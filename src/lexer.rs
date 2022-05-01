@@ -31,7 +31,9 @@ pub enum Lexer {
     Operator(String),
     Keyword(String),
     String(String),
+    Bool(String),
     Error(String),
+    Seperator(String),
     Eof
     }
 
@@ -47,7 +49,10 @@ impl Lexer {
             chars[0].is_alphabetic() || chars[0] == '_'
 
         }
-
+    
+    pub fn check_for_bool(input: &str) -> bool {
+        input.to_string().parse::<bool>().is_ok()
+    }
     pub fn check_for_operator(input: &str) -> bool {
         if input.len() > 1 {
             return false;
@@ -62,7 +67,7 @@ impl Lexer {
     pub fn check_for_keyword(input : &str) -> bool {
         match input {
             // check if one of the keywords is in the input
-            "if" | "else" | "for" | "while" | "let" | "then" => true,
+            "if" | "else" | "for" | "while" | "let" | "then" | "do" | "in" => true,
             _ => false
         }
     }
@@ -75,8 +80,10 @@ impl Lexer {
     }
 
 }
-                
-pub fn tokenize(string: &str) -> Vec<Lexer> {
+
+// WARNING: this function is old and needs to be updated
+
+pub fn _legacy_tokenize(string: &str) -> Vec<Lexer> {
     let mut tokens = Vec::new();
     let buffer = string.to_string();
     let mut tkchar = String::new();
@@ -106,10 +113,10 @@ pub fn tokenize(string: &str) -> Vec<Lexer> {
         if string_curr == "\"" {
             is_string = true;
             continue
-        }
-
+        } 
         if i == lenght - 1 {
             tkchar += &string_curr;
+            tkchar = tkchar.trim().to_string();
             if Lexer::check_for_number(&tkchar)  {
                 tokens.push(Lexer::Number(tkchar));
                 tkchar = String::new();
@@ -120,13 +127,20 @@ pub fn tokenize(string: &str) -> Vec<Lexer> {
             } else if Lexer::check_for_keyword(&tkchar) {
                 tokens.push(Lexer::Keyword(tkchar));
                 tkchar = String::new();
+            } else if Lexer::check_for_bool(&tkchar) {
+                tokens.push(Lexer::Bool(tkchar));
+                tkchar = String::new();
             } else if Lexer::check_for_identifier(&tkchar) {
                 tokens.push(Lexer::Identifier(tkchar));
+                tkchar = String::new();
+            } else if Lexer::check_for_seperator(&tkchar) {
+                tokens.push(Lexer::Seperator(tkchar));
                 tkchar = String::new();
             } else {
                 tokens.push(Lexer::Error(tkchar));
                 tkchar = String::new();
             }
+            
             break;
         }
         if string_curr == " ".to_string() || string_curr == "\n".to_string() || string_curr == "\r".to_string() {
@@ -137,21 +151,26 @@ pub fn tokenize(string: &str) -> Vec<Lexer> {
             if Lexer::check_for_number(&tkchar)  {
                 tokens.push(Lexer::Number(tkchar));
                 tkchar = String::new();
-            
+
             } else if Lexer::check_for_operator(&tkchar) {
                 tokens.push(Lexer::Operator(tkchar));
                 tkchar = String::new();
             } else if Lexer::check_for_keyword(&tkchar) {
                 tokens.push(Lexer::Keyword(tkchar));
                 tkchar = String::new();
+            } else if Lexer::check_for_bool(&tkchar) {
+                tokens.push(Lexer::Bool(tkchar));
+                tkchar = String::new();
             } else if Lexer::check_for_identifier(&tkchar) {
                 tokens.push(Lexer::Identifier(tkchar));
+                tkchar = String::new();
+            } else if Lexer::check_for_seperator(&tkchar) {
+                tokens.push(Lexer::Seperator(tkchar));
                 tkchar = String::new();
             } else {
                 tokens.push(Lexer::Error(tkchar));
                 tkchar = String::new();
             }
-
             continue
         } 
         tkchar += &string_curr;
@@ -161,4 +180,117 @@ pub fn tokenize(string: &str) -> Vec<Lexer> {
 }
 
 
+pub fn tokenize(string: &str) -> Vec<Lexer> {
+    let mut tokens = Vec::new();
+    let mut is_char = false;
+    let mut chars = "".to_string();
+    let mut is_num = false;
+    let mut num = "".to_string();
+    let mut s;
+    for (i, c) in string.chars().enumerate() {
+        s = c.to_string();
+        if s == " " || s == "\n" || s == "\r" || s == "\t" {
+            if is_char {
+                if Lexer::check_for_keyword(&chars) {
+                    tokens.push(Lexer::Keyword(chars));
+                } else if Lexer::check_for_identifier(&chars) {
+                    tokens.push(Lexer::Identifier(chars));
+                } else if Lexer::check_for_bool(&chars) {
+                    tokens.push(Lexer::Bool(chars));
+                } else {
+                    tokens.push(Lexer::Error(chars));
+                }
+                chars = "".to_string();
+                is_char = false;
+            }
+            if is_num {
+                tokens.push(Lexer::Number(num));
+                num = "".to_string();
+                is_num = false;
+            }
+        }
+        if Lexer::check_for_seperator(&s) {
+            if is_char {
+                if Lexer::check_for_keyword(&chars) {
+                    tokens.push(Lexer::Keyword(chars));
+                } else if Lexer::check_for_identifier(&chars) {
+                    tokens.push(Lexer::Identifier(chars));
+                } else if Lexer::check_for_bool(&chars) {
+                    tokens.push(Lexer::Bool(chars));
+                } else {
+                    tokens.push(Lexer::Error(chars));
+                }
+                chars = "".to_string();
+                is_char = false;
+            }
+            if is_num {
+                tokens.push(Lexer::Number(num));
+                num = "".to_string();
+                is_num = false;
+            }
+            tokens.push(Lexer::Seperator(s.clone()));
+        }
+        if Lexer::check_for_operator(&s) {
+            if is_char {
+                if Lexer::check_for_keyword(&chars) {
+                    tokens.push(Lexer::Keyword(chars));
+                } else if Lexer::check_for_identifier(&chars) {
+                    tokens.push(Lexer::Identifier(chars));
+                } else if Lexer::check_for_bool(&chars) {
+                    tokens.push(Lexer::Bool(chars));
+                } else {
+                    tokens.push(Lexer::Error(chars));
+                }
+                chars = "".to_string();
+                is_char = false;
+            }
+            if is_num {
+                tokens.push(Lexer::Number(num));
+                num = "".to_string();
+                is_num = false;
+            }
+            tokens.push(Lexer::Operator(s.clone()));
+        }
 
+        if Lexer::check_for_identifier(&s)  {
+            if is_num {
+                tokens.push(Lexer::Error("".to_string()));
+                
+            } else {
+                chars += &s;
+                is_char = true;
+            }
+            
+        }
+        if Lexer::check_for_number(&s) {
+            if is_char {
+                chars += &s;
+            } else {
+                num += &s;
+                is_num = true;
+            }
+        }
+    }
+    if is_char {
+        if Lexer::check_for_keyword(&chars) {
+            tokens.push(Lexer::Keyword(chars));
+        } else if Lexer::check_for_identifier(&chars) {
+            tokens.push(Lexer::Identifier(chars));
+        } else if Lexer::check_for_bool(&chars) {
+            tokens.push(Lexer::Bool(chars));
+        } else {
+            tokens.push(Lexer::Error(chars));
+        }
+        chars = "".to_string();
+        is_char = false;
+    }
+    if is_num {
+        tokens.push(Lexer::Number(num));
+        num = "".to_string();
+        is_num = false;
+    }
+    return tokens;
+
+
+
+}

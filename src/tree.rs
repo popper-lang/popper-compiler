@@ -14,19 +14,48 @@ pub enum Expr {
         cond: Box<Expr>,
         body: Box<Expr>
     },
-    Let {
+    Assign {
         name: String,
         value: Box<Expr>
     },
     Number {
-        value: String
+        value: f64
     },
     Identifier {
         name: String
     },
     BinOp {
-        op: String,
+        op: Op,
         left: Box<Expr>,
         right: Box<Expr>
     },
+    String {
+        value: String
+    },
+    For {
+        name: String,
+        iter: Box<Expr>,
+        body: Box<Expr>
+    },
+    Bool {
+        value: bool
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Op {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Eq,
+    Neq,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or,
+    Invalid
 }
