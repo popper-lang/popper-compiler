@@ -1,9 +1,34 @@
 
 
+pub enum Keyword {
+	If,
+	While,
+	Let,
+	For,
+	Else
+}
+
+pub struct Integrer;
+
+
+
+
+
+impl FromStr for Keyword {
+    type Err = String;
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		match s {
+			"if" => Ok(Keyword::If),
+			"else" => Ok(Keyword::Else),
+			"let" => Ok(Keyword::Let),
+			"for" => Ok(Keyword::For),
+			_ => Err(format!("{s} is not a valid keyword"))
+		}
+	}
 
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Lexer {
+pub enum Token {
     // The lexer is a simple state machine with the following states.
     //
     // * `Seperator`: The lexer expects to find  or one
@@ -29,7 +54,7 @@ pub enum Lexer {
     Number(String),
     Identifier(String),
     Operator(String),
-    Keyword(String),
+    Keyword(Keyword),
     String(String),
     Bool(String),
     Error(String),
@@ -37,7 +62,7 @@ pub enum Lexer {
     Eof
     }
 
-impl Lexer {
+impl Token {
     pub fn check_for_number(input: &str) -> bool {
         input.to_string().parse::<f64>().is_ok()
     }
@@ -64,13 +89,7 @@ impl Lexer {
         }
     }
 
-    pub fn check_for_keyword(input : &str) -> bool {
-        match input {
-            // check if one of the keywords is in the input
-            "if" | "else" | "for" | "while" | "let" | "then" | "do" | "in" => true,
-            _ => false
-        }
-    }
+    
 
     pub fn check_for_seperator(input: &str) -> bool {
         match input {
@@ -81,103 +100,13 @@ impl Lexer {
 
 }
 
-// WARNING: this function is old and needs to be updated
-
-pub fn _legacy_tokenize(string: &str) -> Vec<Lexer> {
-    let mut tokens = Vec::new();
-    let buffer = string.to_string();
-    let mut tkchar = String::new();
-    let mut is_string = false;
-    let lenght = buffer.len();
-    let mut string_curr;
-    let mut d = false;
-    for (i, c) in &mut buffer.chars().enumerate() {
-        string_curr = c.to_string();
-        if d {
-             d = false;
-            continue
-        }
-        if is_string {
-            if string_curr == "\"" {
-                is_string = false;
-                tokens.push(Lexer::String(tkchar));
-                tkchar = String::new();
-                d = true;
-                continue
-            } else {
-                tkchar += &c.to_string();
-                continue
-            }
-
-        }
-        if string_curr == "\"" {
-            is_string = true;
-            continue
-        } 
-        if i == lenght - 1 {
-            tkchar += &string_curr;
-            tkchar = tkchar.trim().to_string();
-            if Lexer::check_for_number(&tkchar)  {
-                tokens.push(Lexer::Number(tkchar));
-                tkchar = String::new();
-
-            } else if Lexer::check_for_operator(&tkchar) {
-                tokens.push(Lexer::Operator(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_keyword(&tkchar) {
-                tokens.push(Lexer::Keyword(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_bool(&tkchar) {
-                tokens.push(Lexer::Bool(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_identifier(&tkchar) {
-                tokens.push(Lexer::Identifier(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_seperator(&tkchar) {
-                tokens.push(Lexer::Seperator(tkchar));
-                tkchar = String::new();
-            } else {
-                tokens.push(Lexer::Error(tkchar));
-                tkchar = String::new();
-            }
-            
-            break;
-        }
-        if string_curr == " ".to_string() || string_curr == "\n".to_string() || string_curr == "\r".to_string() {
-            if i == 0 {
-                continue;
-            }
-
-            if Lexer::check_for_number(&tkchar)  {
-                tokens.push(Lexer::Number(tkchar));
-                tkchar = String::new();
-
-            } else if Lexer::check_for_operator(&tkchar) {
-                tokens.push(Lexer::Operator(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_keyword(&tkchar) {
-                tokens.push(Lexer::Keyword(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_bool(&tkchar) {
-                tokens.push(Lexer::Bool(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_identifier(&tkchar) {
-                tokens.push(Lexer::Identifier(tkchar));
-                tkchar = String::new();
-            } else if Lexer::check_for_seperator(&tkchar) {
-                tokens.push(Lexer::Seperator(tkchar));
-                tkchar = String::new();
-            } else {
-                tokens.push(Lexer::Error(tkchar));
-                tkchar = String::new();
-            }
-            continue
-        } 
-        tkchar += &string_curr;
-    }
-            
-    return tokens;
+impl FromStr for Token {
+	type Err = String; 
+	fn from_str(string: &str) -> Result<Vec<Self>, Self::Err> {
+		
+	}
 }
+
 
 
 pub fn tokenize(string: &str) -> Vec<Lexer> {
@@ -191,7 +120,7 @@ pub fn tokenize(string: &str) -> Vec<Lexer> {
         s = c.to_string();
         if s == " " || s == "\n" || s == "\r" || s == "\t" {
             if is_char {
-                if Lexer::check_for_keyword(&chars) {
+                if Keyword::from_str(chars) {
                     tokens.push(Lexer::Keyword(chars));
                 } else if Lexer::check_for_identifier(&chars) {
                     tokens.push(Lexer::Identifier(chars));

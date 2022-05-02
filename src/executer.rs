@@ -3,7 +3,7 @@ use crate::tree::Op;
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 struct Ident(String);
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone)]
 enum Value {
     Number(f64),
     String(String),
@@ -226,7 +226,7 @@ impl Vm {
             },
             Expr::While { cond, body } => {
                 while self.eval_expr(*cond) == Value::Bool(true) {
-                    self.eval_expr(*body);
+                    self.eval_expr(body as tree::Expr);
                 }
                 return Value::None;
             },
@@ -235,7 +235,7 @@ impl Vm {
                 let Value::Number(n) = iter;
                 for i in 0..n as i32 {
                     self.set_ident(Ident(name), Value::Number(i as f64));
-                    self.eval_expr(*body);
+                    self.eval_expr(*body.clone());
                 }
                 return Value::None;
             },
@@ -248,7 +248,7 @@ impl Vm {
 
     fn get_ident(&mut self, ident: Ident) -> Value {
         match self.0.get(&ident) {
-            Some(v) => *v,
+            Some(v) => v.clone(),
             None => Value::None
         }
     }

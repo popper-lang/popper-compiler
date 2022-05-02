@@ -45,7 +45,6 @@ pub fn parse_expr(tokens: &mut Vec<Lexer>) -> Result<Expr, String> {
                             then: Box::new(then)
                         })
                     } else if is_else {
-                        println!("tokens: {:?}", tokens);
                         tokens.remove(0);
                         if tokens[0] != Lexer::Seperator("{".to_string()) {
                             return Err("Expected token '{'".to_string());
