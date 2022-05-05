@@ -175,8 +175,8 @@ pub enum Token {
     Operator(Operator),
     Keyword(Keyword),
     Seperator(Seperator),
-    Eof
-    }
+    NewLine    
+}
 
 
 impl Token {
@@ -214,6 +214,9 @@ impl Token {
                     } else {
                         return Err(format!("{} is not a valid number", num));
                     }
+                }
+                if s == "\n" {
+                    tokens.push(Token::NewLine);
                 }
             }
             if let Ok(sep) = Seperator::from_str(&s) {

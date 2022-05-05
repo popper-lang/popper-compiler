@@ -12,6 +12,10 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
     }
     let token = tokens[0].clone();
     match token {
+        Token::NewLine => {
+            tokens.remove(0);
+            return parse_token(tokens);
+        },
         Token::Literal(n) => {
             tokens.remove(0);
             return Ok(Expr::Literal { value: n });
