@@ -1,4 +1,4 @@
-
+use crate::lexer::Literal;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     IfThen {
@@ -18,27 +18,21 @@ pub enum Expr {
         name: String,
         value: Box<Expr>
     },
-    Number {
-        value: f64
-    },
-    Identifier {
-        name: String
+    Literal {
+        value: Literal
     },
     BinOp {
         op: Op,
         left: Box<Expr>,
         right: Box<Expr>
     },
-    String {
-        value: String
-    },
     For {
         name: String,
         iter: Box<Expr>,
         body: Box<Expr>
     },
-    Bool {
-        value: bool
+    Identifier {
+        name: String
     }
 }
 
@@ -57,5 +51,6 @@ pub enum Op {
     Ge,
     And,
     Or,
-    Invalid
+    Invalid,
+    Assign
 }
