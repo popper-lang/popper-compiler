@@ -1,7 +1,7 @@
 use crate::tree::Expr; 
 use crate::tree::Op;
 use crate::lexer::Literal;
-use crate::lexer;
+use std::collections::HashMap;
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub struct Ident(pub String);
 
@@ -146,10 +146,20 @@ pub struct Vm(std::collections::HashMap<Ident, Value>);
 
 impl Vm {
     pub fn new() -> Self {
-        Vm(std::collections::HashMap::new())
+        Vm(HashMap::new())
+    }
+    pub fn from(map: HashMap<Ident, Value>) -> Self {
+        Vm(map)
     }
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, String> {
         match expr {
+            Expr::Block { body } => {
+                let mut last = Value::None;
+                for expr in body {
+                    last = self.eval_expr(expr)?;
+                }
+                Ok(last)
+            }
             Expr::Literal { value } => {
                 Ok(match value {
                     Literal::Number(n) => Value::Number(n),
@@ -182,9 +192,9 @@ impl Vm {
             Expr::IfThen { cond, then } => {
                 if let Value::Bool(c) = self.eval_expr(*cond)?{
                     if c {
-                        self.eval_expr(*then)
+                        return Ok(self.eval_expr(*then)?);
                     } else {
-                        Ok(Value::None)
+                        return Ok(Value::None);
                     }
                 }
                 else {
@@ -222,12 +232,14 @@ impl Vm {
                     Value::Number(n) => n,
                     _ => return Err("iter is not number".to_string())
                 };
-                
+                let mut last = Value::None;
                 for i in 0..n as i32 {
                     self.set_ident(Ident(name.clone().to_string()), Value::Number(i as f64));
+                    last = self.eval_expr(*body.clone())?;
                 }
-                return Ok(Value::None);
+                return Ok(last);
             },
+            _ => Err("Unknown expression".to_string())
         }
     }
 

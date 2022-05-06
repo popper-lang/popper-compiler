@@ -3,6 +3,7 @@ use crate::lexer::Keyword;
 use crate::lexer::Seperator;
 use crate::lexer::Operator;
 use crate::lexer::Identifier;
+
 use crate::tree::Expr;
 use crate::tree::Op;
 
@@ -12,9 +13,15 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
     }
     let token = tokens[0].clone();
     match token {
-        Token::NewLine => {
+        Token::Seperator(Seperator::LeftBrace) => {
             tokens.remove(0);
-            return parse_token(tokens);
+            let mut body = Vec::new();
+            while tokens[0] != Token::Seperator(Seperator::RightBrace) {
+                body.push(parse_token(tokens)?);
+            }
+            tokens.remove(0);
+            return Ok(Expr::Block { body });
+
         },
         Token::Literal(n) => {
             tokens.remove(0);
@@ -22,14 +29,14 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
         },
         Token::Identifier(i) => {
             tokens.remove(0);
-            Ok(Expr::Identifier { name: i.0.clone() })
+            return Ok(Expr::Identifier { name: i.0.clone() });
         },
         Token::Keyword(k) => {
             match k {
                 Keyword::If => {
                     let mut is_else = false;
                     tokens.remove(0); // remove "if " of if block
-                    let cond = parse_expr(tokens)?;
+                    let cond = parse_token(tokens)?;
                     
                     if tokens[0] != Token::Seperator(Seperator::LeftBrace) {
                         return Err("Expected token '{'".to_string());
@@ -45,14 +52,12 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                     } else {
                         tokens.pop(); // remove "}" of if block
                     }
-                    let then = parse_expr(tokens)?;
-                    
-                    if tokens.len() == 0 {
-                        Ok(Expr::IfThen {
-                            cond: Box::new(cond),
-                            then: Box::new(then)
-                        })
-                    } else if is_else {
+                    let then_block = Token::tokens_to_block(tokens.clone())?;
+                    println!("block: {:?}", then_block);
+                    let then = Expr::Block { body: parse_block(then_block)? };
+                    println!("tokens: {:?}", tokens);
+                    tokens.remove(0); 
+                    if is_else {
                         tokens.remove(0);
                         if tokens[0] != Token::Seperator(Seperator::LeftBrace) {
                             return Err("Expected token '{'".to_string());
@@ -62,22 +67,28 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                         }
                         tokens.remove(0);
                         tokens.pop();
-                        let else_ = parse_expr(tokens)?;
-                        Ok(Expr::IfThenElse {
+                        let else_block = Token::tokens_to_block(tokens.to_vec())?;
+                        let else_ = Expr::Block {
+                            body: parse_block(else_block)?
+                        };
+
+                        return Ok(Expr::IfThenElse {
                             cond: Box::new(cond),
                             then: Box::new(then),
                             else_: Box::new(else_)
-                        })
+                        });
                         
                     } else {
-                        Err("error syntatic".to_string()) // doesn't match any case         
-                    
+
+                        return Ok(Expr::IfThen {
+                            cond: Box::new(cond),
+                            then: Box::new(then)
+                        });
                     }
-                    
                 },
                 Keyword::While => {
                     tokens.remove(0); // remove "while" of while block
-                    let cond = parse_expr(tokens)?;
+                    let cond = parse_token(tokens)?;
                     if tokens[0] != Token::Seperator(Seperator::LeftBrace) {
                         return Err("Expected token '{'".to_string());
                     }
@@ -86,11 +97,12 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                     }
                     tokens.remove(0); // remove "{" of while block
                     tokens.pop(); // remove "}" of while block
-                    let body = parse_expr(tokens)?;
-                    Ok(Expr::While {
+                    let body_block = Token::tokens_to_block(tokens.clone())?;
+                    let body = Expr::Block { body: parse_block(body_block)? };
+                    return Ok(Expr::While {
                         cond: Box::new(cond),
                         body: Box::new(body)
-                    })
+                    });
                 },
                 Keyword::Let => {
                     tokens.remove(0);
@@ -102,13 +114,13 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                         } else {
                             tokens.remove(0);
                         }
-                        let value = parse_expr(tokens)?;
-                        Ok(Expr::Assign {
+                        let value = parse_token(tokens)?;
+                        return Ok(Expr::Assign {
                             name: name.clone(),
                             value: Box::new(value)
-                        })
+                        });
                     } else {
-                        Err("Expected identifier".to_string())
+                        return Err("Expected identifier".to_string());
                     }
                 },
                 Keyword::For => {
@@ -122,7 +134,7 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                             return Err("Expected keyword 'in'".to_string());
                         }
                         tokens.remove(0);
-                        let iter = parse_expr(tokens)?;
+                        let iter = parse_token(tokens)?;
                         if tokens[0] != Token::Seperator(Seperator::LeftBrace) {
                             return Err("Expected keyword '{'".to_string());
                         }
@@ -131,24 +143,25 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
                         }
                         tokens.remove(0);
                         tokens.pop();
-                        let body = parse_expr(tokens)?;
-                        Ok(Expr::For {
+                        let body_block = Token::tokens_to_block(tokens.clone())?;
+                        let body = Expr::Block { body: parse_block(body_block)? };
+                        return Ok(Expr::For {
                             name: name.clone(),
                             iter: Box::new(iter),
                             body: Box::new(body)
-                        })
+                        });
                     } else {
-                        Err("Expected identifier: no var".to_string())
+                        return Err("Expected identifier: no var".to_string());
                     }
                 },
                 
-                _ => Err("Unexpected keyword: ".to_string())
+                _ => { return Err("Unexpected keyword: ".to_string()); }
             }
         },
         Token::Operator(op) => {
             tokens.remove(0); // remove operator of binary expression
-            let left = parse_expr(tokens)?;
-            let right = parse_expr(tokens)?;
+            let left = parse_token(tokens)?;
+            let right = parse_token(tokens)?;
             let op_enum = match op {
                 Operator::Add => Op::Add,
                 Operator::Sub => Op::Sub,
@@ -167,12 +180,22 @@ pub fn parse_token(tokens: &mut Vec<Token>) -> Result<Expr, String> {
 
                 
             };
-            Ok(Expr::BinOp {
+            return Ok(Expr::BinOp {
                 op: op_enum.clone(),
                 left: Box::new(left),
                 right: Box::new(right)
-            })
+            });
         }
         _ => Err("Unexpected token".to_string())
     }
+
+    
+}
+
+pub fn parse_block(tokens_block: Vec<Vec<Token>>) -> Result<Vec<Expr>, String> {
+    let mut exprs = Vec::new();
+    for mut tokens in tokens_block {
+        exprs.push(parse_token(&mut tokens)?);
+    }
+    return Ok(exprs);
 }

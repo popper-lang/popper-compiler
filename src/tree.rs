@@ -33,6 +33,18 @@ pub enum Expr {
     },
     Identifier {
         name: String
+    },
+    Function {
+        name: String,
+        args: Box<Expr>,
+        body: Box<Expr>
+    },
+    Call {
+        name: String,
+        args: Box<Expr>
+    },
+    Block {
+        body: Vec<Expr>
     }
 }
 

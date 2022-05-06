@@ -313,4 +313,36 @@ impl Token {
     
     
 	}
+
+    pub fn from_block(string: &str) -> Result<Vec<Vec<Token>>,String> {
+        let mut tokens = Token::from_str(string)?;
+        let mut lines = Vec::<Vec<Token>>::new();
+        let mut line = Vec::<Token>::new();
+        for t in tokens {
+            if t == Token::NewLine {
+                lines.push(line);
+                line = Vec::new();
+            } else {
+                line.push(t);
+            }
+        }
+        return Ok(lines);
+    }
+
+    pub fn tokens_to_block(tokens: Vec<Token>) -> Result<Vec<Vec<Token>>, String> {
+        let mut lines = Vec::<Vec<Token>>::new();
+        let mut line = Vec::<Token>::new();
+        for t in tokens {
+            if t == Token::NewLine {
+                lines.push(line);
+                line = Vec::new();
+            } else {
+                line.push(t);
+            }
+        }
+        
+        lines.push(line);
+        
+        return Ok(lines);
+    }
 }
