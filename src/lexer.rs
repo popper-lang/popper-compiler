@@ -1,35 +1,154 @@
+use std::str::FromStr;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Identifier(pub String);
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Literal {
+    Number(f64),
+    String(String),
+    Bool(bool),
+}
 
 
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Keyword {
 	If,
 	While,
 	Let,
 	For,
-	Else
+	Else,
+    In
 }
 
-pub struct Integrer;
+#[derive(Debug, Clone, PartialEq)]
+pub enum Operator {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Assign,
+    Eq,
+    Neq,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    And,
+    Or
+}
 
 
 
-
+#[derive(Debug, Clone, PartialEq)]
+pub enum Seperator {
+    SemiColon,
+    Comma,
+    Dot,
+    Colon,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    LeftBracket,
+    RightBracket
+}
 
 impl FromStr for Keyword {
     type Err = String;
-	fn from_str(s: &str) -> Result<Self, Self::Err> {
-		match s {
-			"if" => Ok(Keyword::If),
-			"else" => Ok(Keyword::Else),
-			"let" => Ok(Keyword::Let),
-			"for" => Ok(Keyword::For),
-			_ => Err(format!("{s} is not a valid keyword"))
-		}
-	}
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "if" => Ok(Keyword::If),
+            "while" => Ok(Keyword::While),
+            "let" => Ok(Keyword::Let),
+            "for" => Ok(Keyword::For),
+            "else" => Ok(Keyword::Else),
+            "in" => Ok(Keyword::In),
+            _ => Err(format!("{} is not a keyword", s))
+        }
+    }
+}
+
+impl FromStr for Operator {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "+" => Ok(Operator::Add),
+            "-" => Ok(Operator::Sub),
+            "*" => Ok(Operator::Mul),
+            "/" => Ok(Operator::Div),
+            "%" => Ok(Operator::Mod),
+            "=" => Ok(Operator::Assign),
+            "==" => Ok(Operator::Eq),
+            "!=" => Ok(Operator::Neq),
+            "<" => Ok(Operator::Lt),
+            ">" => Ok(Operator::Gt),
+            "<=" => Ok(Operator::Le),
+            ">=" => Ok(Operator::Ge),
+            "&&" => Ok(Operator::And),
+            "||" => Ok(Operator::Or),
+            _ => Err(format!("{} is not an operator", s))
+        }
+    }
+}
 
 
-#[derive(Debug, PartialEq, Clone)]
+
+impl FromStr for Seperator {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            ";" => Ok(Seperator::SemiColon),
+            "," => Ok(Seperator::Comma),
+            "." => Ok(Seperator::Dot),
+            ":" => Ok(Seperator::Colon),
+            "(" => Ok(Seperator::LeftParen),
+            ")" => Ok(Seperator::RightParen),
+            "{" => Ok(Seperator::LeftBrace),
+            "}" => Ok(Seperator::RightBrace),
+            "[" => Ok(Seperator::LeftBracket),
+            "]" => Ok(Seperator::RightBracket),
+            _ => Err(format!("{} is not a seperator", s))
+        }
+    }
+}
+
+impl FromStr for Literal {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "true" => Ok(Literal::Bool(true)),
+            "false" => Ok(Literal::Bool(false)),
+            _ => {
+                if let Ok(num) = s.parse::<f64>() {
+                    Ok(Literal::Number(num))
+                } else {
+                    Ok(Literal::String(s.to_string()))
+                }
+            }
+        }
+    }
+}
+
+impl FromStr for Identifier {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() == 0 {
+            Err("Identifier cannot be empty".to_string())
+        } else if ! s.chars().next().unwrap().is_alphabetic() {
+            Err(format!("{} is not a valid identifier", s))
+        } else if s.chars().any(|c| ! c.is_alphanumeric() && c != '_') {
+            Err(format!("{} is not a valid identifier", s))
+        } else {
+            Ok(Identifier(s.to_string()))
+        }
+    }
+}
+#[derive(Debug,  Clone, PartialEq)]
 pub enum Token {
-    // The lexer is a simple state machine with the following states.
+    // The token enum is a simple state machine with the following states.
     //
     // * `Seperator`: The lexer expects to find  or one
     //   of the symbols `(`, `)`, `{`, `}`, `[`, `]`, `;`, `,`
@@ -51,175 +170,179 @@ pub enum Token {
     //
     // * `Eof`: The lexer expects to find the end of the file.
     Comment(String),
-    Number(String),
-    Identifier(String),
-    Operator(String),
+    Literal(Literal),
+    Identifier(Identifier),
+    Operator(Operator),
     Keyword(Keyword),
-    String(String),
-    Bool(String),
-    Error(String),
-    Seperator(String),
-    Eof
-    }
+    Seperator(Seperator),
+    NewLine    
+}
+
 
 impl Token {
-    pub fn check_for_number(input: &str) -> bool {
-        input.to_string().parse::<f64>().is_ok()
-    }
-    pub fn check_for_identifier(input: &str) -> bool {
-        let chars = input.chars().collect::<Vec<char>>();
-        if input.len() == 0 {
-                return false;
+	pub fn from_str(string: &str) -> Result<Vec<Token>, String> {
+        let mut tokens = Vec::new();
+        let mut is_char = false;
+        let mut chars = "".to_string();
+        let mut is_num = false;
+        let mut num = "".to_string();
+        let mut s;
+        for (_, c) in string.chars().enumerate() {
+            s = c.to_string();
+            if s == " " || s == "\n" || s == "\r" || s == "\t" {
+                if is_char {
+                    if is_char {
+                        if let Ok(k) = Keyword::from_str(&chars) {
+                            tokens.push(Token::Keyword(k));
+                        } else if let Ok(i) = Identifier::from_str(&chars) {
+                            tokens.push(Token::Identifier(i));
+                        } else if let Ok(Literal::Bool(b)) = Literal::from_str(&chars) {
+                            tokens.push(Token::Literal(Literal::Bool(b)));
+                        } 
+                        chars = "".to_string();
+                        is_char = false;
+                    }
+                    chars = "".to_string();
+                    is_char = false;
+                }
+                if is_num {
+                    
+                    if let Ok(n) = Literal::from_str(&num) {
+                        tokens.push(Token::Literal(n));
+                        num = "".to_string();
+                        is_num = false;
+                    } else {
+                        return Err(format!("{} is not a valid number", num));
+                    }
+                }
+                if s == "\n" {
+                    tokens.push(Token::NewLine);
+                }
             }
-            chars[0].is_alphabetic() || chars[0] == '_'
-
-        }
+            if let Ok(sep) = Seperator::from_str(&s) {
+                if is_char {
+                    if is_char {
+                        if let Ok(k) = Keyword::from_str(&chars) {
+                            tokens.push(Token::Keyword(k));
+                        } else if let Ok(i) = Identifier::from_str(&chars) {
+                            tokens.push(Token::Identifier(i));
+                        } else if let Ok(Literal::Bool(b)) = Literal::from_str(&chars) {
+                            tokens.push(Token::Literal(Literal::Bool(b)));
+                        } 
+                        chars = "".to_string();
+                        is_char = false;
+                    }
+                    chars = "".to_string();
+                    is_char = false;
+                }
+                if is_num {
+                    if let Ok(n) = Literal::from_str(&num) {
+                        tokens.push(Token::Literal(n));
+                        num = "".to_string();
+                        is_num = false;
+                    } else {
+                        return Err(format!("{} is not a valid number", num));
+                    }
+                }
+                tokens.push(Token::Seperator(sep));
+            }
+            if let Ok(op) = Operator::from_str(&s) {
+                if is_char {
+                    if let Ok(k) = Keyword::from_str(&chars) {
+                        tokens.push(Token::Keyword(k));
+                    } else if let Ok(i) = Identifier::from_str(&chars) {
+                        tokens.push(Token::Identifier(i));
+                    } else if let Ok(Literal::Bool(b)) = Literal::from_str(&chars) {
+                        tokens.push(Token::Literal(Literal::Bool(b)));
+                    } 
+                    chars = "".to_string();
+                    is_char = false;
+                }
+                if is_num {
+                    if let Ok(n) = Literal::from_str(&num) {
+                        tokens.push(Token::Literal(n));
+                        num = "".to_string();
+                        is_num = false;
+                    } else {
+                        return Err(format!("{} is not a valid number", num));
+                    }
+                }
+                tokens.push(Token::Operator(op));
+            }
     
-    pub fn check_for_bool(input: &str) -> bool {
-        input.to_string().parse::<bool>().is_ok()
-    }
-    pub fn check_for_operator(input: &str) -> bool {
-        if input.len() > 1 {
-            return false;
-        }
-        match input {
-            "+"| "-" | "*" | "/" | "%"  => true,
-            "=" | "!" | "<" | ">" | "&" | "|" | "^" | "~" | "?" => true,
-            _ => return false
-        }
-    }
-
-    
-
-    pub fn check_for_seperator(input: &str) -> bool {
-        match input {
-            "(" | ")" | "{" | "}" | "[" | "]" | ";" | "," => true,
-            _ => false
-        }
-    }
-
-}
-
-impl FromStr for Token {
-	type Err = String; 
-	fn from_str(string: &str) -> Result<Vec<Self>, Self::Err> {
-		
-	}
-}
-
-
-
-pub fn tokenize(string: &str) -> Vec<Lexer> {
-    let mut tokens = Vec::new();
-    let mut is_char = false;
-    let mut chars = "".to_string();
-    let mut is_num = false;
-    let mut num = "".to_string();
-    let mut s;
-    for (i, c) in string.chars().enumerate() {
-        s = c.to_string();
-        if s == " " || s == "\n" || s == "\r" || s == "\t" {
-            if is_char {
-                if Keyword::from_str(chars) {
-                    tokens.push(Lexer::Keyword(chars));
-                } else if Lexer::check_for_identifier(&chars) {
-                    tokens.push(Lexer::Identifier(chars));
-                } else if Lexer::check_for_bool(&chars) {
-                    tokens.push(Lexer::Bool(chars));
+            if let Ok(_) = Identifier::from_str(&s) {
+                if is_num {
+                    return Err("Identifier cannot be a number".to_string());
+                    
                 } else {
-                    tokens.push(Lexer::Error(chars));
+                    chars += &s;
+                    is_char = true;
                 }
-                chars = "".to_string();
-                is_char = false;
-            }
-            if is_num {
-                tokens.push(Lexer::Number(num));
-                num = "".to_string();
-                is_num = false;
-            }
-        }
-        if Lexer::check_for_seperator(&s) {
-            if is_char {
-                if Lexer::check_for_keyword(&chars) {
-                    tokens.push(Lexer::Keyword(chars));
-                } else if Lexer::check_for_identifier(&chars) {
-                    tokens.push(Lexer::Identifier(chars));
-                } else if Lexer::check_for_bool(&chars) {
-                    tokens.push(Lexer::Bool(chars));
-                } else {
-                    tokens.push(Lexer::Error(chars));
-                }
-                chars = "".to_string();
-                is_char = false;
-            }
-            if is_num {
-                tokens.push(Lexer::Number(num));
-                num = "".to_string();
-                is_num = false;
-            }
-            tokens.push(Lexer::Seperator(s.clone()));
-        }
-        if Lexer::check_for_operator(&s) {
-            if is_char {
-                if Lexer::check_for_keyword(&chars) {
-                    tokens.push(Lexer::Keyword(chars));
-                } else if Lexer::check_for_identifier(&chars) {
-                    tokens.push(Lexer::Identifier(chars));
-                } else if Lexer::check_for_bool(&chars) {
-                    tokens.push(Lexer::Bool(chars));
-                } else {
-                    tokens.push(Lexer::Error(chars));
-                }
-                chars = "".to_string();
-                is_char = false;
-            }
-            if is_num {
-                tokens.push(Lexer::Number(num));
-                num = "".to_string();
-                is_num = false;
-            }
-            tokens.push(Lexer::Operator(s.clone()));
-        }
-
-        if Lexer::check_for_identifier(&s)  {
-            if is_num {
-                tokens.push(Lexer::Error("".to_string()));
                 
-            } else {
-                chars += &s;
-                is_char = true;
             }
-            
-        }
-        if Lexer::check_for_number(&s) {
-            if is_char {
-                chars += &s;
-            } else {
-                num += &s;
-                is_num = true;
+            if let Ok(Literal::Number(_)) = Literal::from_str(&s) {
+                if is_char {
+                    chars += &s;
+                } else {
+                    num += &s;
+                    is_num = true;
+                }
             }
         }
-    }
-    if is_char {
-        if Lexer::check_for_keyword(&chars) {
-            tokens.push(Lexer::Keyword(chars));
-        } else if Lexer::check_for_identifier(&chars) {
-            tokens.push(Lexer::Identifier(chars));
-        } else if Lexer::check_for_bool(&chars) {
-            tokens.push(Lexer::Bool(chars));
-        } else {
-            tokens.push(Lexer::Error(chars));
+        if is_char {
+            if let Ok(k) = Keyword::from_str(&chars) {
+                tokens.push(Token::Keyword(k));
+            } else if let Ok(i) = Identifier::from_str(&chars) {
+                tokens.push(Token::Identifier(i));
+            } else if let Ok(Literal::Bool(b)) = Literal::from_str(&chars) {
+                tokens.push(Token::Literal(Literal::Bool(b)));
+            } 
+            chars = "".to_string();
+            is_char = false;
         }
-        chars = "".to_string();
-        is_char = false;
+        if is_num {
+            if let Ok(n) = Literal::from_str(&num) {
+                tokens.push(Token::Literal(n));
+                num = "".to_string();
+                is_num = false;
+            } else {
+                return Err(format!("{} is not a valid number", num));
+            }
+        }
+        return Ok(tokens);
+    
+    
+	}
+
+    pub fn from_block(string: &str) -> Result<Vec<Vec<Token>>,String> {
+        let mut tokens = Token::from_str(string)?;
+        let mut lines = Vec::<Vec<Token>>::new();
+        let mut line = Vec::<Token>::new();
+        for t in tokens {
+            if t == Token::NewLine {
+                lines.push(line);
+                line = Vec::new();
+            } else {
+                line.push(t);
+            }
+        }
+        return Ok(lines);
     }
-    if is_num {
-        tokens.push(Lexer::Number(num));
-        num = "".to_string();
-        is_num = false;
+
+    pub fn tokens_to_block(tokens: Vec<Token>) -> Result<Vec<Vec<Token>>, String> {
+        let mut lines = Vec::<Vec<Token>>::new();
+        let mut line = Vec::<Token>::new();
+        for t in tokens {
+            if t == Token::NewLine {
+                lines.push(line);
+                line = Vec::new();
+            } else {
+                line.push(t);
+            }
+        }
+        
+        lines.push(line);
+        
+        return Ok(lines);
     }
-    return tokens;
-
-
-
 }

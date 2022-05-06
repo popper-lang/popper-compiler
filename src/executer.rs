@@ -1,252 +1,253 @@
 use crate::tree::Expr; 
 use crate::tree::Op;
+use crate::lexer::Literal;
+use std::collections::HashMap;
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
-struct Ident(String);
+pub struct Ident(pub String);
 
 #[derive(Debug, PartialEq, Clone)]
-enum Value {
+pub enum Value {
     Number(f64),
     String(String),
     Bool(bool),
-    Error,
     None
 }
 
 impl Value {
-    fn add(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Number(a + b),
-                _ => Value::Error
-            }
+    pub fn add(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
+            _ => Err("invalid operation".to_string())
         }
+        
 
     }
-    fn sub(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Number(a - b),
-                _ => Value::Error
-            }
+    pub fn sub(&self, other: &Value) -> Result<Value, String> {
+ 
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a - b)),
+            _ => Err("invalid operation".to_string())
         }
 
     }
 
-    fn mul(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Number(a * b),
-                _ => Value::Error
-            }
+    pub fn mul(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a * b)),
+            _ => Err("invalid operation".to_string())
+        }
+        
+
+    }
+
+    pub fn div(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a / b)),
+            _ => Err("invalid operation".to_string())
+        }
+        
+
+    }
+
+    pub fn modulo(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a % b)),
+            _ => Err("invalid operation".to_string())
+        }
+        
+
+    }
+
+    pub fn eq(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(a == b)),
+            (Value::String(a), Value::String(b)) => Ok(Value::Bool(a == b)),
+            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a == b)),
+               _ => Err("invalid operation".to_string())
+        }
+        
+
+    }
+
+    pub fn neq(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(a != b)),
+            (Value::String(a), Value::String(b)) => Ok(Value::Bool(a != b)),
+            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
+             _ => Err("invalid operation".to_string())
+            
         }
 
     }
 
-    fn div(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Number(a / b),
-                _ => Value::Error
-            }
+    pub fn gt(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a > *b)),
+            _ => Err("invalid operation".to_string())
+        }
+        
+
+    }
+
+    pub fn lt(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a < *b)),
+            _ => Err("invalid operation".to_string())
         }
 
     }
 
-    fn modulo(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Number(a % b),
-                _ => Value::Error
-            }
+    pub fn ge(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a >= *b)),
+            _ => Err("invalid operation".to_string())
         }
+        
 
     }
 
-    fn eq(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(a == b),
-                (Value::String(a), Value::String(b)) => Value::Bool(a == b),
-                (Value::Bool(a), Value::Bool(b)) => Value::Bool(a == b),
-                _ => Value::Error
-            }
+    pub fn le(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a <= *b)),
+            _ => Err("invalid operation".to_string())
         }
+        
 
     }
 
-    fn neq(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(a != b),
-                (Value::String(a), Value::String(b)) => Value::Bool(a != b),
-                (Value::Bool(a), Value::Bool(b)) => Value::Bool(a != b),
-                _ => Value::Error
-            }
+    pub fn and(&self, other: &Value) -> Result<Value, String> {
+
+        match (self, other) {
+            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a && *b)),
+            _ => Err("invalid operation".to_string())
         }
+        
 
     }
 
-    fn gt(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(*a > *b),
-                _ => Value::Error
-            }
+    pub fn or(&self, other: &Value) -> Result<Value, String> {
+        match (self, other) {
+            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a || *b)),
+            _ => Err("invalid operation".to_string())
         }
-
-    }
-
-    fn lt(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(*a < *b),
-                _ => Value::Error
-            }
-        }
-
-    }
-
-    fn ge(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(*a >= *b),
-                _ => Value::Error
-            }
-        }
-
-    }
-
-    fn le(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Number(a), Value::Number(b)) => Value::Bool(*a <= *b),
-                _ => Value::Error
-            }
-        }
-
-    }
-
-    fn and(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Bool(a), Value::Bool(b)) => Value::Bool(*a && *b),
-                _ => Value::Error
-            }
-        }
-
-    }
-
-    fn or(&self, other: &Value) -> Value {
-        if self != other  {
-            Value::Error 
-        } else {
-            match (self, other) {
-                (Value::Bool(a), Value::Bool(b)) => Value::Bool(*a || *b),
-                _ => Value::Error
-            }
-        }
-
-    }
+    }   
 }
 
-struct Vm(std::collections::HashMap<Ident, Value>);
+pub struct Vm(std::collections::HashMap<Ident, Value>);
 
 impl Vm {
-    fn eval_expr(&mut self, expr: Expr) -> Value {
+    pub fn new() -> Self {
+        Vm(HashMap::new())
+    }
+    pub fn from(map: HashMap<Ident, Value>) -> Self {
+        Vm(map)
+    }
+    pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, String> {
         match expr {
-            Expr::Number { value }  => Value::Number(value),
-            Expr::String { value } => Value::String(value),
-            Expr::Bool { value } => Value::Bool(value),
-            Expr::Identifier{ name } => self.get_ident(Ident(name)),
-            Expr::BinOp { op, left, right } => {
-                let left = self.eval_expr(*left);
-                let right = self.eval_expr(*right);
-                return match op {
-                    Op::Add => left.add(&right),
-                    Op::Sub => left.sub(&right),
-                    Op::Mul => left.mul(&right),
-                    Op::Div => left.div(&right),
-                    Op::Mod => left.modulo(&right),
-                    Op::Eq => left.eq(&right),
-                    Op::Neq => left.neq(&right),
-                    Op::Gt => left.gt(&right),
-                    Op::Lt => left.lt(&right),
-                    Op::Ge => left.ge(&right),
-                    Op::Le => left.le(&right),
-                    Op::And => left.and(&right),
-                    Op::Or => left.or(&right),
-                    _ => Value::Error
+            Expr::Block { body } => {
+                let mut last = Value::None;
+                for expr in body {
+                    last = self.eval_expr(expr)?;
+                }
+                Ok(last)
+            }
+            Expr::Literal { value } => {
+                Ok(match value {
+                    Literal::Number(n) => Value::Number(n),
+                    Literal::String(s) => Value::String(s),
+                    Literal::Bool(b) => Value::Bool(b)
+                })
+            },
+            Expr::Identifier{ name } => Ok(self.get_ident(Ident(name))),
+            Expr::BinOp { op, left, right } => {                
+                let left = self.eval_expr(*left)?;
+                let right = self.eval_expr(*right)?;
+                return Ok(match op {
+                    Op::Add => left.add(&right)?,
+                    Op::Sub => left.sub(&right)?,
+                    Op::Mul => left.mul(&right)?,
+                    Op::Div => left.div(&right)?,
+                    Op::Mod => left.modulo(&right)?,
+                    Op::Eq => left.eq(&right)?,
+                    Op::Neq => left.neq(&right)?,
+                    Op::Gt => left.gt(&right)?,
+                    Op::Lt => left.lt(&right)?,
+                    Op::Ge => left.ge(&right)?,
+                    Op::Le => left.le(&right)?,
+                    Op::And => left.and(&right)?,
+                    Op::Or => left.or(&right)?,
+                    _ => return Err(String::from("Unknown operator"))
 
-                };
+                });
             },
             Expr::IfThen { cond, then } => {
-                if self.eval_expr(*cond) == Value::Bool(true) {
-                    return self.eval_expr(*then);
+                if let Value::Bool(c) = self.eval_expr(*cond)?{
+                    if c {
+                        return Ok(self.eval_expr(*then)?);
+                    } else {
+                        return Ok(Value::None);
+                    }
                 }
                 else {
-                    return Value::None;
+                    return Err("condition is not bool".to_string());
                 }
             },
             Expr::IfThenElse { cond, then, else_ } => {
-                if self.eval_expr(*cond) == Value::Bool(true) {
+                if let Value::Bool(n) = self.eval_expr(*cond)? {
+                    if n {
+                        return self.eval_expr(*then);
+                    }
+                    else {
+                        return self.eval_expr(*else_);
+                    }
                     return self.eval_expr(*then);
                 }
                 else {
-                    return self.eval_expr(*else_);
+                    return Err("condition is not bool".to_string());
                 }
             },
             Expr::Assign { name, value } => {
-                let value_evaluate = self.eval_expr(*value);
-                self.set_ident(Ident(name), value_evaluate);
-                return value_evaluate;
+                let value_evaluate = self.eval_expr(*value)?;
+                self.set_ident(Ident(name), value_evaluate.clone());
+                return Ok(value_evaluate);
             },
-            Expr::While { cond, body } => {
-                while self.eval_expr(*cond) == Value::Bool(true) {
-                    self.eval_expr(body as tree::Expr);
+            Expr::While { ref cond, ref body } => {
+                while self.eval_expr(*cond.clone())? == Value::Bool(true) {
+                    self.eval_expr(*body.clone())?;
                 }
-                return Value::None;
+                return Ok(Value::None);
             },
-            Expr::For {name, iter, body} => {
-                let iter = self.eval_expr(*iter);
-                let Value::Number(n) = iter;
+            Expr::For {ref name, ref iter, ref body} => {
+                let iter = self.eval_expr(*iter.clone())?;
+                let n = match iter {
+                    Value::Number(n) => n,
+                    _ => return Err("iter is not number".to_string())
+                };
+                let mut last = Value::None;
                 for i in 0..n as i32 {
-                    self.set_ident(Ident(name), Value::Number(i as f64));
-                    self.eval_expr(*body.clone());
+                    self.set_ident(Ident(name.clone().to_string()), Value::Number(i as f64));
+                    last = self.eval_expr(*body.clone())?;
                 }
-                return Value::None;
+                return Ok(last);
             },
+            _ => Err("Unknown expression".to_string())
         }
     }
 
-    fn set_ident(&mut self, ident: Ident, value: Value) {
+    pub fn set_ident(&mut self, ident: Ident, value: Value) {
         self.0.insert(ident, value);
     }
 
-    fn get_ident(&mut self, ident: Ident) -> Value {
+    pub fn get_ident(&mut self, ident: Ident) -> Value {
         match self.0.get(&ident) {
             Some(v) => v.clone(),
             None => Value::None
