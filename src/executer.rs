@@ -153,6 +153,7 @@ impl Vm {
     }
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, String> {
         match expr {
+            Expr::Empty => Ok(Value::None),
             Expr::Block { body } => {
                 let mut last = Value::None;
                 for expr in body {
@@ -218,7 +219,7 @@ impl Vm {
             Expr::Assign { name, value } => {
                 let value_evaluate = self.eval_expr(*value)?;
                 self.set_ident(Ident(name), value_evaluate.clone());
-                return Ok(value_evaluate);
+                return Ok(Value::None);
             },
             Expr::While { ref cond, ref body } => {
                 while self.eval_expr(*cond.clone())? == Value::Bool(true) {

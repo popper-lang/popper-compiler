@@ -309,6 +309,9 @@ impl Token {
                 return Err(format!("{} is not a valid number", num));
             }
         }
+        if tokens.last().unwrap() == &Token::NewLine {
+            tokens.pop();
+        }
         return Ok(tokens);
     
     
@@ -334,14 +337,17 @@ impl Token {
         let mut line = Vec::<Token>::new();
         for t in tokens {
             if t == Token::NewLine {
-                lines.push(line);
+                if line != Vec::new() {
+                    lines.push(line);
+                }
                 line = Vec::new();
             } else {
                 line.push(t);
             }
         }
-        
-        lines.push(line);
+        if line != Vec::new() {
+            lines.push(line);
+        }
         
         return Ok(lines);
     }

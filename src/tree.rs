@@ -45,8 +45,11 @@ pub enum Expr {
     },
     Block {
         body: Vec<Expr>
-    }
+    },
+    Empty
 }
+
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Op {
