@@ -30,7 +30,7 @@ pub enum Expr {
         iter: Box<Expr>,
         body: Box<Expr>
     },
-    Function {
+    FunDef {
         name: String,
         args: Box<Expr>,
         body: Box<Expr>

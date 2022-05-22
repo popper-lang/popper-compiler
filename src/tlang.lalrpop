@@ -6,6 +6,7 @@ use crate::tree::Op;
 grammar;
 
 pub Exprs = MultiLine<Expr>;
+Ident : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{name: i.to_string()};
 Block: Expr = "{" <e:Exprs> "}" => Expr::Block {body: e};
 Num : Expr = <n:r"[0-9]+"> => Expr::Literal{value: Literal::Number(n.parse::<f64>().unwrap())} ;
 Str : Expr = <s:r#"'(\\.|[^"])*'"#> => Expr::Literal{value: Literal::String(s[1..s.len()-1].to_string())} ;
@@ -57,17 +58,22 @@ CmpOp: Expr = {
     <e1:Term> ">=" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
 };
 
+List: Vec<Expr> = "[" Comma<Expr> "]";
+Args: Vec<Ident> = "(" Comma<Ident> ")" ;
 
-
-
-
+FunDef : Expr = "def" <e1:Ident> "(" <e2:Args> ")" "{" <e3:Exprs> "}" => {
+    match e1 {
+        Expr::Ident{name} => Expr::FunDef{name: name, args: e2, body: Box::new(Expr::Block {body: e3}) },
+        _ => panic!("Invalid function definition")
+    }
+};
 
 
 
 True : Expr = "true" => Expr::Literal{value: Literal::Bool(true)};
 False : Expr = "false" => Expr::Literal{value: Literal::Bool(false)};
 
-Ident : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{name: i.to_string()};
+
 
 Value = { Num, Str, Ident , True, False};
 Term = {
@@ -90,6 +96,12 @@ Expr = {
 
 MultiLine<T> : Vec<T> = {
     <mut v:(<T> "\n") *> <e:T*>  => {
+        v.into_iter().chain(e).collect()
+    }
+}
+
+Comma<P> : Vec<P> = {
+    <mut v:(<P> ",") *> <e:P*>  => {
         v.into_iter().chain(e).collect()
     }
 }
