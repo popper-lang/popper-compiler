@@ -1,5 +1,4 @@
 mod tree;
-mod lexer;
 mod executer;
 use std::fs;
 #[macro_use] extern crate lalrpop_util;

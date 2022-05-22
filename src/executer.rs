@@ -1,6 +1,6 @@
 use crate::tree::Expr; 
 use crate::tree::Op;
-use crate::lexer::Literal;
+use crate::tree::Literal;
 use std::collections::HashMap;
 #[derive(Debug, PartialEq, Clone, Hash, Eq)]
 pub struct Ident(pub String);

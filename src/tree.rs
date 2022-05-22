@@ -1,4 +1,3 @@
-use crate::lexer::Literal;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     IfThen {
@@ -68,4 +67,11 @@ pub enum Op {
     Or,
     Invalid,
     Assign
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Literal {
+    Number(f64),
+    String(String),
+    Bool(bool)
 }

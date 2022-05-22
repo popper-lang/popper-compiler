@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use crate::tree::Expr;
-use crate::lexer::Literal;
+use crate::tree::Literal;
 use crate::tree::Op;
 
 grammar;
