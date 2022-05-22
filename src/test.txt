@@ -1,3 +1,14 @@
 for e in 5 {
     e + 3
 }
+
+let a = 9 
+if a == 9 {
+    5
+} else {
+   8 
+}
+
+while 1 {
+    5
+}
