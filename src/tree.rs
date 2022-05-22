@@ -27,12 +27,9 @@ pub enum Expr {
         right: Box<Expr>
     },
     For {
-        name: String,
+        name: Box<Expr>,
         iter: Box<Expr>,
         body: Box<Expr>
-    },
-    Identifier {
-        name: String
     },
     Function {
         name: String,
@@ -45,6 +42,9 @@ pub enum Expr {
     },
     Block {
         body: Vec<Expr>
+    },
+    Ident {
+        name: String
     },
     Empty
 }

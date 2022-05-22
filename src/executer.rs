@@ -152,6 +152,7 @@ impl Vm {
         Vm(map)
     }
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, String> {
+        
         match expr {
             Expr::Empty => Ok(Value::None),
             Expr::Block { body } => {
@@ -168,7 +169,7 @@ impl Vm {
                     Literal::Bool(b) => Value::Bool(b)
                 })
             },
-            Expr::Identifier{ name } => Ok(self.get_ident(Ident(name))),
+            Expr::Ident { name } => Ok(self.get_ident(Ident(name))),
             Expr::BinOp { op, left, right } => {                
                 let left = self.eval_expr(*left)?;
                 let right = self.eval_expr(*right)?;
@@ -234,13 +235,16 @@ impl Vm {
                     _ => return Err("iter is not number".to_string())
                 };
                 let mut last = Value::None;
-                for i in 0..n as i32 {
-                    self.set_ident(Ident(name.clone().to_string()), Value::Number(i as f64));
+                for i in 0..(n+1.0) as i32 {
+                    self.set_ident(Ident(match **name {
+                        Expr::Ident{ ref name } => name.clone().to_string(),
+                        _ => return Err("name is not identifier".to_string())
+                    }), Value::Number(i as f64));
                     last = self.eval_expr(*body.clone())?;
                 }
                 return Ok(last);
             },
-            _ => Err("Unknown expression".to_string())
+            _ => Err(format!("Unknown expression : {:?}", expr))
         }
     }
 
@@ -253,5 +257,13 @@ impl Vm {
             Some(v) => v.clone(),
             None => Value::None
         }
+    }
+    
+    pub fn eval_many_expr(&mut self, exprs: Vec<Expr>) -> Result<Value, String> {
+        let mut last = Value::None;
+        for expr in exprs {
+            last = self.eval_expr(expr)?;
+        }
+        Ok(last)
     }
 }
