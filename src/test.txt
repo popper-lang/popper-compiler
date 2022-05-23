@@ -5,4 +5,10 @@ def fact(n) {
         n * @fact(n-1)
     }
 }
-@fact(3) 
+let i = @fact(3) 
+let n = if i == 6 {
+    6 + 3
+} else {
+    6 - 3
+}
+n + 5 * 4
