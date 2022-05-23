@@ -45,7 +45,10 @@ pub enum Expr {
     Ident {
         name: String,
     },
-    Empty,
+    List {
+        elems: Vec<Expr>,
+    },
+    Empty
 }
 
 #[derive(Debug, PartialEq, Clone)]

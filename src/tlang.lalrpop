@@ -60,9 +60,15 @@ CmpOp: Expr = {
 
 
 
-//List: Vec<Expr> = {
-//    "[" <s:(Expr ",")*> <e:Expr*> "]" => s.into_iter().map(|x| x.0).collect::<Vec<Expr>>()
-//};
+List: Expr = {
+    "[" <s:Expr *> <e:("," Expr)*> "]" => {
+        let i = s.into_iter();
+        let n = e.into_iter().map(|x| x.1);
+        Expr::List {
+            elems: i.chain(n).collect::<Vec<Expr>>()
+        }
+    }
+};
 
 ArgDef: Vec<Expr> = {
     "(" <s:Identifier*> <e:("," Identifier)*> ")"  => {
