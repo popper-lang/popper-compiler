@@ -2,7 +2,7 @@ mod executer;
 mod tree;
 use std::fs;
 #[macro_use]
-extern crate lalrpop_util;
+use lalrpop_util::lalrpop_mod;
 
 lalrpop_mod!(pub tlang); // synthesized by LALRPOP
 
