@@ -261,7 +261,8 @@ impl Vm {
                     new_vm.set_ident(arg.clone(), arg_value.clone());
                 }
                 return new_vm.eval_expr(function.body);
-            }
+            },
+            _ => Err("invalid operation".to_string()),
         }
     }
 
