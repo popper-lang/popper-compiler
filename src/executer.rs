@@ -6,10 +6,18 @@ use std::collections::HashMap;
 pub struct Ident(pub String);
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct Function {
+    name: String,
+    args: Vec<Ident>,
+    body: Expr,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Number(f64),
     String(String),
     Bool(bool),
+    Function(Function),
     None,
 }
 
@@ -210,8 +218,50 @@ impl Vm {
                     last = self.eval_expr(*body.clone())?;
                 }
                 return Ok(last);
+            },
+            Expr::FunDef {
+                ref name,
+                ref args,
+                ref body,
+            } => {
+                let mut args_vec = Vec::new();
+                for arg in args {
+                    let arg_name = match arg {
+                        Expr::Ident { ref name } => name.clone(),
+                        _ => return Err("arg is not identifier".to_string()),
+                    };
+                    args_vec.push(Ident(arg_name));
+                }
+                self.set_ident(Ident(name.clone()), Value::Function(Function {
+                    name: name.clone(),
+                    args: args_vec.clone(),
+                    body: *body.clone()
+                }));
+                return Ok(Value::None);
+            },
+            Expr::Call {
+                ref name,
+                ref args,
+            } => {
+                let mut new_vm = Vm::from(self.0.clone());
+                let mut args_vec = Vec::new();
+                for arg in args {
+                    let arg_value = self.eval_expr(arg.clone())?;
+                    args_vec.push(arg_value);
+                }
+                let function = match self.get_ident(Ident(name.clone())) {
+                    Value::Function(f) => f,
+                    _ => return Err("function not found".to_string()),
+                };
+                new_vm.set_ident(Ident(function.name.clone()), Value::Function(function.clone()));
+                if args_vec.len() != function.args.len() {
+                    return Err("wrong number of arguments".to_string());
+                }
+                for (arg, arg_value) in function.args.iter().zip(args_vec.iter()) {
+                    new_vm.set_ident(arg.clone(), arg_value.clone());
+                }
+                return new_vm.eval_expr(function.body);
             }
-            _ => Err(format!("Unknown expression : {:?}", expr)),
         }
     }
 
@@ -226,11 +276,5 @@ impl Vm {
         }
     }
 
-    pub fn eval_many_expr(&mut self, exprs: Vec<Expr>) -> Result<Value, String> {
-        let mut last = Value::None;
-        for expr in exprs {
-            last = self.eval_expr(expr)?;
-        }
-        Ok(last)
-    }
+    
 }

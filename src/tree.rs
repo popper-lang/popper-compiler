@@ -37,7 +37,7 @@ pub enum Expr {
     },
     Call {
         name: String,
-        args: Box<Expr>,
+        args: Vec<Expr>,
     },
     Block {
         body: Vec<Expr>,

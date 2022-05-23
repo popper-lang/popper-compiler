@@ -13,7 +13,7 @@ fn main() {
     match exprs {
         Ok(exprs) => {
             let mut vm = executer::Vm::new();
-            println!("{:?}", vm.eval_many_expr(exprs));
+            println!("{:?}", vm.eval_expr(exprs));
         }
         Err(e) => {
             println!("{:?}", e);
