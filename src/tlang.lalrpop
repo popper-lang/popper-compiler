@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
@@ -6,15 +5,14 @@ use crate::tree::Op;
 grammar;
 
 pub Exprs = MultiLine<Expr>;
-Ident : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{name: i.to_string()};
+Identifier : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{name: i.to_string()};
 Block: Expr = "{" <e:Exprs> "}" => Expr::Block {body: e};
 Num : Expr = <n:r"[0-9]+"> => Expr::Literal{value: Literal::Number(n.parse::<f64>().unwrap())} ;
 Str : Expr = <s:r#"'(\\.|[^"])*'"#> => Expr::Literal{value: Literal::String(s[1..s.len()-1].to_string())} ;
-// Bool : Expr = <b:r#"true|false"#> => Expr::Literal{value: Literal::Bool(b == "true")} ;
 IfExpr : Expr = "if" <e:Expr> "{" <e1:Exprs>  "}" => Expr::IfThen{cond: Box::new(e), then: Box::new(Expr::Block {body: e1} )};
 IfElseExpr : Expr = <e1:IfExpr> "else" <e2:Block>  => {
     match e1 {
-        Expr::IfThen{cond, then} => Expr::IfThenElse{cond: cond, then: then, else_: Box::new(e2)},
+        Expr::IfThen{cond, then} => Expr::IfThenElse{cond, then, else_: Box::new(e2)},
         _ => panic!("Invalid if-else expression")
     }
 };
@@ -30,7 +28,7 @@ WhileExpr : Expr = "while" <e1:Expr> "{" <e2:Exprs> "}" => Expr::While{
     body: Box::new(Expr::Block {body: e2})
 };
 
-LetExpr : Expr = "let" <e1:Ident> "=" <e2:Expr>  => Expr::Assign{name: match e1 {
+LetExpr : Expr = "let" <e1:Identifier> "=" <e2:Expr>  => Expr::Assign{name: match e1 {
     Expr::Ident{name} => name,
     _ => panic!("Invalid let expression")
 }, value: Box::new(e2)};
@@ -58,29 +56,34 @@ CmpOp: Expr = {
     <e1:Term> ">=" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
 };
 
-List: Vec<Expr> = "[" Comma<Expr> "]";
-Args: Vec<Ident> = "(" Comma<Ident> ")" ;
 
-FunDef : Expr = "def" <e1:Ident> "(" <e2:Args> ")" "{" <e3:Exprs> "}" => {
-    match e1 {
-        Expr::Ident{name} => Expr::FunDef{name: name, args: e2, body: Box::new(Expr::Block {body: e3}) },
-        _ => panic!("Invalid function definition")
-    }
+
+List: Vec<Expr> = {
+    "[" <s:(Expr ",")*> <e:Expr*> "]" => s.into_iter().map(|x| x.0).collect::<Vec<Expr>>()
 };
 
+Args: Vec<Expr> = {
+    "(" <s:(Identifier ",")*> <e:Identifier*> ")" => s.into_iter().map(|x| x.0).collect::<Vec<Expr>>()
+}; 
 
+FunDef : Expr = "def" <e1:Identifier>  <e2:Args>  "{" <e3:Exprs> "}" => {
+    match e1 {
+        Expr::Ident{name} => Expr::FunDef{name, args: e2, body: Box::new(Expr::Block {body: e3}) },
+        _ => panic!("Invalid function definition")
+    }
+}; 
 
 True : Expr = "true" => Expr::Literal{value: Literal::Bool(true)};
 False : Expr = "false" => Expr::Literal{value: Literal::Bool(false)};
 
 
 
-Value = { Num, Str, Ident , True, False};
+Value = { Num, Str, Identifier , True, False};
 Term = {
     Value,
     "(" <e:Expr> ")" => e,
 
-}
+};
 Expr = {
     Block,
     IfExpr,
@@ -89,22 +92,18 @@ Expr = {
     WhileExpr,
     LetExpr,
     Op,
-    CmpOp
-}
+    CmpOp,
+    FunDef
+};
 
 
 
 MultiLine<T> : Vec<T> = {
-    <mut v:(<T> "\n") *> <e:T*>  => {
+    <v:(<T> "\n") *> <e:T*>  => {
         v.into_iter().chain(e).collect()
     }
-}
+};
 
-Comma<P> : Vec<P> = {
-    <mut v:(<P> ",") *> <e:P*>  => {
-        v.into_iter().chain(e).collect()
-    }
-}
 
 
 

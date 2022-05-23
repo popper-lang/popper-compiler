@@ -2,7 +2,7 @@
 pub enum Expr {
     IfThen {
         cond: Box<Expr>,
-        then: Box<Expr>    
+        then: Box<Expr>,
     },
     IfThenElse {
         cond: Box<Expr>,
@@ -11,44 +11,42 @@ pub enum Expr {
     },
     While {
         cond: Box<Expr>,
-        body: Box<Expr>
+        body: Box<Expr>,
     },
     Assign {
         name: String,
-        value: Box<Expr>
+        value: Box<Expr>,
     },
     Literal {
-        value: Literal
+        value: Literal,
     },
     BinOp {
         op: Op,
         left: Box<Expr>,
-        right: Box<Expr>
+        right: Box<Expr>,
     },
     For {
         name: Box<Expr>,
         iter: Box<Expr>,
-        body: Box<Expr>
+        body: Box<Expr>,
     },
     FunDef {
         name: String,
-        args: Box<Expr>,
-        body: Box<Expr>
+        args: Vec<Expr>,
+        body: Box<Expr>,
     },
     Call {
         name: String,
-        args: Box<Expr>
+        args: Box<Expr>,
     },
     Block {
-        body: Vec<Expr>
+        body: Vec<Expr>,
     },
     Ident {
-        name: String
+        name: String,
     },
-    Empty
+    Empty,
 }
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Op {
@@ -66,12 +64,12 @@ pub enum Op {
     And,
     Or,
     Invalid,
-    Assign
+    Assign,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Literal {
     Number(f64),
     String(String),
-    Bool(bool)
+    Bool(bool),
 }
