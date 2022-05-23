@@ -102,7 +102,7 @@ Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call{name: match e1 {
 }, args: e2};
 
 
-Value = { Num, Str, Identifier , True, False, Call};
+Value = { Num, Str, Identifier , True, False, Call, List};
 Term = {
     Value,
     "(" <e:Expr> ")" => e,

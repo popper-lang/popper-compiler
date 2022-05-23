@@ -18,6 +18,7 @@ pub enum Value {
     String(String),
     Bool(bool),
     Function(Function),
+    List(Vec<Value>),
     None,
 }
 
@@ -262,7 +263,13 @@ impl Vm {
                 }
                 return new_vm.eval_expr(function.body);
             },
-            _ => Err("invalid operation".to_string()),
+            Expr::List { ref elems } => {
+                let mut list = Vec::new();
+                for elem in elems {
+                    list.push(self.eval_expr(elem.clone())?);
+                }
+                return Ok(Value::List(list));
+            },
         }
     }
 
