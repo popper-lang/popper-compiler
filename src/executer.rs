@@ -180,7 +180,7 @@ impl Value {
             Value::Number(n) => n.to_string(),
             Value::String(s) => s.clone(),
             Value::Bool(b) => b.to_string(),
-            Value::Function { name, args, body } => "function".to_string(),
+            Value::Function { .. } => "function".to_string(),
             Value::List(list) => {
                 let mut s = String::new();
                 s.push_str("[");
@@ -230,12 +230,12 @@ impl Vm {
         map_builtins.insert("println".to_string(), Vm::println);
         Vm(HashMap::new(), map_builtins)
     }
-    pub fn from(
+    /* pub fn from(
         map: HashMap<Ident, Value>,
         builtin: HashMap<String, fn(Vec<Value>) -> Value>,
     ) -> Self {
         Vm(map, builtin)
-    }
+    } */
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, Error> {
         match expr {
             Expr::Empty => Ok(Value::None),
@@ -311,11 +311,11 @@ impl Vm {
                 let value_evaluate = self.eval_expr(*value)?;
                 if self.get_ident(Ident(name.clone())).is_some() {
                     return Err(Error::VarAlreadyDefined(VarAlreadyDefinedError {
-                        var_name: name.clone(),
+                        var_name: name,
                     }));
                 }
                 self.set_ident(Ident(name), value_evaluate.clone());
-                return Ok(Value::None);
+                Ok(Value::None)
             }
             Expr::While { ref cond, ref body } => {
                 while self.eval_expr(*cond.clone())? == Value::Bool(true) {
@@ -346,7 +346,7 @@ impl Vm {
                             self.set_ident(Ident(name_str.clone()), item.clone());
                             last = self.eval_expr(*body.clone())?;
                         }
-                        return Ok(last);
+                        Ok(last)
                     }
                     Value::Range(r) => {
                         let mut last = Value::None;
@@ -354,15 +354,13 @@ impl Vm {
                             self.set_ident(Ident(name_str.clone()), Value::Number(i as f64));
                             last = self.eval_expr(*body.clone())?;
                         }
-                        return Ok(last);
+                        Ok(last)
                     }
-                    _ => {
-                        return Err(Error::TypeMismatch(TypeMismatchError {
-                            expected: "list".to_string(),
-                            found: iter.get_type(),
-                        }))
-                    }
-                };
+                    _ => Err(Error::TypeMismatch(TypeMismatchError {
+                        expected: "list".to_string(),
+                        found: iter.get_type(),
+                    })),
+                }
             }
             Expr::FunDef {
                 ref name,
@@ -393,7 +391,7 @@ impl Vm {
                         body: *body.clone(),
                     },
                 );
-                return Ok(Value::None);
+                Ok(Value::None)
             }
             Expr::Call {
                 ref name, ref args, ..
@@ -407,7 +405,7 @@ impl Vm {
                     let args_map = args_iter.map(|x| -> Value {
                         match self.eval_expr(x.clone()) {
                             Ok(v) => v,
-                            Err(e) => Value::None,
+                            Err(_e) => Value::None,
                         }
                     });
 
@@ -428,20 +426,16 @@ impl Vm {
                                 let ev_arg = self.eval_expr(cparg[i].clone())?;
                                 new_vm.set_ident(arg.clone(), ev_arg.clone());
                             }
-                            return new_vm.eval_expr(body.clone());
+                            new_vm.eval_expr(body.clone())
                         }
-                        _ => {
-                            return Err(Error::TypeMismatch(TypeMismatchError {
-                                expected: "function".to_string(),
-                                found: f.get_type(),
-                            }))
-                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "function".to_string(),
+                            found: f.get_type(),
+                        })),
                     },
-                    None => {
-                        return Err(Error::FunctionNotFound(FunctionNotFoundError {
-                            name: name.clone(),
-                        }))
-                    }
+                    None => Err(Error::FunctionNotFound(FunctionNotFoundError {
+                        name: name.clone(),
+                    })),
                 }
             }
             Expr::List { ref elems } => {
@@ -449,7 +443,7 @@ impl Vm {
                 for elem in elems {
                     list.push(self.eval_expr(elem.clone())?);
                 }
-                return Ok(Value::List(list));
+                Ok(Value::List(list))
             }
             Expr::Index {
                 ref name,
@@ -495,8 +489,8 @@ impl Vm {
                                 name: real_name,
                             }));
                         }
-                        return Ok(list[num as usize].clone());
-                    },
+                        Ok(list[num as usize].clone())
+                    }
                     Value::Range(r) => {
                         if r.start >= list.len() as isize {
                             return Err(Error::IndexOutOfBounds(IndexOutOfBoundsError {
@@ -511,16 +505,13 @@ impl Vm {
                                 name: real_name,
                             }));
                         }
-                        
-                        return Ok(Value::List(list[r.start as usize..r.end as usize].to_vec()));
-                        
+
+                        Ok(Value::List(list[r.start as usize..r.end as usize].to_vec()))
                     }
-                    _ => {
-                        return Err(Error::TypeMismatch(TypeMismatchError {
-                            expected: "number".to_string(),
-                            found: index.get_type(),
-                        }))
-                    }
+                    _ => Err(Error::TypeMismatch(TypeMismatchError {
+                        expected: "number".to_string(),
+                        found: index.get_type(),
+                    })),
                 }
             }
             Expr::Range { ref start, ref end } => {
@@ -545,7 +536,7 @@ impl Vm {
                     }
                 };
 
-                return Ok(Value::Range(start as isize..end as isize));
+                Ok(Value::Range(start as isize..end as isize))
             }
         }
     }
