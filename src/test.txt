@@ -1,3 +1,6 @@
-let n = [5, 6, 9, 6]
 
-n
+let n = :2:4
+
+for i in :5:10 {
+    @println(i)
+}

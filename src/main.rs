@@ -1,7 +1,7 @@
 mod executer;
 mod tree;
+mod errors;
 use std::fs;
-#[macro_use]
 use lalrpop_util::lalrpop_mod;
 
 lalrpop_mod!(pub tlang); // synthesized by LALRPOP
@@ -13,10 +13,16 @@ fn main() {
     match exprs {
         Ok(exprs) => {
             let mut vm = executer::Vm::new();
-            println!("{:?}", vm.eval_expr(exprs));
+            let value = vm.eval_expr(exprs);
+            match value {
+                Ok(value) => println!("{:?}", value),
+                Err(err) => {
+                    println!("erreur: {:?}", err);
+                },
+            };
         }
         Err(e) => {
-            println!("{:?}", e);
+            println!("erreur: {:?}", e);
         }
     }
 }

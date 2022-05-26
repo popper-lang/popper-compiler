@@ -43,10 +43,18 @@ pub enum Expr {
         body: Vec<Expr>,
     },
     Ident {
-        name: String,
+        ident: String,
     },
     List {
         elems: Vec<Expr>,
+    },
+    Index {
+        name: Box<Expr>,
+        index: Box<Expr>,
+    },
+    Range {
+        start: Box<Expr>,
+        end: Box<Expr>,
     },
     Empty
 }
@@ -65,9 +73,7 @@ pub enum Op {
     Le,
     Ge,
     And,
-    Or,
-    Invalid,
-    Assign,
+    Or
 }
 
 #[derive(Debug, PartialEq, Clone)]

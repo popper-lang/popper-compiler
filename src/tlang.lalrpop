@@ -7,10 +7,10 @@ grammar;
 pub Exprs : Expr = MultiLine<Expr> => Expr::Block {
     body: <>
 };
-Identifier : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{name: i.to_string()};
+Identifier : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident{ident: i.to_string()};
 Block: Expr = "{" <e:Exprs> "}" => e;
 Num : Expr = <n:r"[0-9]+"> => Expr::Literal{value: Literal::Number(n.parse::<f64>().unwrap())} ;
-Str : Expr = <s:r#"'(\\.|[^"])*'"#> => Expr::Literal{value: Literal::String(s[1..s.len()-1].to_string())} ;
+Str : Expr = <s:r#"'(\\.|[^"])*'"#> => Expr::Literal{value: Literal::String(s.to_string())} ;
 IfExpr : Expr = "if" <e:Expr> "{" <e1:Exprs>  "}" => Expr::IfThen{cond: Box::new(e), then: Box::new(e1)};
 IfElseExpr : Expr = <e1:IfExpr> "else" <e2:Block>  => {
     match e1 {
@@ -31,9 +31,10 @@ WhileExpr : Expr = "while" <e1:Expr> "{" <e2:Exprs> "}" => Expr::While{
 };
 
 LetExpr : Expr = "let" <e1:Identifier> "=" <e2:Expr>  => Expr::Assign{name: match e1 {
-    Expr::Ident{name} => name,
+    Expr::Ident{ident} => ident,
     _ => panic!("Invalid let expression")
 }, value: Box::new(e2)};
+
 
 
 Op: Expr = {
@@ -88,7 +89,7 @@ ArgCall: Vec<Expr> = {
 
 FunDef : Expr = "def" <e1:Identifier>  <e2:ArgDef>  "{" <e3:Exprs> "}" => {
     match e1 {
-        Expr::Ident{name} => Expr::FunDef{name, args: e2, body: Box::new(e3) },
+        Expr::Ident{ident} => Expr::FunDef{name: ident, args: e2, body: Box::new(e3) },
         _ => panic!("Invalid function definition")
     }
 }; 
@@ -97,16 +98,17 @@ True : Expr = "true" => Expr::Literal{value: Literal::Bool(true)};
 False : Expr = "false" => Expr::Literal{value: Literal::Bool(false)};
 
 Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call{name: match e1 {
-    Expr::Ident{name} => name,
+    Expr::Ident{ident} => ident,
     _ => panic!("Invalid function call")
 }, args: e2};
+Range : Expr = ":" <e1:Expr> ":" <e2:Expr> => Expr::Range{start: Box::new(e1), end: Box::new(e2)};
 
+Index : Expr = <e1:Identifier> "." <e2:Expr> => Expr::Index{name: Box::new(e1), index: Box::new(e2)};
 
 Value = { Num, Str, Identifier , True, False, Call, List};
 Term = {
     Value,
-    "(" <e:Expr> ")" => e,
-
+    "(" <e:Expr> ")" => e
 };
 Expr = {
     Block,
@@ -117,7 +119,9 @@ Expr = {
     LetExpr,
     Op,
     CmpOp,
-    FunDef
+    FunDef,
+    Index,
+    Range,
 };
 
 
