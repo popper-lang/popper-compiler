@@ -1,8 +1,8 @@
+mod errors;
 mod executer;
 mod tree;
-mod errors;
-use std::fs;
 use lalrpop_util::lalrpop_mod;
+use std::fs;
 
 lalrpop_mod!(pub tlang); // synthesized by LALRPOP
 
@@ -18,7 +18,7 @@ fn main() {
                 Ok(value) => println!("{:?}", value),
                 Err(err) => {
                     println!("erreur: {:?}", err);
-                },
+                }
             };
         }
         Err(e) => {

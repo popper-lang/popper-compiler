@@ -56,7 +56,7 @@ pub enum Expr {
         start: Box<Expr>,
         end: Box<Expr>,
     },
-    Empty
+    Empty,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -73,7 +73,7 @@ pub enum Op {
     Le,
     Ge,
     And,
-    Or
+    Or,
 }
 
 #[derive(Debug, PartialEq, Clone)]

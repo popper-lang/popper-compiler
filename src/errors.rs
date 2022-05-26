@@ -1,4 +1,3 @@
-
 trait DisplayError {
     fn display_error(&self) -> String;
 }
@@ -62,7 +61,7 @@ pub struct IsBuiltinError {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionNotFoundError {
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -70,9 +69,6 @@ pub struct IndexOutOfBoundsError {
     pub name: String,
     pub index: i32,
 }
-
-
- 
 
 impl DisplayError for VarNotFoundError {
     fn display_error(&self) -> String {
@@ -88,7 +84,10 @@ impl DisplayError for VarAlreadyDefinedError {
 
 impl DisplayError for TypeMismatchError {
     fn display_error(&self) -> String {
-        format!("Type mismatch: expected {}, found {}", self.expected, self.found)
+        format!(
+            "Type mismatch: expected {}, found {}",
+            self.expected, self.found
+        )
     }
 }
 
@@ -161,4 +160,3 @@ pub enum Error {
     FunctionNotFound(FunctionNotFoundError),
     IndexOutOfBounds(IndexOutOfBoundsError),
 }
-

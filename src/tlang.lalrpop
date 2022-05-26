@@ -38,25 +38,24 @@ LetExpr : Expr = "let" <e1:Identifier> "=" <e2:Expr>  => Expr::Assign{name: matc
 
 
 Op: Expr = {
-    <e1:Term> "+" <e2:Fact> => Expr::BinOp{left: Box::new(e1), op: Op::Add, right: Box::new(e2)},
-    <e1:Term> "-" <e2:Fact> => Expr::BinOp{left: Box::new(e1), op: Op::Sub, right: Box::new(e2)},
+    <e1:Value> "+" <e2:Fact> => Expr::BinOp{left: Box::new(e1), op: Op::Add, right: Box::new(e2)},
+    <e1:Value> "-" <e2:Fact> => Expr::BinOp{left: Box::new(e1), op: Op::Sub, right: Box::new(e2)},
     Fact
 };
 
 
 Fact: Expr = {
-    <e1:Fact> "*" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Mul, right: Box::new(e2)},
-    <e1:Fact> "/" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)},
-    Term
+    <e1:Fact> "*" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Mul, right: Box::new(e2)},
+    <e1:Fact> "/" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)}
 };
 
 CmpOp: Expr = {
-    <e1:Term> "==" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Eq, right: Box::new(e2)},
-    <e1:Term> "!=" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Neq, right: Box::new(e2)},
-    <e1:Term> "<" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Lt, right: Box::new(e2)},
-    <e1:Term> "<=" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Le, right: Box::new(e2)},
-    <e1:Term> ">" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Gt, right: Box::new(e2)},
-    <e1:Term> ">=" <e2:Term> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
+    <e1:Value> "==" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Eq, right: Box::new(e2)},
+    <e1:Value> "!=" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Neq, right: Box::new(e2)},
+    <e1:Value> "<" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Lt, right: Box::new(e2)},
+    <e1:Value> "<=" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Le, right: Box::new(e2)},
+    <e1:Value> ">" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Gt, right: Box::new(e2)},
+    <e1:Value> ">=" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
 };
 
 
@@ -101,15 +100,13 @@ Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid function call")
 }, args: e2};
-Range : Expr = ":" <e1:Expr> ":" <e2:Expr> => Expr::Range{start: Box::new(e1), end: Box::new(e2)};
+Range : Expr = <e1:Num> ":" <e2:Value> => Expr::Range{start: Box::new(e1), end: Box::new(e2)};
 
-Index : Expr = <e1:Identifier> "." <e2:Expr> => Expr::Index{name: Box::new(e1), index: Box::new(e2)};
+Index : Expr = <e1:Identifier> "." <e2:Value> => Expr::Index{name: Box::new(e1), index: Box::new(e2)};
 
-Value = { Num, Str, Identifier , True, False, Call, List};
-Term = {
-    Value,
-    "(" <e:Expr> ")" => e
-};
+Value = { Num, Str, Identifier , True, False, Call, Index, List, Range};
+
+
 Expr = {
     Block,
     IfExpr,
@@ -118,10 +115,8 @@ Expr = {
     WhileExpr,
     LetExpr,
     Op,
-    CmpOp,
     FunDef,
-    Index,
-    Range,
+    Value
 };
 
 
