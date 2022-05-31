@@ -17,6 +17,7 @@ use crate::errors::FunctionArgumentMismatchError;
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
+use crate::tree::IOp;
 use std::fmt;
 use std::ops::Range;
 
@@ -773,6 +774,15 @@ impl Vm {
                 self.set_ident(Ident(name), v);
                 Ok(Value::None)
             },
+            Expr::IOp { op, name, value } => {
+                let v = self.eval_expr(*value.clone())?;
+                match op {
+                    IOp::IAdd => self.iadd(name, v),
+                    IOp::ISub => self.isub(name, v),
+                    IOp::IMul => self.imul(name, v),
+                    IOp::IDiv => self.idiv(name, v)
+                }
+            }
             
         }
     }
@@ -783,6 +793,124 @@ impl Vm {
 
     pub fn get_ident(&self, ident: Ident) -> Option<&Value> {
         self.0.get(&ident)
+    }
+
+    pub fn iadd(&mut self, a: String, b: Value) -> Result<Value, Error> {
+        match b {
+            Value::Number(b) => {
+                if self.exists(Ident(a.clone())) {
+                    let v = self.get_ident(Ident(a.clone())).unwrap().clone();
+                    match v {
+                        Value::Number(v) => {
+                            self.set_ident(Ident(a), Value::Number(v + b));
+                            Ok(Value::None)
+                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "number".to_string(),
+                            found: v.get_type(),
+                        })),
+                    }
+                } else {
+                    return Err(Error::VarNotFound(VarNotFoundError {
+                        var_name: a,
+                    }));
+                }
+            },
+            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                expected: "int or float".to_string(),
+                found: "unknown".to_string(),
+            })),
+        }
+    }
+
+    pub fn isub(&mut self, a: String, b: Value) -> Result<Value, Error> {
+        match b {
+            Value::Number(b) => {
+                if self.exists(Ident(a.clone())) {
+                    let v = self.get_ident(Ident(a.clone())).unwrap().clone();
+                    match v {
+                        Value::Number(v) => {
+                            self.set_ident(Ident(a), Value::Number(v - b));
+                            Ok(Value::None)
+                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "number".to_string(),
+                            found: v.get_type(),
+                        })),
+                    }
+                } else {
+                    return Err(Error::VarNotFound(VarNotFoundError {
+                        var_name: a,
+                    }));
+                }
+            },
+            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                expected: "int or float".to_string(),
+                found: "unknown".to_string(),
+            })),
+        }
+    }
+
+    pub fn imul(&mut self, a: String, b: Value) -> Result<Value, Error> {
+        match b {
+            Value::Number(b) => {
+                if self.exists(Ident(a.clone())) {
+                    let v = self.get_ident(Ident(a.clone())).unwrap().clone();
+                    match v {
+                        Value::Number(v) => {
+                            self.set_ident(Ident(a), Value::Number(v * b));
+                            Ok(Value::None)
+                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "number".to_string(),
+                            found: v.get_type(),
+                        })),
+                    }
+                } else {
+                    return Err(Error::VarNotFound(VarNotFoundError {
+                        var_name: a,
+                    }));
+                }
+            },
+            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                expected: "int or float".to_string(),
+                found: "unknown".to_string(),
+            })),
+        }
+    }
+
+    pub fn idiv(&mut self, a: String, b: Value) -> Result<Value, Error> {
+        match b {
+            Value::Number(b) => {
+                if self.exists(Ident(a.clone())) {
+                    let v = self.get_ident(Ident(a.clone())).unwrap().clone();
+                    match v {
+                        Value::Number(v) => {
+                            self.set_ident(Ident(a), Value::Number(v / b));
+                            Ok(Value::None)
+                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "number".to_string(),
+                            found: v.get_type(),
+                        })),
+                    }
+                } else {
+                    return Err(Error::VarNotFound(VarNotFoundError {
+                        var_name: a,
+                    }));
+                }
+            },
+            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                expected: "int or float".to_string(),
+                found: "unknown".to_string(),
+            })),
+        }
+    }
+
+
+
+    pub fn exists(&self, ident: Ident) -> bool {
+        self.0.contains_key(&ident)
     }
 
     pub fn print(args: Vec<Value>) -> Value {

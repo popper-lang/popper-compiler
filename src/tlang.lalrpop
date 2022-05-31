@@ -1,6 +1,7 @@
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
+use crate::tree::IOp;
 
 grammar;
 
@@ -58,7 +59,24 @@ CmpOp: Expr = {
     <e1:Value> ">" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Gt, right: Box::new(e2)},
     <e1:Value> ">=" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
 };
-
+IOp : Expr = {
+    <e1:Identifier> "+=" <e2:Expr> => Expr::IOp{name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid let expression")
+    }, op: IOp::IAdd, value: Box::new(e2)},
+    <e1:Identifier> "-=" <e2:Expr> => Expr::IOp{name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid let expression")
+    }, op: IOp::ISub, value: Box::new(e2)},
+    <e1:Identifier> "*=" <e2:Expr> => Expr::IOp{name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid let expression")
+    }, op: IOp::IMul, value: Box::new(e2)},
+    <e1:Identifier> "/=" <e2:Expr> => Expr::IOp{name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid let expression")
+    }, op: IOp::IDiv, value: Box::new(e2)},
+}
 SetVar: Expr = <e1:Identifier> "=:" <e2:Expr> => Expr::SetVar{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid set-var expression")
@@ -197,6 +215,7 @@ Expr = {
     Impl,
     GetFunc,
     SetVar,
+    IOp
 };
 
 

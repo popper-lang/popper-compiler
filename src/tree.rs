@@ -25,6 +25,11 @@ pub enum Expr {
         left: Box<Expr>,
         right: Box<Expr>,
     },
+    IOp {
+        op: IOp,
+        value: Box<Expr>,
+        name: String
+    },
     For {
         name: Box<Expr>,
         iter: Box<Expr>,
@@ -101,7 +106,15 @@ pub enum Op {
     Le,
     Ge,
     And,
-    Or,
+    Or
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum IOp {
+    IAdd,
+    ISub,
+    IMul,
+    IDiv
 }
 
 #[derive(Debug, PartialEq, Clone)]
