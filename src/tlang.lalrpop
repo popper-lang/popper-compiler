@@ -46,7 +46,8 @@ Op: Expr = {
 
 Fact: Expr = {
     <e1:Fact> "*" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Mul, right: Box::new(e2)},
-    <e1:Fact> "/" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)}
+    <e1:Fact> "/" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)},
+    Value
 };
 
 CmpOp: Expr = {
@@ -58,7 +59,10 @@ CmpOp: Expr = {
     <e1:Value> ">=" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Ge, right: Box::new(e2)}
 };
 
-
+SetVar: Expr = <e1:Identifier> "=:" <e2:Expr> => Expr::SetVar{name: match e1 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid set-var expression")
+}, value: Box::new(e2)};
 
 List: Expr = {
     "[" <s:Expr *> <e:("," Expr)*> "]" => {
@@ -100,11 +104,82 @@ Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid function call")
 }, args: e2};
+
+StructFieldDef : Vec<Expr> = {
+    <s:Identifier*> <e:(";" Identifier)*>  => {
+        let i = s.into_iter();
+        let n = e.into_iter().map(|x| x.1);
+        i.chain(n).collect::<Vec<Expr>>()
+    }
+}; 
+
+StructFieldCall : Vec<(Expr, Expr)> = {
+    <s:(Identifier "=>" Expr)*> <e:(";" (Identifier "=>" Expr))*>   => {
+
+        let i = s.into_iter().map(|x| (x.0, x.2));
+        let n = e.into_iter().map(|x| (x.1.0, x.1.2));
+        i.chain(n).collect::<Vec<(Expr, Expr)>>()
+    }
+};
+
+Struct : Expr = "struct" <e1:Identifier> "{" <e2:StructFieldDef> "}" => Expr::StructDef {name: match e1 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid struct")
+}, fields: e2};
+
+CallStruct : Expr = "@" <e1:Identifier> "{" <e2:StructFieldCall> "}"  => Expr::CallStruct {name: match e1 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid struct call")
+}, args: e2};
+
+GetAttr : Expr = <e1:Identifier> "->" <e2:Identifier> => Expr::GetAttr{name: match e1 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid get attribute")
+}, attr: match e2 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid get attribute")
+}};
+
+Impl : Expr = "impl" <e1:Identifier> "def" <e2:Identifier> <e3:ArgDef> <e4:Block> => {
+    Expr::Impl {
+        name_struct: match e1 {
+            Expr::Ident{ident} => ident,
+            _ => panic!("Invalid impl")
+        }, name_method: match e2 {
+            Expr::Ident{ident} => ident,
+            _ => panic!("Invalid impl")
+        }, args: e3, body: Box::new(e4)
+    }
+};
+
+GetFunc : Expr = <e1:Identifier> "->" "@" <e2:Identifier> <e3:ArgCall> => Expr::GetFunc {
+    name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid get func")
+    }, func: match e2 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid get func")
+    }, args: e3
+};
+
 Range : Expr = <e1:Num> ":" <e2:Value> => Expr::Range{start: Box::new(e1), end: Box::new(e2)};
 
 Index : Expr = <e1:Identifier> "." <e2:Value> => Expr::Index{name: Box::new(e1), index: Box::new(e2)};
 
-Value = { Num, Str, Identifier , True, False, Call, Index, List, Range};
+
+Value = { 
+    Num, 
+    Str, 
+    Identifier, 
+    True, 
+    False, 
+    Call, 
+    Index, 
+    List, 
+    Range, 
+    GetAttr,
+    "(" <e:Expr> ")" => e,
+};
 
 
 Expr = {
@@ -115,8 +190,13 @@ Expr = {
     WhileExpr,
     LetExpr,
     Op,
+    Struct,
+    CallStruct,
+    CmpOp,
     FunDef,
-    Value
+    Impl,
+    GetFunc,
+    SetVar,
 };
 
 

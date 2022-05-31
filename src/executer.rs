@@ -11,6 +11,9 @@ use crate::errors::IsBuiltinError;
 use crate::errors::TypeMismatchError;
 use crate::errors::VarAlreadyDefinedError;
 use crate::errors::VarNotFoundError;
+use crate::errors::StructNotFoundError;
+use crate::errors::AttrNotFoundError;
+use crate::errors::FunctionArgumentMismatchError;
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
@@ -26,7 +29,7 @@ trait Iterator {
     fn next(&mut self) -> Option<Self::Item>;
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Number(f64),
     String(String),
@@ -35,6 +38,15 @@ pub enum Value {
         name: String,
         args: Vec<Ident>,
         body: Expr,
+    },
+    DefStruct {
+        name: String,
+        fields: Vec<Ident>,
+        function: HashMap<String, Value>
+    },
+    CallStruct {
+        name: String,
+        fields: HashMap<Ident, Value>,
     },
     List(Vec<Value>),
     Range(Range<isize>),
@@ -195,6 +207,8 @@ impl Value {
             }
             Value::Range(_) => "range".to_string(),
             Value::None => "None".to_string(),
+            Value::DefStruct { .. } => todo!(),
+            Value::CallStruct { .. } => todo!(),
         }
     }
 
@@ -206,6 +220,8 @@ impl Value {
             Value::Function { .. } => "function".to_string(),
             Value::List(_) => "list".to_string(),
             Value::Range(_) => "range".to_string(),
+            Value::CallStruct { .. } => "call_struct".to_string(),
+            Value::DefStruct { .. } => "def_struct".to_string(),
             Value::None => "None".to_string(),
         }
     }
@@ -217,7 +233,7 @@ impl fmt::Display for Value {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Vm(
     std::collections::HashMap<Ident, Value>,
     HashMap<String, fn(Vec<Value>) -> Value>,
@@ -230,12 +246,7 @@ impl Vm {
         map_builtins.insert("println".to_string(), Vm::println);
         Vm(HashMap::new(), map_builtins)
     }
-    /* pub fn from(
-        map: HashMap<Ident, Value>,
-        builtin: HashMap<String, fn(Vec<Value>) -> Value>,
-    ) -> Self {
-        Vm(map, builtin)
-    } */
+    
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, Error> {
         match expr {
             Expr::Empty => Ok(Value::None),
@@ -391,7 +402,11 @@ impl Vm {
                         body: *body.clone(),
                     },
                 );
-                Ok(Value::None)
+                Ok(Value::Function {
+                    name: name.clone(),
+                    args: args_vec.clone(),
+                    body: *body.clone(),
+                })
             }
             Expr::Call {
                 ref name, ref args, ..
@@ -537,7 +552,228 @@ impl Vm {
                 };
 
                 Ok(Value::Range(start as isize..end as isize))
-            }
+            },
+            Expr::StructDef {
+                ref name,
+                ref fields,
+            } => {
+                let mut f = Vec::new();
+                
+                for field in fields {
+                    match field {
+                        Expr::Ident { ref ident } => f.push(ident.clone()),
+                        _ => {
+                            return Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "ident".to_string(),
+                                found: "unknown".to_string(),
+                            }))
+                        } 
+                    }
+                    
+                }
+                let mut nf = Vec::new();
+                for field in fields {
+                    nf.push(match field {
+                        Expr::Ident { ident } => Ident(ident.clone()),
+                        _ => {
+                            return Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "ident".to_string(),
+                                found: "unknown".to_string(),
+                            }))
+                        }
+                    });
+                }
+                self.set_ident(Ident(name.clone()), Value::DefStruct {
+                    name: name.clone(),
+                    fields: nf,
+                    function: HashMap::new()
+                });
+                Ok(Value::None)
+            },
+            Expr::CallStruct { ref name, ref args } => {
+                let mut new_vm = Vm::new();
+                let mut copy_self = self.clone();
+                match copy_self.get_ident(Ident(name.clone())) {
+                    Some(f) => match f {
+                        &Value::DefStruct {
+                            ref fields,
+                            ..
+                        } => {
+                            let mut map = HashMap::new();
+                            let mut a ;
+                            let mut v;
+                            for (arg, value) in args {
+                                a = match arg {
+                                    Expr::Ident { ref ident } => ident.clone(),
+                                    _ => {
+                                        return Err(Error::TypeMismatch(TypeMismatchError {
+                                            expected: "ident".to_string(),
+                                            found: "unknown".to_string(),
+                                        }))
+                                    }
+                                };
+                                v = self.eval_expr(value.clone())?;
+                                for field in fields {
+                                    let f = match *field {
+                                        Ident(ref i) => i.clone(),
+                                        _ => {
+                                            return Err(Error::TypeMismatch(TypeMismatchError {
+                                                expected: "ident".to_string(),
+                                                found: "unknown".to_string(),
+                                            }))
+                                        }
+                                    };
+                                    if f == a {
+                                        map.insert(field.clone(), self.eval_expr(value.clone())?);
+                                    }
+
+                                }
+                            }
+                            Ok(Value::CallStruct {
+                                name: name.clone(),
+                                fields: map,
+                            })
+                        }
+                        _ => Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "struct".to_string(),
+                            found: f.get_type(),
+                        })),
+                    },
+                    None => Err(Error::StructNotFound(StructNotFoundError {
+                        name: name.clone(),
+                    })),
+                }
+            },
+            Expr::GetAttr { name , attr } => {
+                let s = match self.get_ident(Ident(name)) {
+                    Some(Value::CallStruct { ref name, ref fields }) => {
+                        match fields.get(&Ident(attr.clone())) {
+                            Some(v) => return Ok(v.clone()),
+                            None => {
+                                return Err(Error::AttrNotFound(AttrNotFoundError {
+                                    attr_name: attr
+                                }))
+                            }
+                        }
+                    }
+                    _ => {
+                        return Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "struct".to_string(),
+                            found: "unknown".to_string(),
+                        }))
+                    }
+                };
+            },
+            Expr::Impl { ref name_struct , ref name_method, args, body } => {
+                let mut naw;
+                let mut fiw;
+                let mut fuw;
+                match self.get_ident(Ident(name_struct.clone())) {
+                    Some(Value::DefStruct { ref name, ref fields, ref function }) => {
+                        naw = name.clone();
+                        fiw = fields.clone();
+                        fuw = function.clone();
+                    },
+                    None => {
+                        return Err(Error::StructNotFound(StructNotFoundError {
+                            name: name_struct.clone(),
+                        }))
+                    }
+                    _ => {
+                        return Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "struct".to_string(),
+                            found: "unknown".to_string(),
+                        }))
+                    }
+                };
+
+                let mut args_vec = Vec::new();
+                for arg in args {
+                    args_vec.push(match arg {
+                        Expr::Ident { ref ident } => Ident(ident.clone()),
+                        _ => {
+                            return Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "ident".to_string(),
+                                found: "unknown".to_string(),
+                            }))
+                        }
+                    });
+                }
+                let f = Value::Function { name: name_method.clone(), args: args_vec, body: *body };
+                fuw.insert(name_method.clone(), f);
+                self.set_ident(Ident(name_struct.clone()), Value::DefStruct { name: name_struct.clone(), fields: fiw, function: fuw });
+                Ok(Value::None)
+            },
+            Expr::GetFunc { name , func , args } => {
+                let mut call_struct;
+                let mut field_struct;
+                let s = match self.get_ident(Ident(name)) {
+                    Some(Value::CallStruct { name: n, fields: fi }) => {
+                        call_struct = Value::CallStruct { name: n.clone(), fields: fi.clone() };
+                        match &self.get_ident(Ident(n.clone())) {
+                            Some(Value::DefStruct { name: nf, fields: f, function: fu }) => {
+                                field_struct = f;
+                                match fu.get(&func) {
+                                    Some(v) => v.clone(),
+                                    None => {
+                                        return Err(Error::FunctionNotFound(FunctionNotFoundError {
+                                            name: func
+                                        }))
+                                    }
+                                }
+                            }
+                            _ => {
+                                return Err(Error::TypeMismatch(TypeMismatchError {
+                                    expected: "struct".to_string(),
+                                    found: "unknown".to_string(),
+                                }))
+                            }
+                        }
+                    }
+                    _ => {
+                        return Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "struct".to_string(),
+                            found: "unknown".to_string(),
+                        }))
+                    }
+                };
+
+                let mut args_vec = Vec::new();
+                let mut new_vm = Vm::new();
+                for arg in args {
+                    args_vec.push(self.clone().eval_expr(arg.clone())?);
+                }
+                new_vm.set_ident(Ident("self".to_string()), call_struct);
+
+                for (value, arg) in args_vec.iter().zip(field_struct.iter()) {
+                    new_vm.set_ident(arg.clone(), value.clone());
+                }
+                
+                new_vm.eval_expr(match s { 
+                    Value::Function {body , ..} => {
+                        body
+                    }
+                    _ => {
+                        return Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "function".to_string(),
+                            found: "unknown".to_string(),
+                        }))
+                    }
+                })
+                
+                
+            },
+            Expr::SetVar { name, value } => {
+                if let None = self.get_ident(Ident(name.clone())) {
+                    return Err(Error::VarNotFound(VarNotFoundError {
+                        var_name: name.clone(),
+                    }));
+                }
+                let v = self.eval_expr(*value.clone())?;
+                self.set_ident(Ident(name), v);
+                Ok(Value::None)
+            },
+            
         }
     }
 
@@ -545,7 +781,7 @@ impl Vm {
         self.0.insert(ident, value);
     }
 
-    pub fn get_ident(&mut self, ident: Ident) -> Option<&Value> {
+    pub fn get_ident(&self, ident: Ident) -> Option<&Value> {
         self.0.get(&ident)
     }
 

@@ -69,6 +69,22 @@ pub struct IndexOutOfBoundsError {
     pub name: String,
     pub index: i32,
 }
+#[derive(Debug, PartialEq, Clone)]
+pub struct FunctionArgumentMismatchError {
+    pub name: String,
+    pub expected: usize,
+    pub found: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct AttrNotFoundError {
+    pub attr_name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct StructNotFoundError {
+    pub name: String,
+}
 
 impl DisplayError for VarNotFoundError {
     fn display_error(&self) -> String {
@@ -145,6 +161,27 @@ impl DisplayError for IndexOutOfBoundsError {
     }
 }
 
+impl DisplayError for StructNotFoundError {
+    fn display_error(&self) -> String {
+        format!("Struct {} not found", self.name)
+    }
+}
+
+impl DisplayError for AttrNotFoundError {
+    fn display_error(&self) -> String {
+        format!("Attribute {} not found", self.attr_name)
+    }
+}
+
+impl DisplayError for FunctionArgumentMismatchError {
+    fn display_error(&self) -> String {
+        format!(
+            "Function {} expected {} arguments, found {}",
+            self.name, self.expected, self.found
+        )
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     VarNotFound(VarNotFoundError),
@@ -159,4 +196,7 @@ pub enum Error {
     IsBuiltin(IsBuiltinError),
     FunctionNotFound(FunctionNotFoundError),
     IndexOutOfBounds(IndexOutOfBoundsError),
+    StructNotFound(StructNotFoundError),
+    AttrNotFound(AttrNotFoundError),
+    FunctionArgumentMismatch(FunctionArgumentMismatchError),
 }

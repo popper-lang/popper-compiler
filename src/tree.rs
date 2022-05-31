@@ -56,6 +56,34 @@ pub enum Expr {
         start: Box<Expr>,
         end: Box<Expr>,
     },
+    StructDef {
+        name: String,
+        fields: Vec<Expr>,
+    },
+    CallStruct {
+        name: String,
+        args: Vec<(Expr, Expr)>,
+    },
+    GetAttr {
+        name: String,
+        attr: String,
+    },
+    Impl {
+        name_struct: String,
+        name_method: String,
+        args: Vec<Expr>,
+        body: Box<Expr>,
+
+    },
+    GetFunc {
+        name: String,
+        func: String,
+        args: Vec<Expr>,
+    },
+    SetVar {
+        name: String,
+        value: Box<Expr>,
+    },
     Empty,
 }
 
