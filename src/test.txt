@@ -1,7 +1,5 @@
 
-let a = 5
-
-a += 5 + 8
-
-a
-
+let s = 'hello'
+match s {
+    'hello' => 45,
+}

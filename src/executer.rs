@@ -13,11 +13,11 @@ use crate::errors::VarAlreadyDefinedError;
 use crate::errors::VarNotFoundError;
 use crate::errors::StructNotFoundError;
 use crate::errors::AttrNotFoundError;
-use crate::errors::FunctionArgumentMismatchError;
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
 use crate::tree::IOp;
+use std::fs;
 use std::fmt;
 use std::ops::Range;
 
@@ -592,7 +592,6 @@ impl Vm {
                 Ok(Value::None)
             },
             Expr::CallStruct { ref name, ref args } => {
-                let mut new_vm = Vm::new();
                 let mut copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
                     Some(f) => match f {
@@ -782,6 +781,19 @@ impl Vm {
                     IOp::IMul => self.imul(name, v),
                     IOp::IDiv => self.idiv(name, v)
                 }
+            },
+            Expr::Match { value, cases } => {
+                let mut return_value = Value::None;
+                for i in cases {
+                    let case = self.eval_expr(i.0);
+                    match self.eval_expr(*value.clone())?.clone() {
+                        case => {
+                            let mut new_vm = Vm::new();
+                            return_value = new_vm.eval_expr(i.1)?;
+                        }
+                    }
+                }
+                Ok(return_value)
             }
             
         }

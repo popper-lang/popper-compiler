@@ -89,6 +89,10 @@ pub enum Expr {
         name: String,
         value: Box<Expr>,
     },
+    Match {
+        value: Box<Expr>,
+        cases: Vec<(Expr, Expr)>,
+    },
     Empty,
 }
 

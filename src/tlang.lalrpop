@@ -184,6 +184,18 @@ Range : Expr = <e1:Num> ":" <e2:Value> => Expr::Range{start: Box::new(e1), end: 
 
 Index : Expr = <e1:Identifier> "." <e2:Value> => Expr::Index{name: Box::new(e1), index: Box::new(e2)};
 
+MatchCase : Vec<(Expr, Expr)> = {
+    <s:(Expr "=>" Expr)*> <e:("," (Expr "=>" Expr))*>   => {
+
+        let i = s.into_iter().map(|x| (x.0, x.2));
+        let n = e.into_iter().map(|x| (x.1.0, x.1.2));
+        i.chain(n).collect::<Vec<(Expr, Expr)>>()
+    }
+};
+
+Match : Expr = "match" <e1:Expr> "{" <e2:MatchCase> "}" => Expr::Match{value: Box::new(e1), cases: e2};
+
+// UseModule : Expr = "use" <e1:Identifier>;
 
 Value = { 
     Num, 
@@ -215,7 +227,8 @@ Expr = {
     Impl,
     GetFunc,
     SetVar,
-    IOp
+    IOp,
+    Match,
 };
 
 
