@@ -1,6 +1,9 @@
-mod errors;
+
+
 mod executer;
+mod errors;
 mod tree;
+mod test;
 use lalrpop_util::lalrpop_mod;
 use std::fs;
 

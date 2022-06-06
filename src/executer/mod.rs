@@ -1,238 +1,14 @@
-use crate::errors::CannotAddError;
-use crate::errors::CannotCompareError;
-use crate::errors::CannotDivError;
-use crate::errors::CannotModError;
-use crate::errors::CannotMulError;
-use crate::errors::CannotSubError;
-use crate::errors::Error;
-use crate::errors::FunctionNotFoundError;
-use crate::errors::IndexOutOfBoundsError;
-use crate::errors::IsBuiltinError;
-use crate::errors::TypeMismatchError;
-use crate::errors::VarAlreadyDefinedError;
-use crate::errors::VarNotFoundError;
-use crate::errors::StructNotFoundError;
-use crate::errors::AttrNotFoundError;
+
+pub(crate) mod value;
+use std::collections::HashMap;
 use crate::tree::Expr;
-use crate::tree::Literal;
 use crate::tree::Op;
 use crate::tree::IOp;
-use std::fs;
-use std::fmt;
-use std::ops::Range;
+use crate::tree::Literal;
+use crate::errors::*;
+use self::value::Value;
+use self::value::Ident;
 
-use std::collections::HashMap;
-#[derive(Debug, PartialEq, Clone, Hash, Eq)]
-pub struct Ident(pub String);
-
-trait Iterator {
-    type Item;
-    fn next(&mut self) -> Option<Self::Item>;
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    Number(f64),
-    String(String),
-    Bool(bool),
-    Function {
-        name: String,
-        args: Vec<Ident>,
-        body: Expr,
-    },
-    DefStruct {
-        name: String,
-        fields: Vec<Ident>,
-        function: HashMap<String, Value>
-    },
-    CallStruct {
-        name: String,
-        fields: HashMap<Ident, Value>,
-    },
-    List(Vec<Value>),
-    Range(Range<isize>),
-    None,
-}
-
-impl Value {
-    pub fn add(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
-            _ => Err(Error::CannotAdd(CannotAddError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-    pub fn sub(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a - b)),
-            _ => Err(Error::CannotSub(CannotSubError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn mul(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a * b)),
-            _ => Err(Error::CannotMul(CannotMulError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn div(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a / b)),
-            _ => Err(Error::CannotDiv(CannotDivError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn modulo(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a % b)),
-            _ => Err(Error::CannotMod(CannotModError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn eq(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(a == b)),
-            (Value::String(a), Value::String(b)) => Ok(Value::Bool(a == b)),
-            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a == b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn neq(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(a != b)),
-            (Value::String(a), Value::String(b)) => Ok(Value::Bool(a != b)),
-            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(a != b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn gt(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a > *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn lt(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a < *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn ge(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a >= *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn le(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Number(a), Value::Number(b)) => Ok(Value::Bool(*a <= *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn and(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a && *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn or(&self, other: &Value) -> Result<Value, Error> {
-        match (self, other) {
-            (Value::Bool(a), Value::Bool(b)) => Ok(Value::Bool(*a || *b)),
-            _ => Err(Error::CannotCompare(CannotCompareError {
-                left: self.to_string(),
-                right: other.to_string(),
-            })),
-        }
-    }
-
-    pub fn display_value(&self) -> String {
-        match self {
-            Value::Number(n) => n.to_string(),
-            Value::String(s) => s.clone(),
-            Value::Bool(b) => b.to_string(),
-            Value::Function { .. } => "function".to_string(),
-            Value::List(list) => {
-                let mut s = String::new();
-                s.push_str("[");
-                for (i, item) in list.iter().enumerate() {
-                    if i > 0 {
-                        s.push_str(", ");
-                    }
-                    s.push_str(&item.display_value());
-                }
-                s.push_str("]");
-                s
-            }
-            Value::Range(_) => "range".to_string(),
-            Value::None => "None".to_string(),
-            Value::DefStruct { .. } => todo!(),
-            Value::CallStruct { .. } => todo!(),
-        }
-    }
-
-    pub fn get_type(&self) -> String {
-        match self {
-            Value::Number(_) => "number".to_string(),
-            Value::String(_) => "string".to_string(),
-            Value::Bool(_) => "bool".to_string(),
-            Value::Function { .. } => "function".to_string(),
-            Value::List(_) => "list".to_string(),
-            Value::Range(_) => "range".to_string(),
-            Value::CallStruct { .. } => "call_struct".to_string(),
-            Value::DefStruct { .. } => "def_struct".to_string(),
-            Value::None => "None".to_string(),
-        }
-    }
-}
-
-impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.display_value())
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct Vm(
@@ -429,7 +205,7 @@ impl Vm {
                     return Ok(v(args));
                 }
                 let mut new_vm = Vm::new();
-                let mut copy_self = self.clone();
+                let copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
                     Some(f) => match f {
                         &Value::Function {
@@ -474,7 +250,7 @@ impl Vm {
                         }))
                     }
                 };
-                let mut copy_vm = self.clone();
+                let copy_vm = self.clone();
                 let list = match copy_vm.get_ident(Ident(real_name.clone())) {
                     Some(Value::List(list)) => list,
                     None => {
@@ -592,7 +368,7 @@ impl Vm {
                 Ok(Value::None)
             },
             Expr::CallStruct { ref name, ref args } => {
-                let mut copy_self = self.clone();
+                let copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
                     Some(f) => match f {
                         &Value::DefStruct {
@@ -601,7 +377,7 @@ impl Vm {
                         } => {
                             let mut map = HashMap::new();
                             let mut a ;
-                            let mut v;
+                            let mut _v;
                             for (arg, value) in args {
                                 a = match arg {
                                     Expr::Ident { ref ident } => ident.clone(),
@@ -612,17 +388,9 @@ impl Vm {
                                         }))
                                     }
                                 };
-                                v = self.eval_expr(value.clone())?;
+                                _v = self.eval_expr(value.clone())?;
                                 for field in fields {
-                                    let f = match *field {
-                                        Ident(ref i) => i.clone(),
-                                        _ => {
-                                            return Err(Error::TypeMismatch(TypeMismatchError {
-                                                expected: "ident".to_string(),
-                                                found: "unknown".to_string(),
-                                            }))
-                                        }
-                                    };
+                                    let Ident(f) = field.clone();
                                     if f == a {
                                         map.insert(field.clone(), self.eval_expr(value.clone())?);
                                     }
@@ -645,8 +413,8 @@ impl Vm {
                 }
             },
             Expr::GetAttr { name , attr } => {
-                let s = match self.get_ident(Ident(name)) {
-                    Some(Value::CallStruct { ref name, ref fields }) => {
+                match self.get_ident(Ident(name)) {
+                    Some(Value::CallStruct { ref fields , ..}) => {
                         match fields.get(&Ident(attr.clone())) {
                             Some(v) => return Ok(v.clone()),
                             None => {
@@ -665,12 +433,10 @@ impl Vm {
                 };
             },
             Expr::Impl { ref name_struct , ref name_method, args, body } => {
-                let mut naw;
-                let mut fiw;
+                let fiw;
                 let mut fuw;
                 match self.get_ident(Ident(name_struct.clone())) {
-                    Some(Value::DefStruct { ref name, ref fields, ref function }) => {
-                        naw = name.clone();
+                    Some(Value::DefStruct { ref fields, ref function , ..}) => {
                         fiw = fields.clone();
                         fuw = function.clone();
                     },
@@ -705,13 +471,13 @@ impl Vm {
                 Ok(Value::None)
             },
             Expr::GetFunc { name , func , args } => {
-                let mut call_struct;
-                let mut field_struct;
+                let call_struct;
+                let field_struct;
                 let s = match self.get_ident(Ident(name)) {
                     Some(Value::CallStruct { name: n, fields: fi }) => {
                         call_struct = Value::CallStruct { name: n.clone(), fields: fi.clone() };
                         match &self.get_ident(Ident(n.clone())) {
-                            Some(Value::DefStruct { name: nf, fields: f, function: fu }) => {
+                            Some(Value::DefStruct { fields: f, function: fu , ..}) => {
                                 field_struct = f;
                                 match fu.get(&func) {
                                     Some(v) => v.clone(),
@@ -785,9 +551,9 @@ impl Vm {
             Expr::Match { value, cases } => {
                 let mut return_value = Value::None;
                 for i in cases {
-                    let case = self.eval_expr(i.0);
+                    let _case = self.eval_expr(i.0);
                     match self.eval_expr(*value.clone())?.clone() {
-                        case => {
+                        _case => {
                             let mut new_vm = Vm::new();
                             return_value = new_vm.eval_expr(i.1)?;
                         }
@@ -940,3 +706,4 @@ impl Vm {
         Value::None
     }
 }
+
