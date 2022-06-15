@@ -82,6 +82,11 @@ pub struct AttrNotFoundError {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct FileNotFoundError {
+    pub file_name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct StructNotFoundError {
     pub name: String,
 }
@@ -182,6 +187,12 @@ impl DisplayError for FunctionArgumentMismatchError {
     }
 }
 
+impl DisplayError for FileNotFoundError {
+    fn display_error(&self) -> String {
+        format!("File {} not found", self.file_name)
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     VarNotFound(VarNotFoundError),
@@ -199,4 +210,5 @@ pub enum Error {
     StructNotFound(StructNotFoundError),
     AttrNotFound(AttrNotFoundError),
     FunctionArgumentMismatch(FunctionArgumentMismatchError),
+    FileNotFound(FileNotFoundError),
 }

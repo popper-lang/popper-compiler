@@ -4,6 +4,7 @@ mod executer;
 mod errors;
 mod tree;
 mod test;
+mod std_t;
 use lalrpop_util::lalrpop_mod;
 use std::fs;
 
@@ -16,6 +17,7 @@ fn main() {
     match exprs {
         Ok(exprs) => {
             let mut vm = executer::Vm::new();
+
             let value = vm.eval_expr(exprs);
             match value {
                 Ok(value) => println!("{:?}", value),

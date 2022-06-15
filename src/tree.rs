@@ -93,7 +93,7 @@ pub enum Expr {
         value: Box<Expr>,
         cases: Vec<(Expr, Expr)>,
     },
-    Empty,
+    Empty
 }
 
 #[derive(Debug, PartialEq, Clone)]

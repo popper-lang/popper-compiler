@@ -1,6 +1,6 @@
 
 
-use std::{ops::Range, fmt};
+use std::{ops::Range, fmt, hash::Hash, collections::HashMap, rc::Rc};
 
 use super::*;
 
@@ -8,6 +8,7 @@ use super::*;
 pub struct Ident(pub String);
 
 
+pub struct Function(pub Rc<dyn Fn(HashMap<String, Value>, Vm) -> Result<Value, Error>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -16,8 +17,8 @@ pub enum Value {
     Bool(bool),
     Function {
         name: String,
-        args: Vec<Ident>,
-        body: Expr,
+        func: Function,
+        args: Vec<String>,
     },
     DefStruct {
         name: String,
@@ -31,6 +32,35 @@ pub enum Value {
     List(Vec<Value>),
     Range(Range<isize>),
     None,
+}
+
+impl Clone for Function {
+    fn clone(&self) -> Self {
+        Function(self.0.clone())
+    }
+}
+
+impl fmt::Debug for Function {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Function")
+    }
+}
+
+
+
+impl PartialEq for Function {
+    fn eq(&self, other: &Self) -> bool {
+        &self.0 as *const _ == &other.0 as *const _
+    }
+}
+impl Hash for Function {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        (&self.0 as *const _ as usize).hash(state);
+    }
+}
+
+impl Eq for Function {
+
 }
 
 impl Value {
@@ -206,6 +236,8 @@ impl Value {
         }
     }
 }
+
+
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

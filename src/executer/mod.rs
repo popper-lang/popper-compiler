@@ -1,29 +1,50 @@
 
 pub(crate) mod value;
 use std::collections::HashMap;
+use std::rc::Rc;
+use crate::std_t::Builtin;
 use crate::tree::Expr;
 use crate::tree::Op;
 use crate::tree::IOp;
 use crate::tree::Literal;
 use crate::errors::*;
 use self::value::Value;
+use self::value::Function;
 use self::value::Ident;
+use crate::std_t::BuiltinFunction;
 
+
+fn function(body: Expr) -> Function {
+    let body_clone = body.clone();
+    Function(Rc::new(move |args: HashMap<String, Value>,  vm: Vm| -> Result<Value, Error> {
+        let mut vm = vm.clone();
+        for i in args.iter() {
+            vm.set_ident(Ident(i.0.clone()), i.1.clone());
+        }
+        vm.eval_expr(body_clone.clone())
+        
+    }))
+}
 
 #[derive(Debug, Clone)]
 pub struct Vm(
-    std::collections::HashMap<Ident, Value>,
-    HashMap<String, fn(Vec<Value>) -> Value>,
+    std::collections::HashMap<Ident, Value>
 );
 
 impl Vm {
     pub fn new() -> Self {
-        let mut map_builtins = HashMap::new();
-        map_builtins.insert("print".to_string(), Vm::print as fn(Vec<Value>) -> Value);
-        map_builtins.insert("println".to_string(), Vm::println);
-        Vm(HashMap::new(), map_builtins)
+
+        let mut vm = Vm(HashMap::new());
+        vm.use_builtin_function();
+        vm
     }
-    
+
+    pub fn use_builtin_function(&mut self) {
+        let map = BuiltinFunction::build();
+        for i in map.iter() {
+            self.set_ident(Ident(i.0.clone()), Value::Function { name: i.0.clone(), func: Function(i.1.0.clone()), args: i.1.1.clone() });
+        }
+    }    
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, Error> {
         match expr {
             Expr::Empty => Ok(Value::None),
@@ -155,9 +176,7 @@ impl Vm {
                 ref args,
                 ref body,
             } => {
-                if self.1.clone().into_iter().any(|x| x.0 == name.clone()) {
-                    return Err(Error::IsBuiltin(IsBuiltinError { name: name.clone() }));
-                }
+                
                 let mut args_vec = Vec::new();
                 for arg in args {
                     let arg_name = match arg {
@@ -169,56 +188,34 @@ impl Vm {
                             }))
                         }
                     };
-                    args_vec.push(Ident(arg_name));
+                    args_vec.push(arg_name);
                 }
+                
                 self.set_ident(
                     Ident(name.clone()),
-                    Value::Function {
-                        name: name.clone(),
-                        args: args_vec.clone(),
-                        body: *body.clone(),
-                    },
+                    Value::Function { name: name.clone(), func: function(*body.clone()), args: args_vec.clone() },
                 );
-                Ok(Value::Function {
-                    name: name.clone(),
-                    args: args_vec.clone(),
-                    body: *body.clone(),
-                })
+                Ok(Value::Function { name: name.clone(), func:  function(*body.clone()), args: args_vec })
             }
             Expr::Call {
                 ref name, ref args, ..
             } => {
-                let cparg = args.clone();
-                let b = self.1.clone();
-                if b.clone().into_iter().any(|x| x.0 == name.clone()) {
-                    let v = b.get(name).unwrap().clone();
-                    let args_iter = args.iter();
-
-                    let args_map = args_iter.map(|x| -> Value {
-                        match self.eval_expr(x.clone()) {
-                            Ok(v) => v,
-                            Err(_e) => Value::None,
-                        }
-                    });
-
-                    let args = args_map.collect::<Vec<Value>>();
-                    return Ok(v(args));
-                }
-                let mut new_vm = Vm::new();
+                
                 let copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
-                    Some(f) => match f {
-                        &Value::Function {
-                            ref name,
-                            ref args,
-                            ref body,
+                    Some(f) => match f.clone() {
+                        Value::Function {
+                            func,
+                            args: a,
+                            ..
                         } => {
-                            new_vm.set_ident(Ident(name.clone()), f.clone());
-                            for (i, arg) in args.iter().enumerate() {
-                                let ev_arg = self.eval_expr(cparg[i].clone())?;
-                                new_vm.set_ident(arg.clone(), ev_arg.clone());
+                            let mut dict_args = HashMap::new();
+                            for (i, arg) in a.iter().enumerate() {
+                                let arg_value = args[i].clone();
+                                dict_args.insert(arg.clone(), self.eval_expr(arg_value)?);
                             }
-                            new_vm.eval_expr(body.clone())
+                            let Function(f) = func;
+                            f(dict_args, Vm::new())
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "function".to_string(),
@@ -456,7 +453,7 @@ impl Vm {
                 let mut args_vec = Vec::new();
                 for arg in args {
                     args_vec.push(match arg {
-                        Expr::Ident { ref ident } => Ident(ident.clone()),
+                        Expr::Ident { ref ident } => ident.clone(),
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "ident".to_string(),
@@ -465,20 +462,18 @@ impl Vm {
                         }
                     });
                 }
-                let f = Value::Function { name: name_method.clone(), args: args_vec, body: *body };
+                let f = Value::Function { name: name_method.clone(), func: function(*body), args: args_vec };
                 fuw.insert(name_method.clone(), f);
                 self.set_ident(Ident(name_struct.clone()), Value::DefStruct { name: name_struct.clone(), fields: fiw, function: fuw });
                 Ok(Value::None)
             },
             Expr::GetFunc { name , func , args } => {
                 let call_struct;
-                let field_struct;
                 let s = match self.get_ident(Ident(name)) {
                     Some(Value::CallStruct { name: n, fields: fi }) => {
                         call_struct = Value::CallStruct { name: n.clone(), fields: fi.clone() };
                         match &self.get_ident(Ident(n.clone())) {
                             Some(Value::DefStruct { fields: f, function: fu , ..}) => {
-                                field_struct = f;
                                 match fu.get(&func) {
                                     Some(v) => v.clone(),
                                     None => {
@@ -503,31 +498,28 @@ impl Vm {
                         }))
                     }
                 };
+                    
+                match s {
+                    Value::Function {func: f, args: a, ..} => {
+                        let Function(f) = f;
+                        let mut new_vm = Vm::new();
+                        let mut args_map = HashMap::new();
+                        for (argv, argn) in args.iter().zip(a) {
+                            args_map.insert(argn, self.clone().eval_expr(argv.clone())?);
+                        }
+                        new_vm.set_ident(Ident("self".to_string()), call_struct);
 
-                let mut args_vec = Vec::new();
-                let mut new_vm = Vm::new();
-                for arg in args {
-                    args_vec.push(self.clone().eval_expr(arg.clone())?);
-                }
-                new_vm.set_ident(Ident("self".to_string()), call_struct);
-
-                for (value, arg) in args_vec.iter().zip(field_struct.iter()) {
-                    new_vm.set_ident(arg.clone(), value.clone());
-                }
-                
-                new_vm.eval_expr(match s { 
-                    Value::Function {body , ..} => {
-                        body
-                    }
+                        
+                        return f(args_map, new_vm);
+                    },
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "function".to_string(),
                             found: "unknown".to_string(),
                         }))
                     }
-                })
-                
-                
+                }
+                                
             },
             Expr::SetVar { name, value } => {
                 if let None = self.get_ident(Ident(name.clone())) {
@@ -691,19 +683,6 @@ impl Vm {
         self.0.contains_key(&ident)
     }
 
-    pub fn print(args: Vec<Value>) -> Value {
-        for i in args {
-            print!("{}", i.display_value());
-        }
-        Value::None
-    }
-
-    pub fn println(args: Vec<Value>) -> Value {
-        for i in args {
-            print!("{}", i.display_value());
-        }
-        println!();
-        Value::None
-    }
 }
+
 
