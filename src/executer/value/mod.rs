@@ -4,8 +4,19 @@ use std::{ops::Range, fmt, hash::Hash, collections::HashMap, rc::Rc};
 
 use super::*;
 
+
+
+macro_rules! build_enum {
+    ($name:ident, $($variant:ident),*) => {
+        enum $name {
+            $($variant),*
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Ident(pub String);
+
 
 
 pub struct Function(pub Rc<dyn Fn(HashMap<String, Value>, Vm) -> Result<Value, Error>>);
@@ -31,6 +42,13 @@ pub enum Value {
     },
     List(Vec<Value>),
     Range(Range<isize>),
+    Enum {
+        variants: Vec<String>,
+    },
+    EnumCall {
+        name: String,
+        field: String,
+    },
     None,
 }
 
@@ -219,6 +237,9 @@ impl Value {
             Value::None => "None".to_string(),
             Value::DefStruct { .. } => todo!(),
             Value::CallStruct { .. } => todo!(),
+            Value::Enum { .. } => todo!(),
+            Value::EnumCall { .. } => todo!()
+
         }
     }
 
@@ -233,6 +254,8 @@ impl Value {
             Value::CallStruct { .. } => "call_struct".to_string(),
             Value::DefStruct { .. } => "def_struct".to_string(),
             Value::None => "None".to_string(),
+            Value::Enum { .. } => todo!(),
+            Value::EnumCall { .. } => todo!(),
         }
     }
 }

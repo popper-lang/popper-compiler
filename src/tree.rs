@@ -93,6 +93,19 @@ pub enum Expr {
         value: Box<Expr>,
         cases: Vec<(Expr, Expr)>,
     },
+    Enum {
+        name: String,
+        fields: Vec<String>
+    },
+    EnumCall {
+        name: String,
+        field: String
+    },
+    To {
+        value: Box<Expr>,
+        to: Type,
+
+    },
     Empty
 }
 
@@ -126,4 +139,11 @@ pub enum Literal {
     Number(f64),
     String(String),
     Bool(bool),
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Type {
+    StringType, 
+    IntType,
+    BoolType
 }

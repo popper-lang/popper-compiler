@@ -69,6 +69,9 @@ pub struct IndexOutOfBoundsError {
     pub name: String,
     pub index: i32,
 }
+
+
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionArgumentMismatchError {
     pub name: String,
@@ -89,6 +92,22 @@ pub struct FileNotFoundError {
 #[derive(Debug, PartialEq, Clone)]
 pub struct StructNotFoundError {
     pub name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct EnumNotFoundError {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct FieldEnumNotFoundError {
+    pub name: String,
+    pub field: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct InvalidCastNumberError {
+    pub elt: String
 }
 
 impl DisplayError for VarNotFoundError {
@@ -193,6 +212,26 @@ impl DisplayError for FileNotFoundError {
     }
 }
 
+impl DisplayError for EnumNotFoundError {
+    fn display_error(&self) -> String {
+        format!("Enum {} not found", self.name)
+    }
+}
+
+impl DisplayError for FieldEnumNotFoundError {
+    fn display_error(&self) -> String {
+        format!("Field {} not found in enum {}", self.field, self.name)
+    }
+}
+
+impl DisplayError for InvalidCastNumberError {
+    fn display_error(&self) -> String {
+        format!("invalid number: {}", self.elt)
+    }
+}
+
+
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     VarNotFound(VarNotFoundError),
@@ -211,4 +250,7 @@ pub enum Error {
     AttrNotFound(AttrNotFoundError),
     FunctionArgumentMismatch(FunctionArgumentMismatchError),
     FileNotFound(FileNotFoundError),
+    EnumNotFound(EnumNotFoundError),
+    FieldEnumNotFound(FieldEnumNotFoundError),
+    InvalidCastNumber(InvalidCastNumberError),
 }

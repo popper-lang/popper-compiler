@@ -7,6 +7,7 @@ use crate::tree::Expr;
 use crate::tree::Op;
 use crate::tree::IOp;
 use crate::tree::Literal;
+use crate::tree::Type;
 use crate::errors::*;
 use self::value::Value;
 use self::value::Function;
@@ -33,7 +34,6 @@ pub struct Vm(
 
 impl Vm {
     pub fn new() -> Self {
-
         let mut vm = Vm(HashMap::new());
         vm.use_builtin_function();
         vm
@@ -60,11 +60,15 @@ impl Vm {
                 Literal::String(s) => Value::String(s),
                 Literal::Bool(b) => Value::Bool(b),
             }),
-            Expr::Ident { ref ident } => match self.get_ident(Ident(ident.clone())) {
-                Some(value) => Ok(value.clone()),
-                None => Err(Error::VarNotFound(VarNotFoundError {
-                    var_name: ident.clone(),
-                })),
+            Expr::Ident { ref ident } => {
+                match self.get_ident(Ident(ident.clone())) {
+                    Some(value) => Ok(value.clone()),
+                    None => {
+                        Err(Error::VarNotFound(VarNotFoundError {
+                            var_name: ident.clone(),
+                        }))
+                    },
+                }
             },
             Expr::BinOp { op, left, right } => {
                 let left = self.eval_expr(*left)?;
@@ -215,7 +219,7 @@ impl Vm {
                                 dict_args.insert(arg.clone(), self.eval_expr(arg_value)?);
                             }
                             let Function(f) = func;
-                            f(dict_args, Vm::new())
+                            f(dict_args, self.clone())
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "function".to_string(),
@@ -552,17 +556,90 @@ impl Vm {
                     }
                 }
                 Ok(return_value)
+            },
+            Expr::Enum { name, fields } => {
+                self.set_ident(Ident(name), Value::Enum { variants: fields });
+                Ok(Value::None)
             }
-            
+            Expr::EnumCall { ref name, field } => {
+                match self.get_ident(Ident(name.to_string())) {
+                    Some(Value::Enum { variants: fields }) => {
+                        if fields.contains(&field) {
+                            Ok(Value::EnumCall { name: name.clone(), field: field.clone() })
+                        } else {
+                            Err(Error::FieldEnumNotFound(FieldEnumNotFoundError {
+                                name: name.clone(),
+                                field: field.clone(),
+                            }))
+                        }
+                    },
+                    Some(e) => {
+                        Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: "enum".to_string(),
+                            found: e.to_string(),
+                        }))
+                    }
+                    _ => {
+                        Err(Error::EnumNotFound(EnumNotFoundError {
+                            name: name.clone()
+                        }))
+                    }
+                }
+            },
+            Expr::To { value, to } => {
+                let v = self.eval_expr(*value.clone())?;
+                match to {
+                    Type::IntType => {
+                        match v {
+                            Value::Number(i) => Ok(Value::Number(i)),
+                            Value::String(s) => {
+                                Ok(Value::Number(match s.parse::<i32>() {
+                                    Ok(i) => i,
+                                    Err(_) => {
+                                        return Err(Error::InvalidCastNumber(InvalidCastNumberError {
+                                            elt: s.clone()
+                                        }))
+                                    }
+                                } as f64))
+                            },
+                            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "int".to_string(),
+                                found: v.to_string(),
+                            })),
+                        }
+                    },
+                    Type::StringType => {
+                        match v {
+                            Value::String(s) => Ok(Value::String(s)),
+                            Value::Number(i) => Ok(Value::String(i.to_string())),
+                            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "unknow".to_string(),
+                                found: "unknow".to_string(),
+                            })),
+                        }
+                    },
+                    Type::BoolType => {
+                        match v {
+                            Value::Bool(b) => Ok(Value::Bool(b)),
+                            _ => Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: "bool".to_string(),
+                                found: v.to_string(),
+                            })),
+                        }
+                    }
+                }
+            }        
         }
     }
 
     pub fn set_ident(&mut self, ident: Ident, value: Value) {
-        self.0.insert(ident, value);
+        self.0.insert(ident.clone(), value);
     }
 
     pub fn get_ident(&self, ident: Ident) -> Option<&Value> {
+        
         self.0.get(&ident)
+
     }
 
     pub fn iadd(&mut self, a: String, b: Value) -> Result<Value, Error> {
