@@ -1,11 +1,2 @@
 
-struct A {
-    a;b;c
-}
-
-impl A def a(b: int) {
-    b
-}
-
-let n = @A {a => 5; b => 9; c => 2}
-n->@a(6)
+8 + 9 

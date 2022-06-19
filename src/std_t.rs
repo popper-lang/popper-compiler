@@ -31,14 +31,14 @@ impl Builtin for BuiltinFunction  {
 }
 
 impl BuiltinFunction {
-    pub fn print(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
+    pub fn print(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
         for i in args {
             print!("{}", i.1.value.display_value());
         }
         Ok(Value::None)
     }
 
-    pub fn println(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
+    pub fn println(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
         for i in args {
             print!("{}", i.1.value.display_value());
         }
@@ -46,7 +46,7 @@ impl BuiltinFunction {
         Ok(Value::None)
     }
 
-    pub fn len(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
+    pub fn len(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
@@ -59,7 +59,7 @@ impl BuiltinFunction {
         }
     }
 
-    pub fn read(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
+    pub fn read(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
@@ -68,7 +68,7 @@ impl BuiltinFunction {
                 Var {value: Value::String(s), ..} => {
                     let mut input = String::new();
                     print!("{}", s);
-                    std::io::stdout().flush();
+                    std::io::stdout().flush().unwrap();
                     std::io::stdin().read_line(&mut input).expect("Failed to read line");
                     if input.ends_with("\n") {
                         input.pop();

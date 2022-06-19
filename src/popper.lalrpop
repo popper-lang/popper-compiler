@@ -58,7 +58,9 @@ Op: Expr = {
 
 Fact: Expr = {
     <e1:Fact> "*" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Mul, right: Box::new(e2)},
-    <e1:Fact> "/" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)}
+    <e1:Fact> "/" <e2:Value> => Expr::BinOp{left: Box::new(e1), op: Op::Div, right: Box::new(e2)},
+    Value
+
 };
 
 CmpOp: Expr = {
@@ -290,7 +292,6 @@ Expr = {
     Match,
     Op,
     CmpOp,
-    Value,
     r"/\*.*\*/" => Expr::Empty,
     Enum,
     EnumCall,
