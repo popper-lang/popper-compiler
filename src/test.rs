@@ -9,14 +9,14 @@ use crate::executer::Vm;
 use crate::executer::value;
 use std::fs;
 
-lalrpop_mod!(pub tlang);
+lalrpop_mod!(pub popper);
 
 #[cfg(test)]
 fn test_value(path: &str, value_tested: value::Value) {
     // WARNING: THIS IS NOT A TEST
     let contents = fs::read_to_string(path)
         .expect("Something went wrong reading the file");
-    let exprs = tlang::ExprsParser::new().parse(&contents);
+    let exprs = popper::ExprsParser::new().parse(&contents);
     match exprs {
         Ok(exprs) => {
             let mut vm = Vm::new();
@@ -37,7 +37,7 @@ fn test_value(path: &str, value_tested: value::Value) {
 #[cfg(test)]
 fn assert_expr_eq(string: &str, expr_tested: Expr) {
     let expr;
-    match tlang::ExprsParser::new().parse(string) {
+    match popper::ExprsParser::new().parse(string) {
         Ok(o) => {
             expr = o;
         },
@@ -55,7 +55,7 @@ fn assert_expr_eq(string: &str, expr_tested: Expr) {
 
 #[test]
 fn test_def_var_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("let = 5"), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("let = 5"), Err(_)))
 }
 
 #[test]
@@ -79,7 +79,7 @@ fn test_def_var_expr() {
 
 #[test]
 fn test_op_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("2 + "), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("2 + "), Err(_)))
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn test_op_expr() {
 
 #[test]
 fn test_cmp_op_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("2 > "), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("2 > "), Err(_)))
 }
 
 #[test]
@@ -116,7 +116,7 @@ fn test_cmp_op_expr() {
 
 #[test]
 fn test_iop_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("3 += 5"), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("3 += 5"), Err(_)))
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn test_iop_expr() {
 
 #[test]
 fn test_if_block_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("if a == 5 {"), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("if a == 5 {"), Err(_)))
 }
 
 #[test]
@@ -157,7 +157,7 @@ fn test_if_block_expr() {
 
 #[test]
 fn test_while_block_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("while {}"), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("while {}"), Err(_)))
 }
 
 #[test]
@@ -183,7 +183,7 @@ fn test_while_block_expr() {
 
 #[test]
 fn test_func_syntax() {
-    assert!(matches!(tlang::ExprsParser::new().parse("def () {}"), Err(_)))
+    assert!(matches!(popper::ExprsParser::new().parse("def () {}"), Err(_)))
 }
 
 #[test]
