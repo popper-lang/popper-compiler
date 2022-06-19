@@ -41,7 +41,8 @@ WhileExpr : Expr = "while" <e1:Expr> "{" <e2:Exprs> "}" => Expr::While{
 LetExpr : Expr = "let" <e1:Identifier> "=" <e2:Expr>  => Expr::Assign{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid let expression")
-}, value: Box::new(e2)};
+}, value: Box::new(e2),
+mutable: true};
 
 
 
@@ -242,6 +243,15 @@ EnumCall: Expr = "@" <e1:Identifier> "{" <e2:Identifier> "}" => {
 
 To: Expr = <e1:Value> "to" <e2:Type> => Expr::To{value: Box::new(e1), to: e2}; 
 
+Const: Expr = "const" <e1:Identifier> "=" <e2:Expr> => {
+    Expr::Assign{name: match e1 {
+        Expr::Ident{ident} => ident,
+        _ => panic!("Invalid let expression")
+    }, 
+    value: Box::new(e2),
+    mutable: false
+    }
+};
 
 Value = { 
     Num, 
@@ -279,7 +289,8 @@ Expr = {
     r"/\*.*\*/" => Expr::Empty,
     Enum,
     EnumCall,
-    To
+    To,
+    Const
 
 };
 

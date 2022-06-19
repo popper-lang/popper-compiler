@@ -17,9 +17,22 @@ macro_rules! build_enum {
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Ident(pub String);
 
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
+pub enum Type {
+    Int, 
+    String,
+    Bool,
+    List,
+    Func,
+    Range,
+    Enum,
+    FieldEnum(String),
+    Struct(String),
+    FieldStruct(String),
+    None
+}
 
-
-pub struct Function(pub Rc<dyn Fn(HashMap<String, Value>, Vm) -> Result<Value, Error>>);
+pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -50,6 +63,14 @@ pub enum Value {
         field: String,
     },
     None,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Var {
+    pub value: Value,
+    pub mutable: bool,
+    pub type_: Type,
+
 }
 
 impl Clone for Function {
@@ -243,19 +264,19 @@ impl Value {
         }
     }
 
-    pub fn get_type(&self) -> String {
+    pub fn get_type(&self) -> Type {
         match self {
-            Value::Number(_) => "number".to_string(),
-            Value::String(_) => "string".to_string(),
-            Value::Bool(_) => "bool".to_string(),
-            Value::Function { .. } => "function".to_string(),
-            Value::List(_) => "list".to_string(),
-            Value::Range(_) => "range".to_string(),
-            Value::CallStruct { .. } => "call_struct".to_string(),
-            Value::DefStruct { .. } => "def_struct".to_string(),
-            Value::None => "None".to_string(),
-            Value::Enum { .. } => todo!(),
-            Value::EnumCall { .. } => todo!(),
+            Value::Number(_) => Type::Int,
+            Value::String(_) => Type::String,
+            Value::Bool(_) => Type::Bool,
+            Value::Function { .. } => Type::Func,
+            Value::List(_) => Type::List,
+            Value::Range(_) => Type::Range,
+            Value::CallStruct { name , ..} => Type::FieldStruct(name.clone()),
+            Value::DefStruct { name, .. } => Type::Struct(name.clone()),
+            Value::None => Type::None,
+            Value::Enum { .. } => Type::Enum,
+            Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
         }
     }
 }

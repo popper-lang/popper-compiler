@@ -4,6 +4,7 @@ use std::io::Write;
 use std::rc::Rc;
 use crate::executer::Vm;
 use crate::executer::value::Value;
+use crate::executer::value::Var;
 use crate::errors::Error;
 
 
@@ -16,7 +17,7 @@ pub trait Builtin {
 pub struct BuiltinFunction;
 
 impl Builtin for BuiltinFunction  {
-    type BuiltinValue = Rc<dyn Fn(HashMap<String, Value>, Vm) -> Result<Value, Error>>;
+    type BuiltinValue = Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>;
     fn build() -> HashMap<String, (Self::BuiltinValue, Vec<String>)> {
         let mut map = HashMap::<String, (Self::BuiltinValue, Vec<String>)>::new();
         map.insert("print".to_string(), (Rc::new(BuiltinFunction::print), vec!["msg".to_string()]));
@@ -29,41 +30,41 @@ impl Builtin for BuiltinFunction  {
 }
 
 impl BuiltinFunction {
-    pub fn print(args: HashMap<String, Value>, vm: Vm) -> Result<Value, Error> {
+    pub fn print(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
         for i in args {
-            print!("{}", i.1.display_value());
+            print!("{}", i.1.value.display_value());
         }
         Ok(Value::None)
     }
 
-    pub fn println(args: HashMap<String, Value>, vm: Vm) -> Result<Value, Error> {
+    pub fn println(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
         for i in args {
-            print!("{}", i.1.display_value());
+            print!("{}", i.1.value.display_value());
         }
         println!();
         Ok(Value::None)
     }
 
-    pub fn len(args: HashMap<String, Value>, vm: Vm) -> Result<Value, Error> {
+    pub fn len(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
             let value = args.get("0").unwrap();
             Ok(match value {
-                Value::String(s) => Value::Number(s.len() as f64),
-                Value::List(l) => Value::Number(l.len() as f64),
+                Var {value: Value::String(s), ..} => Value::Number(s.len() as f64),
+                Var {value: Value::List(l), ..} => Value::Number(l.len() as f64),
                 _ => Value::None,
             })
         }
     }
 
-    pub fn read(args: HashMap<String, Value>, vm: Vm) -> Result<Value, Error> {
+    pub fn read(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
             let value = args.get("msg").unwrap();
             Ok(match value {
-                Value::String(s) => {
+                Var {value: Value::String(s), ..} => {
                     let mut input = String::new();
                     print!("{}", s);
                     std::io::stdout().flush();

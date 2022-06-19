@@ -16,6 +16,7 @@ pub enum Expr {
     Assign {
         name: String,
         value: Box<Expr>,
+        mutable: bool
     },
     Literal {
         value: Literal,

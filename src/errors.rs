@@ -1,3 +1,5 @@
+use crate::executer::value::Type;
+
 trait DisplayError {
     fn display_error(&self) -> String;
 }
@@ -15,7 +17,7 @@ pub struct VarAlreadyDefinedError {
 #[derive(Debug, PartialEq, Clone)]
 pub struct TypeMismatchError {
     pub expected: String,
-    pub found: String,
+    pub found: Type,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -110,6 +112,11 @@ pub struct InvalidCastNumberError {
     pub elt: String
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct ItsAConstantError {
+    pub var_name: String
+}
+
 impl DisplayError for VarNotFoundError {
     fn display_error(&self) -> String {
         format!("Variable {} not found", self.var_name)
@@ -125,7 +132,7 @@ impl DisplayError for VarAlreadyDefinedError {
 impl DisplayError for TypeMismatchError {
     fn display_error(&self) -> String {
         format!(
-            "Type mismatch: expected {}, found {}",
+            "Type mismatch: expected {}, found {:?}",
             self.expected, self.found
         )
     }
@@ -230,6 +237,11 @@ impl DisplayError for InvalidCastNumberError {
     }
 }
 
+impl DisplayError for ItsAConstantError {
+    fn display_error(&self) -> String {
+        format!("its a constant: {}", self.var_name)
+    }
+}
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -253,4 +265,5 @@ pub enum Error {
     EnumNotFound(EnumNotFoundError),
     FieldEnumNotFound(FieldEnumNotFoundError),
     InvalidCastNumber(InvalidCastNumberError),
+    ItsAConstant(ItsAConstantError)
 }

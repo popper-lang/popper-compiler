@@ -7,17 +7,19 @@ use crate::tree::Expr;
 use crate::tree::Op;
 use crate::tree::IOp;
 use crate::tree::Literal;
-use crate::tree::Type;
+use crate::tree::Type as TypeAst;
 use crate::errors::*;
 use self::value::Value;
 use self::value::Function;
 use self::value::Ident;
+use self::value::Var;
+use self::value::Type;
 use crate::std_t::BuiltinFunction;
 
 
 fn function(body: Expr) -> Function {
     let body_clone = body.clone();
-    Function(Rc::new(move |args: HashMap<String, Value>,  vm: Vm| -> Result<Value, Error> {
+    Function(Rc::new(move |args: HashMap<String, Var>,  vm: Vm| -> Result<Value, Error> {
         let mut vm = vm.clone();
         for i in args.iter() {
             vm.set_ident(Ident(i.0.clone()), i.1.clone());
@@ -29,7 +31,7 @@ fn function(body: Expr) -> Function {
 
 #[derive(Debug, Clone)]
 pub struct Vm(
-    std::collections::HashMap<Ident, Value>
+    std::collections::HashMap<Ident, Var>
 );
 
 impl Vm {
@@ -42,7 +44,11 @@ impl Vm {
     pub fn use_builtin_function(&mut self) {
         let map = BuiltinFunction::build();
         for i in map.iter() {
-            self.set_ident(Ident(i.0.clone()), Value::Function { name: i.0.clone(), func: Function(i.1.0.clone()), args: i.1.1.clone() });
+            self.set_ident(Ident(i.0.clone()), Var {
+                value: Value::Function { name: i.0.clone(), func: Function(i.1.0.clone()), args: i.1.1.clone()},
+                type_: Type::Func,
+                mutable: false,
+            });
         }
     }    
     pub fn eval_expr(&mut self, expr: Expr) -> Result<Value, Error> {
@@ -54,7 +60,7 @@ impl Vm {
                     last = self.eval_expr(expr)?;
                 }
                 Ok(last)
-            }
+            },
             Expr::Literal { value } => Ok(match value {
                 Literal::Number(n) => Value::Number(n),
                 Literal::String(s) => Value::String(s),
@@ -62,7 +68,7 @@ impl Vm {
             }),
             Expr::Ident { ref ident } => {
                 match self.get_ident(Ident(ident.clone())) {
-                    Some(value) => Ok(value.clone()),
+                    Some(var) => Ok(var.clone().value),
                     None => {
                         Err(Error::VarNotFound(VarNotFoundError {
                             var_name: ident.clone(),
@@ -89,7 +95,7 @@ impl Vm {
                     Op::And => left.and(&right)?,
                     Op::Or => left.or(&right)?,
                 })
-            }
+            },
             Expr::IfThen { cond, then } => {
                 let v = self.eval_expr(*cond)?;
                 if let Value::Bool(c) = v {
@@ -119,15 +125,31 @@ impl Vm {
                         found: v.get_type(),
                     }))
                 }
-            }
-            Expr::Assign { name, value } => {
+            },
+            Expr::Assign { name, value, mutable } => {
                 let value_evaluate = self.eval_expr(*value)?;
                 if self.get_ident(Ident(name.clone())).is_some() {
                     return Err(Error::VarAlreadyDefined(VarAlreadyDefinedError {
                         var_name: name,
                     }));
                 }
-                self.set_ident(Ident(name), value_evaluate.clone());
+                self.set_ident(Ident(name), Var {
+                    value: value_evaluate.clone(),
+                    type_: match value_evaluate {
+                        Value::Number(_) => Type::Int,
+                        Value::String(_) => Type::String,
+                        Value::Bool(_) => Type::Bool,
+                        Value::Function { .. } => Type::Func,
+                        Value::DefStruct { name, fields, function } => Type::Struct(name),
+                        Value::CallStruct { name, fields } => Type::FieldStruct(name),
+                        Value::List(_) => Type::List,
+                        Value::Range(_) => Type::Range,
+                        Value::Enum { variants } => Type::Enum,
+                        Value::EnumCall { name, field } => Type::FieldEnum(name),
+                        Value::None => Type::None,
+                    },
+                    mutable,
+                });
                 Ok(Value::None)
             }
             Expr::While { ref cond, ref body } => {
@@ -146,7 +168,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "string".to_string(),
-                            found: "ident".to_string(),
+                            found: Type::None,
                         }))
                     }
                 };
@@ -156,7 +178,11 @@ impl Vm {
                     Value::List(ref l) => {
                         let mut last = Value::None;
                         for item in l {
-                            self.set_ident(Ident(name_str.clone()), item.clone());
+                            self.set_ident(Ident(name_str.clone()), Var{
+                                value: item.clone(),
+                                type_: Type::Int,
+                                mutable: true
+                            });
                             last = self.eval_expr(*body.clone())?;
                         }
                         Ok(last)
@@ -164,7 +190,11 @@ impl Vm {
                     Value::Range(r) => {
                         let mut last = Value::None;
                         for i in r {
-                            self.set_ident(Ident(name_str.clone()), Value::Number(i as f64));
+                            self.set_ident(Ident(name_str.clone()), Var {
+                                value: Value::Number(i as f64),
+                                type_: Type::Int,
+                                mutable: true,
+                            });
                             last = self.eval_expr(*body.clone())?;
                         }
                         Ok(last)
@@ -174,7 +204,7 @@ impl Vm {
                         found: iter.get_type(),
                     })),
                 }
-            }
+            },
             Expr::FunDef {
                 ref name,
                 ref args,
@@ -188,7 +218,7 @@ impl Vm {
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "ident".to_string(),
-                                found: "unknown".to_string(),
+                                found: Type::None,
                             }))
                         }
                     };
@@ -197,10 +227,14 @@ impl Vm {
                 
                 self.set_ident(
                     Ident(name.clone()),
-                    Value::Function { name: name.clone(), func: function(*body.clone()), args: args_vec.clone() },
+                    Var {
+                        value: Value::Function { name: name.clone(), func: function(*body.clone()), args: args_vec.clone() },
+                        type_: Type::Func,
+                        mutable: false,
+                    },
                 );
                 Ok(Value::Function { name: name.clone(), func:  function(*body.clone()), args: args_vec })
-            }
+            },
             Expr::Call {
                 ref name, ref args, ..
             } => {
@@ -208,29 +242,35 @@ impl Vm {
                 let copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
                     Some(f) => match f.clone() {
-                        Value::Function {
+                        Var{value: Value::Function {
                             func,
                             args: a,
                             ..
-                        } => {
+                        }, ..} => {
                             let mut dict_args = HashMap::new();
                             for (i, arg) in a.iter().enumerate() {
                                 let arg_value = args[i].clone();
-                                dict_args.insert(arg.clone(), self.eval_expr(arg_value)?);
+                                let value = self.eval_expr(arg_value)?;
+                                dict_args.insert(arg.clone(), Var {
+                                    value: value.clone(),
+                                    type_: value.get_type(),
+                                    mutable: false,
+                                });
                             }
+                            
                             let Function(f) = func;
                             f(dict_args, self.clone())
-                        }
+                        },
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "function".to_string(),
-                            found: f.get_type(),
+                            found: f.value.get_type(),
                         })),
                     },
                     None => Err(Error::FunctionNotFound(FunctionNotFoundError {
                         name: name.clone(),
                     })),
                 }
-            }
+            },
             Expr::List { ref elems } => {
                 let mut list = Vec::new();
                 for elem in elems {
@@ -247,13 +287,13 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "ident".to_string(),
-                            found: "unknown".to_string(),
+                            found: Type::None,
                         }))
                     }
                 };
                 let copy_vm = self.clone();
                 let list = match copy_vm.get_ident(Ident(real_name.clone())) {
-                    Some(Value::List(list)) => list,
+                    Some(Var{value: Value::List(list), ..}) => list,
                     None => {
                         return Err(Error::VarNotFound(VarNotFoundError {
                             var_name: real_name,
@@ -262,7 +302,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "list".to_string(),
-                            found: self.get_ident(Ident(real_name)).unwrap().get_type(),
+                            found: self.get_ident(Ident(real_name)).unwrap().value.get_type(),
                         }))
                     }
                 };
@@ -343,7 +383,7 @@ impl Vm {
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "ident".to_string(),
-                                found: "unknown".to_string(),
+                                found: Type::None,
                             }))
                         } 
                     }
@@ -356,26 +396,30 @@ impl Vm {
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "ident".to_string(),
-                                found: "unknown".to_string(),
+                                found: Type::None,
                             }))
                         }
                     });
                 }
-                self.set_ident(Ident(name.clone()), Value::DefStruct {
-                    name: name.clone(),
-                    fields: nf,
-                    function: HashMap::new()
+                self.set_ident(Ident(name.clone()), Var {
+                    value:Value::DefStruct {
+                        name: name.clone(),
+                        fields: nf,
+                        function: HashMap::new()
+                    },
+                    type_: Type::Struct(name.clone()),
+                    mutable: false,
                 });
                 Ok(Value::None)
             },
             Expr::CallStruct { ref name, ref args } => {
                 let copy_self = self.clone();
                 match copy_self.get_ident(Ident(name.clone())) {
-                    Some(f) => match f {
-                        &Value::DefStruct {
+                    Some(f) => match *f {
+                        Var{value: Value::DefStruct {
                             ref fields,
                             ..
-                        } => {
+                        }, ..} => {
                             let mut map = HashMap::new();
                             let mut a ;
                             let mut _v;
@@ -385,7 +429,7 @@ impl Vm {
                                     _ => {
                                         return Err(Error::TypeMismatch(TypeMismatchError {
                                             expected: "ident".to_string(),
-                                            found: "unknown".to_string(),
+                                            found: Type::None,
                                         }))
                                     }
                                 };
@@ -405,7 +449,7 @@ impl Vm {
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "struct".to_string(),
-                            found: f.get_type(),
+                            found: f.value.get_type(),
                         })),
                     },
                     None => Err(Error::StructNotFound(StructNotFoundError {
@@ -415,7 +459,7 @@ impl Vm {
             },
             Expr::GetAttr { name , attr } => {
                 match self.get_ident(Ident(name)) {
-                    Some(Value::CallStruct { ref fields , ..}) => {
+                    Some(Var{value: Value::CallStruct { ref fields , ..}, ..}) => {
                         match fields.get(&Ident(attr.clone())) {
                             Some(v) => return Ok(v.clone()),
                             None => {
@@ -428,7 +472,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "struct".to_string(),
-                            found: "unknown".to_string(),
+                            found: Type::None,
                         }))
                     }
                 };
@@ -437,7 +481,7 @@ impl Vm {
                 let fiw;
                 let mut fuw;
                 match self.get_ident(Ident(name_struct.clone())) {
-                    Some(Value::DefStruct { ref fields, ref function , ..}) => {
+                    Some(Var{value: Value::DefStruct { ref fields, ref function , ..}, ..}) => {
                         fiw = fields.clone();
                         fuw = function.clone();
                     },
@@ -449,7 +493,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "struct".to_string(),
-                            found: "unknown".to_string(),
+                            found: Type::None,
                         }))
                     }
                 };
@@ -461,23 +505,23 @@ impl Vm {
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "ident".to_string(),
-                                found: "unknown".to_string(),
+                                found: Type::None,
                             }))
                         }
                     });
                 }
                 let f = Value::Function { name: name_method.clone(), func: function(*body), args: args_vec };
                 fuw.insert(name_method.clone(), f);
-                self.set_ident(Ident(name_struct.clone()), Value::DefStruct { name: name_struct.clone(), fields: fiw, function: fuw });
+                self.set_ident(Ident(name_struct.clone()), Var {value: Value::DefStruct { name: name_struct.clone(), fields: fiw, function: fuw }, type_: Type::Struct(name_struct.clone()), mutable: false});
                 Ok(Value::None)
             },
             Expr::GetFunc { name , func , args } => {
                 let call_struct;
-                let s = match self.get_ident(Ident(name)) {
-                    Some(Value::CallStruct { name: n, fields: fi }) => {
+                let s = match self.get_ident(Ident(name.clone())) {
+                    Some(Var {value: Value::CallStruct { name: n, fields: fi }, ..}) => {
                         call_struct = Value::CallStruct { name: n.clone(), fields: fi.clone() };
                         match &self.get_ident(Ident(n.clone())) {
-                            Some(Value::DefStruct { fields: f, function: fu , ..}) => {
+                            Some(Var{value: Value::DefStruct { fields: f, function: fu , ..}, ..}) => {
                                 match fu.get(&func) {
                                     Some(v) => v.clone(),
                                     None => {
@@ -490,7 +534,7 @@ impl Vm {
                             _ => {
                                 return Err(Error::TypeMismatch(TypeMismatchError {
                                     expected: "struct".to_string(),
-                                    found: "unknown".to_string(),
+                                    found: Type::None,
                                 }))
                             }
                         }
@@ -498,7 +542,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "struct".to_string(),
-                            found: "unknown".to_string(),
+                            found: Type::None,
                         }))
                     }
                 };
@@ -509,9 +553,10 @@ impl Vm {
                         let mut new_vm = Vm::new();
                         let mut args_map = HashMap::new();
                         for (argv, argn) in args.iter().zip(a) {
-                            args_map.insert(argn, self.clone().eval_expr(argv.clone())?);
+                            let value = self.clone().eval_expr(argv.clone())?;
+                            args_map.insert(argn, Var {value: value.clone(), type_: value.get_type(), mutable: false});
                         }
-                        new_vm.set_ident(Ident("self".to_string()), call_struct);
+                        new_vm.set_ident(Ident("self".to_string()), Var{value: call_struct, type_: Type::Struct(name), mutable: false});
 
                         
                         return f(args_map, new_vm);
@@ -519,7 +564,7 @@ impl Vm {
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "function".to_string(),
-                            found: "unknown".to_string(),
+                            found: Type::None,
                         }))
                     }
                 }
@@ -530,9 +575,16 @@ impl Vm {
                     return Err(Error::VarNotFound(VarNotFoundError {
                         var_name: name.clone(),
                     }));
+                } else if let Some(var) = self.get_ident(Ident(name.clone())) {
+                    if ! var.mutable {
+                        return Err(Error::ItsAConstant(ItsAConstantError {
+                            var_name: name
+                        }))
+                    }
                 }
+
                 let v = self.eval_expr(*value.clone())?;
-                self.set_ident(Ident(name), v);
+                self.set_ident(Ident(name), Var {value: v.clone(), type_: v.get_type(), mutable: true});
                 Ok(Value::None)
             },
             Expr::IOp { op, name, value } => {
@@ -558,12 +610,16 @@ impl Vm {
                 Ok(return_value)
             },
             Expr::Enum { name, fields } => {
-                self.set_ident(Ident(name), Value::Enum { variants: fields });
+                self.set_ident(Ident(name), Var {
+                    value: Value::Enum { variants: fields },
+                    type_: Type::Enum,
+                    mutable: false
+                });
                 Ok(Value::None)
             }
             Expr::EnumCall { ref name, field } => {
                 match self.get_ident(Ident(name.to_string())) {
-                    Some(Value::Enum { variants: fields }) => {
+                    Some(Var{value: Value::Enum { variants: fields }, ..}) => {
                         if fields.contains(&field) {
                             Ok(Value::EnumCall { name: name.clone(), field: field.clone() })
                         } else {
@@ -576,7 +632,7 @@ impl Vm {
                     Some(e) => {
                         Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "enum".to_string(),
-                            found: e.to_string(),
+                            found: e.value.get_type(),
                         }))
                     }
                     _ => {
@@ -589,7 +645,7 @@ impl Vm {
             Expr::To { value, to } => {
                 let v = self.eval_expr(*value.clone())?;
                 match to {
-                    Type::IntType => {
+                    TypeAst::IntType => {
                         match v {
                             Value::Number(i) => Ok(Value::Number(i)),
                             Value::String(s) => {
@@ -604,26 +660,26 @@ impl Vm {
                             },
                             _ => Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "int".to_string(),
-                                found: v.to_string(),
+                                found: v.get_type(),
                             })),
                         }
                     },
-                    Type::StringType => {
+                    TypeAst::StringType => {
                         match v {
                             Value::String(s) => Ok(Value::String(s)),
                             Value::Number(i) => Ok(Value::String(i.to_string())),
                             _ => Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "unknow".to_string(),
-                                found: "unknow".to_string(),
+                                found: v.get_type(),
                             })),
                         }
                     },
-                    Type::BoolType => {
+                    TypeAst::BoolType => {
                         match v {
                             Value::Bool(b) => Ok(Value::Bool(b)),
                             _ => Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: "bool".to_string(),
-                                found: v.to_string(),
+                                found: v.get_type(),
                             })),
                         }
                     }
@@ -631,12 +687,13 @@ impl Vm {
             }        
         }
     }
+    
 
-    pub fn set_ident(&mut self, ident: Ident, value: Value) {
+    pub fn set_ident(&mut self, ident: Ident, value: Var) {
         self.0.insert(ident.clone(), value);
     }
 
-    pub fn get_ident(&self, ident: Ident) -> Option<&Value> {
+    pub fn get_ident(&self, ident: Ident) -> Option<&Var> {
         
         self.0.get(&ident)
 
@@ -647,14 +704,19 @@ impl Vm {
             Value::Number(b) => {
                 if self.exists(Ident(a.clone())) {
                     let v = self.get_ident(Ident(a.clone())).unwrap().clone();
-                    match v {
-                        Value::Number(v) => {
-                            self.set_ident(Ident(a), Value::Number(v + b));
+                    if ! v.mutable {
+                        return Err(Error::ItsAConstant(ItsAConstantError {
+                            var_name: a
+                        }))
+                    }
+                    match v.value {
+                        Value::Number(n) => {
+                            self.set_ident(Ident(a), Var{value: Value::Number(n + b), type_: v.type_, mutable: v.mutable});
                             Ok(Value::None)
-                        }
+                        },
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "number".to_string(),
-                            found: v.get_type(),
+                            found: v.value.get_type(),
                         })),
                     }
                 } else {
@@ -665,7 +727,7 @@ impl Vm {
             },
             _ => Err(Error::TypeMismatch(TypeMismatchError {
                 expected: "int or float".to_string(),
-                found: "unknown".to_string(),
+                found: Type::None,
             })),
         }
     }
@@ -675,14 +737,19 @@ impl Vm {
             Value::Number(b) => {
                 if self.exists(Ident(a.clone())) {
                     let v = self.get_ident(Ident(a.clone())).unwrap().clone();
-                    match v {
-                        Value::Number(v) => {
-                            self.set_ident(Ident(a), Value::Number(v - b));
+                    if ! v.mutable {
+                        return Err(Error::ItsAConstant(ItsAConstantError {
+                            var_name: a
+                        }))
+                    }
+                    match v.value {
+                        Value::Number(n) => {
+                            self.set_ident(Ident(a), Var{value: Value::Number(n - b), type_: v.type_, mutable: v.mutable});
                             Ok(Value::None)
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "number".to_string(),
-                            found: v.get_type(),
+                            found: v.value.get_type(),
                         })),
                     }
                 } else {
@@ -693,7 +760,7 @@ impl Vm {
             },
             _ => Err(Error::TypeMismatch(TypeMismatchError {
                 expected: "int or float".to_string(),
-                found: "unknown".to_string(),
+                found: Type::None,
             })),
         }
     }
@@ -703,14 +770,19 @@ impl Vm {
             Value::Number(b) => {
                 if self.exists(Ident(a.clone())) {
                     let v = self.get_ident(Ident(a.clone())).unwrap().clone();
-                    match v {
-                        Value::Number(v) => {
-                            self.set_ident(Ident(a), Value::Number(v * b));
+                    if ! v.mutable {
+                        return Err(Error::ItsAConstant(ItsAConstantError {
+                            var_name: a
+                        }))
+                    }
+                    match v.value {
+                        Value::Number(n) => {
+                            self.set_ident(Ident(a), Var{value: Value::Number(n * b), type_: v.type_, mutable: v.mutable});
                             Ok(Value::None)
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "number".to_string(),
-                            found: v.get_type(),
+                            found: v.value.get_type(),
                         })),
                     }
                 } else {
@@ -721,7 +793,7 @@ impl Vm {
             },
             _ => Err(Error::TypeMismatch(TypeMismatchError {
                 expected: "int or float".to_string(),
-                found: "unknown".to_string(),
+                found: Type::None,
             })),
         }
     }
@@ -731,14 +803,19 @@ impl Vm {
             Value::Number(b) => {
                 if self.exists(Ident(a.clone())) {
                     let v = self.get_ident(Ident(a.clone())).unwrap().clone();
-                    match v {
-                        Value::Number(v) => {
-                            self.set_ident(Ident(a), Value::Number(v / b));
+                    if ! v.mutable {
+                        return Err(Error::ItsAConstant(ItsAConstantError {
+                            var_name: a
+                        }))
+                    }
+                    match v.value {
+                        Value::Number(n) => {
+                            self.set_ident(Ident(a), Var{value: Value::Number(n / b), type_: v.type_, mutable: v.mutable});
                             Ok(Value::None)
                         }
                         _ => Err(Error::TypeMismatch(TypeMismatchError {
                             expected: "number".to_string(),
-                            found: v.get_type(),
+                            found: v.value.get_type(),
                         })),
                     }
                 } else {
@@ -749,7 +826,7 @@ impl Vm {
             },
             _ => Err(Error::TypeMismatch(TypeMismatchError {
                 expected: "int or float".to_string(),
-                found: "unknown".to_string(),
+                found: Type::None,
             })),
         }
     }
@@ -760,6 +837,8 @@ impl Vm {
         self.0.contains_key(&ident)
     }
 
+
+
+
+
 }
-
-

@@ -1,18 +1,3 @@
 
-let number_of_user = @read('your number: ') to int
-let number_guess = @read('number gess: ') to int 
-
-while number_of_user != number_guess {
-    if number_of_user > number_guess {
-        @println('too big')
-    } else {
-        if number_of_user < number_guess {
-            @println('too small')
-        }
-    }
-
-    number_of_user =: @read('your number: ') to int
-
-}
-
-@println('your win')
+const a = 9
+a =: 8
