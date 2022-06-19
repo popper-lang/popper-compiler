@@ -16,7 +16,8 @@ pub enum Expr {
     Assign {
         name: String,
         value: Box<Expr>,
-        mutable: bool
+        mutable: bool,
+        type_: Option<crate::executer::value::Type>,
     },
     Literal {
         value: Literal,
@@ -104,7 +105,7 @@ pub enum Expr {
     },
     To {
         value: Box<Expr>,
-        to: Type,
+        to: crate::executer::value::Type,
 
     },
     Empty
@@ -146,5 +147,6 @@ pub enum Literal {
 pub enum Type {
     StringType, 
     IntType,
-    BoolType
+    BoolType,
+    Any
 }

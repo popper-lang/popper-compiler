@@ -16,7 +16,7 @@ pub struct VarAlreadyDefinedError {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TypeMismatchError {
-    pub expected: String,
+    pub expected: Type,
     pub found: Type,
 }
 
@@ -132,7 +132,7 @@ impl DisplayError for VarAlreadyDefinedError {
 impl DisplayError for TypeMismatchError {
     fn display_error(&self) -> String {
         format!(
-            "Type mismatch: expected {}, found {:?}",
+            "Type mismatch: expected {:?}, found {:?}",
             self.expected, self.found
         )
     }

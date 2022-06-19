@@ -2,7 +2,7 @@ use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
 use crate::tree::IOp;
-use crate::tree::Type;
+use crate::executer::value::Type;
 use std::fs;
 
 grammar;
@@ -38,13 +38,16 @@ WhileExpr : Expr = "while" <e1:Expr> "{" <e2:Exprs> "}" => Expr::While{
 };
 
 
-LetExpr : Expr = "let" <e1:Identifier> "=" <e2:Expr>  => Expr::Assign{name: match e1 {
+LetExpr : Expr = "let" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::Assign{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid let expression")
-}, value: Box::new(e2),
-mutable: true};
-
-
+    }, value: Box::new(e3),
+    mutable: true,
+    type_: match e2 {
+        Some(e) => Some(e.1),
+        None => None
+    }
+};
 
 Op: Expr = {
     <e1:Value> "+" <e2:Fact> => Expr::BinOp{left: Box::new(e1), op: Op::Add, right: Box::new(e2)},
@@ -84,7 +87,8 @@ IOp : Expr = {
         _ => panic!("Invalid let expression")
     }, op: IOp::IDiv, value: Box::new(e2)},
 }
-SetVar: Expr = <e1:Identifier> "=:" <e2:Expr> => Expr::SetVar{name: match e1 {
+
+SetVar: Expr = <e1:Identifier> ":=" <e2:Expr> => Expr::SetVar{name: match e1 {
     Expr::Ident{ident} => ident,
     _ => panic!("Invalid set-var expression")
 }, value: Box::new(e2)};
@@ -216,9 +220,9 @@ MatchCase : Vec<(Expr, Expr)> = {
         i.chain(n).collect::<Vec<(Expr, Expr)>>()
     }
 };
-StringType: Type = "string" => Type::StringType;
-BoolType: Type = "bool" => Type::BoolType;
-IntType: Type = "int" => Type::IntType;
+StringType: Type = "string" => Type::String;
+BoolType: Type = "bool" => Type::Bool;
+IntType: Type = "int" => Type::Int;
 Type : Type = {StringType, BoolType, IntType};
 
 Match : Expr = "match" <e1:Expr> "{" <e2:MatchCase> "}" => Expr::Match{value: Box::new(e1), cases: e2};
@@ -243,13 +247,14 @@ EnumCall: Expr = "@" <e1:Identifier> "{" <e2:Identifier> "}" => {
 
 To: Expr = <e1:Value> "to" <e2:Type> => Expr::To{value: Box::new(e1), to: e2}; 
 
-Const: Expr = "const" <e1:Identifier> "=" <e2:Expr> => {
-    Expr::Assign{name: match e1 {
-        Expr::Ident{ident} => ident,
-        _ => panic!("Invalid let expression")
-    }, 
-    value: Box::new(e2),
-    mutable: false
+Const: Expr = "const" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::Assign{name: match e1 {
+    Expr::Ident{ident} => ident,
+    _ => panic!("Invalid let expression")
+    }, value: Box::new(e3),
+    mutable: true,
+    type_: match e2 {
+        Some(e) => Some(e.1),
+        None => None
     }
 };
 

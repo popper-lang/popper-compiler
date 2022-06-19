@@ -1,5 +1,6 @@
 
 use lalrpop_util::lalrpop_mod;
+use crate::executer::value::Type;
 use crate::tree::Expr;
 use crate::tree::Literal;
 use crate::tree::Op;
@@ -67,7 +68,9 @@ fn test_def_var_expr() {
                     name: "a".to_string(),
                     value: Box::new(
                         Expr::Literal { value: Literal::Number(5.0) } 
-                    )
+                    ),
+                    mutable: true,
+                    type_: Some(Type::Int)
                 }
             ] 
         }
