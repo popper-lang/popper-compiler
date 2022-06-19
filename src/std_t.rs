@@ -5,25 +5,26 @@ use std::rc::Rc;
 use crate::executer::Vm;
 use crate::executer::value::Value;
 use crate::executer::value::Var;
+use crate::executer::value::Type;
 use crate::errors::Error;
 
 
 
 pub trait Builtin {
     type BuiltinValue;
-    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<String>)>;
+    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)>;
 }
 
 pub struct BuiltinFunction;
 
 impl Builtin for BuiltinFunction  {
     type BuiltinValue = Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>;
-    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<String>)> {
-        let mut map = HashMap::<String, (Self::BuiltinValue, Vec<String>)>::new();
-        map.insert("print".to_string(), (Rc::new(BuiltinFunction::print), vec!["msg".to_string()]));
-        map.insert("println".to_string(), (Rc::new(BuiltinFunction::println), vec!["msg".to_string()]));
-        map.insert("len".to_string(), (Rc::new(BuiltinFunction::len), vec!["list".to_string()]));
-        map.insert("read".to_string(), (Rc::new(BuiltinFunction::read), vec!["msg".to_string()]));
+    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)> {
+        let mut map = HashMap::<String, (Self::BuiltinValue, Vec<(String, Type)>)>::new();
+        map.insert("print".to_string(), (Rc::new(BuiltinFunction::print), vec![("msg".to_string(), Type::String)]));
+        map.insert("println".to_string(), (Rc::new(BuiltinFunction::println), vec![("msg".to_string(), Type::String)]));
+        map.insert("len".to_string(), (Rc::new(BuiltinFunction::len), vec![("list".to_string(), Type::List)]));
+        map.insert("read".to_string(), (Rc::new(BuiltinFunction::read), vec![("msg".to_string(), Type::String)]));
         map
     }
     

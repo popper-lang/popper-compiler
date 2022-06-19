@@ -1,3 +1,5 @@
+
+use crate::executer::value::Type;
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     IfThen {
@@ -17,7 +19,7 @@ pub enum Expr {
         name: String,
         value: Box<Expr>,
         mutable: bool,
-        type_: Option<crate::executer::value::Type>,
+        type_: Option<Type>,
     },
     Literal {
         value: Literal,
@@ -39,7 +41,7 @@ pub enum Expr {
     },
     FunDef {
         name: String,
-        args: Vec<Expr>,
+        args: Vec<(Expr, Type)>,
         body: Box<Expr>,
     },
     Call {
@@ -78,7 +80,7 @@ pub enum Expr {
     Impl {
         name_struct: String,
         name_method: String,
-        args: Vec<Expr>,
+        args: Vec<(Expr, Type)>,
         body: Box<Expr>,
 
     },
@@ -105,7 +107,7 @@ pub enum Expr {
     },
     To {
         value: Box<Expr>,
-        to: crate::executer::value::Type,
+        to: Type,
 
     },
     Empty
@@ -143,10 +145,4 @@ pub enum Literal {
     Bool(bool),
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub enum Type {
-    StringType, 
-    IntType,
-    BoolType,
-    Any
-}
+

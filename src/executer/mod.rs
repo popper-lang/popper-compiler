@@ -7,7 +7,6 @@ use crate::tree::Expr;
 use crate::tree::Op;
 use crate::tree::IOp;
 use crate::tree::Literal;
-use crate::tree::Type as TypeAst;
 use crate::errors::*;
 use self::value::Value;
 use self::value::Function;
@@ -225,7 +224,7 @@ impl Vm {
                 
                 let mut args_vec = Vec::new();
                 for arg in args {
-                    let arg_name = match arg {
+                    let arg_name = match arg.clone().0 {
                         Expr::Ident { ref ident } => ident.clone(),
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
@@ -234,7 +233,7 @@ impl Vm {
                             }))
                         }
                     };
-                    args_vec.push(arg_name);
+                    args_vec.push((arg_name, arg.clone().1));
                 }
                 
                 self.set_ident(
@@ -263,7 +262,13 @@ impl Vm {
                             for (i, arg) in a.iter().enumerate() {
                                 let arg_value = args[i].clone();
                                 let value = self.eval_expr(arg_value)?;
-                                dict_args.insert(arg.clone(), Var {
+                                if value.get_type() != arg.1 {
+                                    return Err(Error::TypeMismatch(TypeMismatchError {
+                                        expected: arg.clone().1,
+                                        found: value.get_type(),
+                                    }));
+                                }
+                                dict_args.insert(arg.0.clone(), Var {
                                     value: value.clone(),
                                     type_: value.get_type(),
                                     mutable: false,
@@ -512,7 +517,7 @@ impl Vm {
 
                 let mut args_vec = Vec::new();
                 for arg in args {
-                    args_vec.push(match arg {
+                    args_vec.push((match arg.0 {
                         Expr::Ident { ref ident } => ident.clone(),
                         _ => {
                             return Err(Error::TypeMismatch(TypeMismatchError {
@@ -520,7 +525,7 @@ impl Vm {
                                 found: Type::None,
                             }))
                         }
-                    });
+                    }, arg.1));
                 }
                 let f = Value::Function { name: name_method.clone(), func: function(*body), args: args_vec };
                 fuw.insert(name_method.clone(), f);
@@ -565,8 +570,15 @@ impl Vm {
                         let mut new_vm = Vm::new();
                         let mut args_map = HashMap::new();
                         for (argv, argn) in args.iter().zip(a) {
+                            
                             let value = self.clone().eval_expr(argv.clone())?;
-                            args_map.insert(argn, Var {value: value.clone(), type_: value.get_type(), mutable: false});
+                            if value.get_type() != argn.1 {
+                                return Err(Error::TypeMismatch(TypeMismatchError {
+                                    expected: argn.clone().1,
+                                    found: value.get_type(),
+                                }))
+                            }
+                            args_map.insert(argn.0, Var {value: value.clone(), type_: value.get_type(), mutable: false});
                         }
                         new_vm.set_ident(Ident("self".to_string()), Var{value: call_struct, type_: Type::Struct(name), mutable: false});
 

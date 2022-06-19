@@ -186,21 +186,7 @@ fn test_func_syntax() {
     assert!(matches!(popper::ExprsParser::new().parse("def () {}"), Err(_)))
 }
 
-#[test]
-fn test_func_expr() {
-    assert_expr_eq("def a(b) { c }", Expr::Block { body: vec![
-        Expr::FunDef { name: "a".to_string(),
-                       args: vec![
-                           Expr::Ident { ident: "b".to_string() }
-                        ], 
-                        body: Box::new(
-                            Expr::Block { body: vec![
-                                Expr::Ident {ident: "c".to_string()}
-                            ]}
-                        ) 
-                    }
-        ]})
-}
+
 
 #[test] 
 fn test_def_var_value() {

@@ -103,11 +103,11 @@ List: Expr = {
     }
 };
 
-ArgDef: Vec<Expr> = {
-    "(" <s:Identifier*> <e:("," Identifier)*> ")"  => {
-        let i = s.into_iter();
-        let n = e.into_iter().map(|x| x.1);
-        i.chain(n).collect::<Vec<Expr>>()
+ArgDef: Vec<(Expr, Type)> = {
+    "(" <s:(Identifier ":" Type)*> <e:("," Identifier ":" Type)*> ")"  => {
+        let i = s.into_iter().map(|x| (x.0, x.2));
+        let n = e.into_iter().map(|x| (x.1, x.3));
+        i.chain(n).collect::<Vec<(Expr, Type)>>()
     }
 }; 
 

@@ -11,7 +11,7 @@ use std::fs;
 lalrpop_mod!(pub popper); // synthesized by LALRPOP
 
 fn main() {
-    let contents = fs::read_to_string("/Users/antoine/Documents/tlang/src/test.txt")
+    let contents = fs::read_to_string("/Users/antoine/Documents/popper/src/test.txt")
         .expect("Something went wrong reading the file");
     let exprs = popper::ExprsParser::new().parse(&contents);
     match exprs {

@@ -42,7 +42,7 @@ pub enum Value {
     Function {
         name: String,
         func: Function,
-        args: Vec<String>,
+        args: Vec<(String, Type)>,
     },
     DefStruct {
         name: String,
