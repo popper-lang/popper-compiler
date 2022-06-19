@@ -8,12 +8,12 @@ mod std_t;
 use lalrpop_util::lalrpop_mod;
 use std::fs;
 
-lalrpop_mod!(pub tlang); // synthesized by LALRPOP
+lalrpop_mod!(pub popper); // synthesized by LALRPOP
 
 fn main() {
     let contents = fs::read_to_string("/Users/antoine/Documents/tlang/src/test.txt")
         .expect("Something went wrong reading the file");
-    let exprs = tlang::ExprsParser::new().parse(&contents);
+    let exprs = popper::ExprsParser::new().parse(&contents);
     match exprs {
         Ok(exprs) => {
             let mut vm = executer::Vm::new();
