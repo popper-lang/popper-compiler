@@ -2,10 +2,10 @@
 use std::collections::HashMap;
 use std::io::Write;
 use std::rc::Rc;
-use crate::executer::Vm;
-use crate::executer::value::Value;
-use crate::executer::value::Var;
-use crate::executer::value::Type;
+use crate::vm::Vm;
+use crate::value::Value;
+use crate::value::Var;
+use crate::value::Type;
 use crate::errors::Error;
 
 
