@@ -32,7 +32,8 @@ impl Evaluateur for Call {
                     let mut dict_args = HashMap::new();
                     for (i, arg) in a.iter().enumerate() {
                         let value = self.args[i].eval(vm)?;
-                        if value.get_type() != arg.1 {
+
+                        if value.get_type() != arg.1 && arg.1 != Type::Any {
                             return Err(Error::TypeMismatch(TypeMismatchError {
                                 expected: arg.clone().1,
                                 found: value.get_type(),

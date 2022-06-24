@@ -19,6 +19,8 @@ pub enum Type {
     FieldEnum(String),
     Struct(String),
     FieldStruct(String),
+    Type,
+    Any,
     None
 }
 
@@ -52,6 +54,7 @@ pub enum Value {
         name: String,
         field: String,
     },
+    Type(Type),
     None,
 }
 
@@ -249,7 +252,8 @@ impl Value {
             Value::DefStruct { .. } => todo!(),
             Value::CallStruct { .. } => todo!(),
             Value::Enum { .. } => todo!(),
-            Value::EnumCall { .. } => todo!()
+            Value::EnumCall { .. } => todo!(),
+            Value::Type(n) => n.to_string(),
 
         }
     }
@@ -267,11 +271,30 @@ impl Value {
             Value::None => Type::None,
             Value::Enum { .. } => Type::Enum,
             Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
+            &Value::Type(_) => Type::Type,
         }
     }
 }
 
-
+impl ToString for Type {
+    fn to_string(&self) -> String {
+        match self {
+            Type::Int => "int".to_string(),
+            Type::String => "string".to_string(),
+            Type::Bool => "bool".to_string(),
+            Type::Func => "func".to_string(),
+            Type::List => "list".to_string(),
+            Type::Range => "range".to_string(),
+            Type::FieldStruct(name) => format!("struct {}", name),
+            Type::Struct(name) => format!("struct {}", name),
+            Type::None => "None".to_string(),
+            Type::Enum => "enum".to_string(),
+            Type::FieldEnum(name) => format!("enum {}", name),
+            Type::Type => "type".to_string(),
+            Type::Any => "any".to_string(),
+        }
+    }
+}
 
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

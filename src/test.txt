@@ -1,6 +1,3 @@
+let f: int = 5
 
-def a(b: int) {
-    b
-}
-
-@a('h')
+@println(typeof f)

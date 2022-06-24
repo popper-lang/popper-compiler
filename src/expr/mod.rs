@@ -23,3 +23,4 @@ pub mod range;
 pub mod setvar;
 pub mod structdef;
 pub mod to;
+pub mod typeof_;

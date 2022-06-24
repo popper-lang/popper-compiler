@@ -30,6 +30,7 @@ use crate::expr::ident;
 use crate::expr::index;
 use crate::expr::to;
 use crate::expr::structdef;
+use crate::expr::typeof_;
 
 use std::fs;
 
@@ -431,6 +432,8 @@ Const: Expr = "const" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::A
     }
 });
 
+TypeOf : Expr = "typeof" <e1:Expr> => Expr::Typeof(typeof_::Typeof{value: Box::new(e1)});
+
 Value = { 
     Num, 
     Str, 
@@ -466,7 +469,8 @@ Expr = {
     Enum,
     EnumCall,
     To,
-    Const
+    Const,
+    TypeOf
 
 };
 

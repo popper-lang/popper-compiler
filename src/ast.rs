@@ -25,6 +25,7 @@ use crate::expr::assign::Assign;
 use crate::expr::match_::Match;
 use crate::expr::ident::Ident;
 use crate::expr::enum_::Enum;
+use crate::expr::typeof_::Typeof;
 use crate::value::Value;
 use crate::vm::{Evaluateur, Vm};
 #[derive(Clone)]
@@ -54,6 +55,7 @@ pub enum Expr {
     Match(Match),
     Ident(Ident),
     Enum(Enum),
+    Typeof(Typeof),
 
 
 }
@@ -86,6 +88,7 @@ impl Evaluateur for Expr {
             Expr::Match(match_) => match_.eval(vm),
             Expr::Ident(ident) => ident.eval(vm),
             Expr::Enum(enum_) => enum_.eval(vm),
+            Expr::Typeof(typeof_) => typeof_.eval(vm),
         }
     }
 }

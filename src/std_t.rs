@@ -22,7 +22,8 @@ impl Builtin for BuiltinFunction  {
     fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)> {
         let mut map = HashMap::<String, (Self::BuiltinValue, Vec<(String, Type)>)>::new();
         map.insert("print".to_string(), (Rc::new(BuiltinFunction::print), vec![("msg".to_string(), Type::String)]));
-        map.insert("println".to_string(), (Rc::new(BuiltinFunction::println), vec![("msg".to_string(), Type::String)]));
+        map.insert("println".to_string(), (Rc::new(BuiltinFunction::println), vec![("msg".to_string(), Type::Any)]));
+        
         map.insert("len".to_string(), (Rc::new(BuiltinFunction::len), vec![("list".to_string(), Type::List)]));
         map.insert("read".to_string(), (Rc::new(BuiltinFunction::read), vec![("msg".to_string(), Type::String)]));
         map
