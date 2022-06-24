@@ -1,21 +1,11 @@
 
 
 use std::{ops::Range, fmt, hash::Hash, collections::HashMap, rc::Rc};
+use crate::expr::ident::Ident;
+use crate::errors::*;
+use crate::vm::Vm;
 
-use super::*;
 
-
-
-macro_rules! build_enum {
-    ($name:ident, $($variant:ident),*) => {
-        enum $name {
-            $($variant),*
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Hash, Eq)]
-pub struct Ident(pub String);
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {

@@ -8,7 +8,9 @@ build = "build.rs"
 
 [dependencies]
 lalrpop-util = { version = "^0.19", features = ["lexer"]}
+yaml-rust = "0.4"
 regex = "1"
 
 [build-dependencies]
 lalrpop = { version = "^0.19", features = ["lexer"]}
+

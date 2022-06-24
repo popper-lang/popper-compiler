@@ -1,4 +1,4 @@
-use crate::executer::value::Type;
+use crate::value::Type;
 
 trait DisplayError {
     fn display_error(&self) -> String;
