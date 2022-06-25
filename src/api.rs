@@ -15,6 +15,16 @@ macro_rules! import_expr {
             )*
         }
 
+        impl Evaluateur for Expr {
+            fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
+                match self {
+                    $(
+                        Expr::$ast(expr) => expr.eval(vm),
+                    )*
+                }
+            }
+        }
+
 
     }
 }
