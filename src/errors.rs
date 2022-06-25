@@ -256,8 +256,6 @@ pub enum Error {
     IndexOutOfBounds(IndexOutOfBoundsError),
     StructNotFound(StructNotFoundError),
     AttrNotFound(AttrNotFoundError),
-    FunctionArgumentMismatch(FunctionArgumentMismatchError),
-    FileNotFound(FileNotFoundError),
     EnumNotFound(EnumNotFoundError),
     FieldEnumNotFound(FieldEnumNotFoundError),
     InvalidCastNumber(InvalidCastNumberError),
