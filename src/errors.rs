@@ -252,7 +252,6 @@ pub enum Error {
     CannotDiv(CannotDivError),
     CannotMod(CannotModError),
     CannotCompare(CannotCompareError),
-    IsBuiltin(IsBuiltinError),
     FunctionNotFound(FunctionNotFoundError),
     IndexOutOfBounds(IndexOutOfBoundsError),
     StructNotFound(StructNotFoundError),
