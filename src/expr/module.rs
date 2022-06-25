@@ -20,8 +20,11 @@ impl Evaluateur for Module {
         let n = match path::Path::new(&self.name).file_name() {
             Some(name) => name.to_str().unwrap().to_string(),
             None => self.name.clone(),
-        }.split(".").collect::<Vec<&str>>()[0].to_string();
-        
+        }
+        .split(".")
+        .collect::<Vec<&str>>()[0]
+            .to_string();
+
         vm.set_ident(
             Ident(n.clone()),
             Var {

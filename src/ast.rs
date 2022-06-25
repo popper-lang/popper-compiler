@@ -2,6 +2,8 @@ use crate::errors::Error;
 
 use crate::value::Value;
 use crate::vm::{Evaluateur, Vm};
+
+#[allow(unused_attributes)]
 #[macro_use]
 use crate::import_expr;
 
@@ -34,7 +36,8 @@ import_expr!(
     typeof_ -> Typeof,
     type_ -> TypeExpr,
     module -> Module,
-    getmodattr -> GetModAttr
+    getmodattr -> GetModAttr,
+    getmodfunc -> GetModFunc
 );
 
 #[derive(Debug, PartialEq, Clone)]

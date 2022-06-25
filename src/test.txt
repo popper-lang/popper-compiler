@@ -1,3 +1,21 @@
-import '/Users/antoine/Documents/popper/src/test2.txt'
 
-@println(test2::a)
+struct A{a; b; c}
+
+let n = @A {a => 5; b => 6; c => 7}
+
+println(n->a)
+
+impl A def display(self: type A) {
+    println(self->a)
+    println(self->b)
+    println(self->c)
+}
+
+n->display()
+
+def hello(name: string) {
+    println('Hello, ' + name)
+}
+
+hello('World')
+

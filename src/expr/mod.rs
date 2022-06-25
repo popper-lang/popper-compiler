@@ -27,3 +27,4 @@ pub mod structdef;
 pub mod to;
 pub mod type_;
 pub mod typeof_;
+pub mod getmodfunc;

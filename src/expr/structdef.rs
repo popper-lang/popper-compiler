@@ -15,37 +15,12 @@ pub struct StructDef {
 
 impl Evaluateur for StructDef {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
-        let mut f = Vec::new();
-
-        for field in self.fields.clone() {
-            match field.clone() {
-                Ident(ref ident) => f.push(ident.clone()),
-                _ => {
-                    return Err(Error::TypeMismatch(TypeMismatchError {
-                        expected: Type::None,
-                        found: Type::None,
-                    }))
-                }
-            }
-        }
-        let mut nf = Vec::new();
-        for field in self.fields.clone() {
-            nf.push(match field {
-                Ident(ident) => Ident(ident.clone()),
-                _ => {
-                    return Err(Error::TypeMismatch(TypeMismatchError {
-                        expected: Type::None,
-                        found: Type::None,
-                    }))
-                }
-            });
-        }
         vm.set_ident(
             Ident(self.name.clone()),
             Var {
                 value: Value::DefStruct {
                     name: self.name.clone(),
-                    fields: nf,
+                    fields: self.fields.clone(),
                     function: HashMap::new(),
                 },
                 type_: Type::Struct(self.name.clone()),

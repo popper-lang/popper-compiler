@@ -21,15 +21,7 @@ impl Evaluateur for FunDef {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let mut args_vec = Vec::new();
         for arg in self.args.clone() {
-            let arg_name = match arg.clone().0 {
-                Ident(ident) => ident.clone(),
-                _ => {
-                    return Err(Error::TypeMismatch(TypeMismatchError {
-                        expected: Type::None,
-                        found: Type::None,
-                    }))
-                }
-            };
+            let Ident(arg_name) = arg.clone().0;
             args_vec.push((
                 arg_name,
                 match arg.clone().1 {

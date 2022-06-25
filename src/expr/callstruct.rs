@@ -24,18 +24,9 @@ impl Evaluateur for CallStruct {
                     ..
                 } => {
                     let mut map = HashMap::new();
-                    let mut a;
                     let mut _v;
                     for (arg, value) in self.args.clone() {
-                        a = match arg {
-                            Ident(ident) => ident.clone(),
-                            _ => {
-                                return Err(Error::TypeMismatch(TypeMismatchError {
-                                    expected: Type::None,
-                                    found: Type::None,
-                                }))
-                            }
-                        };
+                        let Ident(a) = arg;
                         _v = value.eval(vm)?;
                         for field in fields {
                             let Ident(f) = field.clone();

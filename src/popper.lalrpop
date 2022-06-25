@@ -34,6 +34,7 @@ use crate::expr::typeof_;
 use crate::expr::type_;
 use crate::expr::module;
 use crate::expr::getmodattr;
+use crate::expr::getmodfunc;
 
 use std::fs;
 
@@ -254,10 +255,13 @@ ArgDef: Vec<(ident::Ident, Expr)> = {
 }; 
 
 ArgCall: Vec<Expr> = {
-    "(" <s:Expr*> <e:("," Expr)*> ")"  => {
-        let i = s.into_iter();
+    "(" <s:Expr?> <e:("," Expr)*> ")"  => {
+        let i = match s {
+            Some(x) => vec![x],
+            None => vec![]
+        }.into_iter();
         let n = e.into_iter().map(|x| x.1);
-        i.chain(n).collect::<Vec<Expr>>()
+        n.chain(i).collect::<Vec<Expr>>()
     }
 };
 
@@ -282,7 +286,7 @@ False : Expr = "false" => Expr::Literal(
     literal::Literal(literal::LiteralType::Bool(false))
 );
 
-Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call( call::Call {
+Call : Expr =  <e1:Identifier> <e2:ArgCall>  => Expr::Call( call::Call {
     name: match e1 {
         Expr::Ident(ident::Ident(ident)) => ident,
         _ => panic!("Invalid function call")
@@ -370,7 +374,7 @@ Impl : Expr = "impl" <e1:Identifier> "def" <e2:Identifier> <e3:ArgDef> <e4:Block
     })
 };
 
-GetFunc : Expr = <e1:Identifier> "->" "@" <e2:Identifier> <e3:ArgCall> => Expr::GetFunc (getfunc::GetFunc{
+GetFunc : Expr = <e1:Identifier> "->"  <e2:Identifier> <e3:ArgCall> => Expr::GetFunc (getfunc::GetFunc{
     name: match e1 {
         Expr::Ident(ident::Ident(ident)) => ident,
         _ => panic!("Invalid get func")
@@ -398,7 +402,11 @@ MatchCase : Vec<(Expr, Expr)> = {
 StringType: Expr = "string" => Expr::TypeExpr(type_::TypeExpr(Type::String));
 BoolType: Expr = "bool" => Expr::TypeExpr(type_::TypeExpr(Type::Bool));
 IntType: Expr = "int" => Expr::TypeExpr(type_::TypeExpr(Type::Int));
-Type : Expr = {StringType, BoolType, IntType, TypeOf};
+TypeType: Expr = "type" <e1:Identifier> => Expr::TypeExpr(type_::TypeExpr(Type::Type(match e1 {
+    Expr::Ident(ident::Ident(ident)) => ident,
+    _ => panic!("Invalid type")
+})));
+Type : Expr = {StringType, BoolType, IntType, TypeOf,TypeType};
 
 Match : Expr = "match" <e1:Expr> "{" <e2:MatchCase> "}" => Expr::Match(match_::Match{value: Box::new(e1), cases: e2});
 
@@ -453,6 +461,18 @@ GetModAttr : Expr = <e1:Identifier> "::" <e2:Identifier> => Expr::GetModAttr(get
     }
 });
 
+GetModFunc : Expr = <e1:Identifier> "::" "@" <e2:Identifier> <e3:ArgCall> => Expr::GetModFunc(getmodfunc::GetModFunc{
+    mod_name: match e1 {
+        Expr::Ident(ident::Ident(ident)) => ident,
+        _ => panic!("Invalid get module function")
+    },
+    func_name: match e2 {
+        Expr::Ident(ident::Ident(ident)) => ident,
+        _ => panic!("Invalid get module function")
+    },
+    args: e3
+});
+ 
 
 
 Value = { 
@@ -464,9 +484,8 @@ Value = {
     Call, 
     Index, 
     List, 
-    Range, 
-    GetAttr,
-    "(" <e:Expr> ")" => e
+    Range,
+    
 };
 
 
@@ -493,7 +512,10 @@ Expr = {
     Const,
     Type,
     Module,
-    GetModAttr
+    GetModAttr,
+    GetModFunc,
+    GetAttr,
+    " " => panic!("Invalid expression")
 
 };
 

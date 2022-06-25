@@ -15,10 +15,11 @@ pub enum Type {
     FieldEnum(String),
     Struct(String),
     FieldStruct(String),
-    Type,
+    Type(String),
     Any,
     None,
     Module(String),
+    Function
 }
 
 pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>);
@@ -95,6 +96,7 @@ impl Value {
     pub fn add(&self, other: &Value) -> Result<Value, Error> {
         match (self, other) {
             (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a + b)),
+            (Value::String(a), Value::String(b)) => Ok(Value::String(a.to_owned() + b.as_str())),
             _ => Err(Error::CannotAdd(CannotAddError {
                 left: self.to_string(),
                 right: other.to_string(),
@@ -267,7 +269,7 @@ impl Value {
             Value::None => Type::None,
             Value::Enum { .. } => Type::Enum,
             Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
-            Value::Type(_) => Type::Type,
+            Value::Type(_) => Type::Type("unknow".to_string()),
             Value::Module { name, .. } => Type::Module(name.to_string()),
         }
     }
@@ -287,9 +289,10 @@ impl ToString for Type {
             Type::None => "None".to_string(),
             Type::Enum => "enum".to_string(),
             Type::FieldEnum(name) => format!("enum {}", name),
-            Type::Type => "type".to_string(),
+            Type::Type(_) => "type".to_string(),
             Type::Module(name) => format!("module {}", name),
             Type::Any => "any".to_string(),
+            Type::Function => "function".to_string(),
         }
     }
 }

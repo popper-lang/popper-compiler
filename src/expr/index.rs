@@ -14,15 +14,7 @@ pub struct Index {
 
 impl Evaluateur for Index {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
-        let real_name = match self.name.clone() {
-            Ident(name) => name.clone(),
-            _ => {
-                return Err(Error::TypeMismatch(TypeMismatchError {
-                    expected: Type::None,
-                    found: Type::None,
-                }))
-            }
-        };
+        let Ident(real_name) = self.name.clone();
         let _copy_vm = vm.clone();
         let list = match self.name.eval(vm)? {
             Value::List(list) => list,
