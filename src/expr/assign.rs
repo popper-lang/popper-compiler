@@ -12,12 +12,13 @@ pub struct Assign {
     pub name: String,
     pub value: Box<Expr>,
     pub mutable: bool,
-    pub type_: Option<Type>,
+    pub type_: Option<Box<Expr>>,
 }
 
 impl Evaluateur for Assign {
 
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
+
         let value_evaluate = self.value.eval(vm)?;
         if vm.get_ident(Ident(self.name.clone())).is_some() {
             return Err(Error::VarAlreadyDefined(VarAlreadyDefinedError {
@@ -26,9 +27,30 @@ impl Evaluateur for Assign {
         }
         match self.type_.clone() {
             Some(type_) => {
-                if value_evaluate.get_type() != type_ {
+                let type_expr = match *type_ {
+                    Expr::TypeExpr(type_expr) => type_expr.0,
+                    Expr::Typeof(type_of) => {
+                        match type_of.eval(vm)? {
+                            Value::Type(type_) => type_,
+                            _ => {
+                                return Err(Error::TypeMismatch(TypeMismatchError {
+                                    expected: Type::None,
+                                    found: Type::None,
+                                }));
+                            }
+                        }
+                        
+                    }
+                    _ => {
+                        return Err(Error::TypeMismatch(TypeMismatchError {
+                            expected: Type::None,
+                            found: Type::None,
+                        }));
+                    }
+                };
+                if value_evaluate.get_type() != type_expr {
                     return Err(Error::TypeMismatch(TypeMismatchError {
-                        expected: type_,
+                        expected: type_expr,
                         found: value_evaluate.get_type(),
                     }));
                 }

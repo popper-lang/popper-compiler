@@ -31,6 +31,9 @@ use crate::expr::index;
 use crate::expr::to;
 use crate::expr::structdef;
 use crate::expr::typeof_;
+use crate::expr::type_;
+use crate::expr::module;
+use crate::expr::getmodattr;
 
 use std::fs;
 
@@ -94,7 +97,7 @@ WhileExpr : Expr = "while" <e1:Expr> "{" <e2:Exprs> "}" => Expr::While(
 );
 
 
-LetExpr : Expr = "let" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::Assign(
+LetExpr : Expr = "let" <e1:Identifier> <e2:(":" Expr)?> "=" <e3:Expr>  => Expr::Assign(
     assign::Assign{
         name: match e1 {
             Expr::Ident(ident::Ident(i)) => i,
@@ -103,7 +106,7 @@ LetExpr : Expr = "let" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::
         value: Box::new(e3),
         mutable: true,
         type_: match e2 {
-            Some(e) => Some(e.1),
+            Some(e) => Some(Box::new(e.1)),
             None => None
         }
     }
@@ -236,8 +239,8 @@ List: Expr = {
     }
 };
 
-ArgDef: Vec<(ident::Ident, Type)> = {
-    "(" <s:(Identifier ":" Type)*> <e:("," Identifier ":" Type)*> ")"  => {
+ArgDef: Vec<(ident::Ident, Expr)> = {
+    "(" <s:(Identifier ":" Expr)*> <e:("," Identifier ":" Expr)*> ")"  => {
         let i = s.into_iter().map(|x| (match x.0 {
             Expr::Ident(ident) => ident,
             _ => panic!("Invalid argument definition")
@@ -246,7 +249,7 @@ ArgDef: Vec<(ident::Ident, Type)> = {
             Expr::Ident(ident) => ident,
             _ => panic!("Invalid argument definition")
         }, x.3));
-        i.chain(n).collect::<Vec<(ident::Ident, Type)>>()
+        i.chain(n).collect::<Vec<(ident::Ident, Expr)>>()
     }
 }; 
 
@@ -392,10 +395,10 @@ MatchCase : Vec<(Expr, Expr)> = {
         i.chain(n).collect::<Vec<(Expr, Expr)>>()
     }
 };
-StringType: Type = "string" => Type::String;
-BoolType: Type = "bool" => Type::Bool;
-IntType: Type = "int" => Type::Int;
-Type : Type = {StringType, BoolType, IntType};
+StringType: Expr = "string" => Expr::TypeExpr(type_::TypeExpr(Type::String));
+BoolType: Expr = "bool" => Expr::TypeExpr(type_::TypeExpr(Type::Bool));
+IntType: Expr = "int" => Expr::TypeExpr(type_::TypeExpr(Type::Int));
+Type : Expr = {StringType, BoolType, IntType, TypeOf};
 
 Match : Expr = "match" <e1:Expr> "{" <e2:MatchCase> "}" => Expr::Match(match_::Match{value: Box::new(e1), cases: e2});
 
@@ -419,7 +422,7 @@ EnumCall: Expr = "@" <e1:Identifier> "{" <e2:Identifier> "}" => {
     }
 )};
 
-To: Expr = <e1:Value> "to" <e2:Type> => Expr::To(to::To{value: Box::new(e1), type_: e2}); 
+To: Expr = <e1:Value> "to" <e2:Type> => Expr::To(to::To{value: Box::new(e1), type_: Box::new(e2)}); 
 
 Const: Expr = "const" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::Assign(assign::Assign{name: match e1 {
     Expr::Ident(ident::Ident(ident)) => ident,
@@ -427,12 +430,30 @@ Const: Expr = "const" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::A
     }, value: Box::new(e3),
     mutable: true,
     type_: match e2 {
-        Some(e) => Some(e.1),
+        Some(e) => Some(Box::new(e.1)),
         None => None
     }
 });
 
 TypeOf : Expr = "typeof" <e1:Expr> => Expr::Typeof(typeof_::Typeof{value: Box::new(e1)});
+
+Module : Expr = "import" <e1:Str> => Expr::Module(module::Module{name: match e1 {
+    Expr::Literal(literal::Literal(literal::LiteralType::String(s))) => s,
+    _ => panic!("Invalid module")
+}});
+
+GetModAttr : Expr = <e1:Identifier> "::" <e2:Identifier> => Expr::GetModAttr(getmodattr::GetModAttr{
+    mod_name: match e1 {
+        Expr::Ident(ident::Ident(ident)) => ident,
+        _ => panic!("Invalid get module attribute")
+    },
+    attr_name: match e2 {
+        Expr::Ident(ident::Ident(ident)) => ident,
+        _ => panic!("Invalid get module attribute")
+    }
+});
+
+
 
 Value = { 
     Num, 
@@ -470,7 +491,9 @@ Expr = {
     EnumCall,
     To,
     Const,
-    TypeOf
+    Type,
+    Module,
+    GetModAttr
 
 };
 

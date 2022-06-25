@@ -24,3 +24,6 @@ pub mod setvar;
 pub mod structdef;
 pub mod to;
 pub mod typeof_;
+pub mod type_;
+pub mod module;
+pub mod getmodattr;

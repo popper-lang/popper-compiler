@@ -33,9 +33,11 @@ import_expr!(
     setvar -> SetVar,
     structdef -> StructDef,
     to -> To,
-    typeof_ -> Typeof
+    typeof_ -> Typeof,
+    type_ -> TypeExpr,
+    module -> Module,
+    getmodattr -> GetModAttr
 );
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Op {

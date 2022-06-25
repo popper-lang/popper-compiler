@@ -12,7 +12,7 @@ use crate::errors::*;
 pub struct Impl {
     pub name_struct: String,
     pub name_method: String,
-    pub args: Vec<(Ident, Type)>,
+    pub args: Vec<(Ident, Expr)>,
     pub body: Box<Expr>,
 
 }
@@ -42,7 +42,15 @@ impl Evaluateur for Impl {
         let mut args_vec = Vec::new();
         for arg in self.args.clone() {
             let Ident(i) = arg.0;
-            args_vec.push((i, arg.1));
+            args_vec.push((i, match arg.1 {
+                Expr::TypeExpr(type_expr) => type_expr.0,
+                _ => {
+                    return Err(Error::TypeMismatch(TypeMismatchError {
+                        expected: Type::None,
+                        found: Type::None,
+                    }))
+                }
+            }));
         }
         let f = Value::Function { name: self.name_method.clone(), func: function(*self.body.clone()), args: args_vec };
         fuw.insert(self.name_method.clone(), f);

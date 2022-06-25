@@ -10,6 +10,9 @@ use crate::value::Var;
 use crate::value::Type;
 use crate::std_t::BuiltinFunction;
 
+use lalrpop_util::lalrpop_mod;
+use std::fs;
+
 
 
 pub trait Evaluateur {
@@ -29,7 +32,7 @@ pub fn function<T: Evaluateur + 'static>(body: T) -> Function {
 
 #[derive(Debug, Clone)]
 pub struct Vm(
-    std::collections::HashMap<Ident, Var>
+    pub std::collections::HashMap<Ident, Var>
 );
 
 impl Vm {
@@ -235,4 +238,13 @@ impl Vm {
 
 
 
+}
+
+pub fn execute_file(path: &str) -> Vm {
+    lalrpop_mod!(pub popper);
+    let string = fs::read_to_string(path).unwrap();
+    let expr = popper::ExprsParser::new().parse(&string).unwrap();
+    let mut vm = Vm::new();
+    expr.eval(&mut vm).unwrap();
+    return vm;
 }

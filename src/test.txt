@@ -1,5 +1,3 @@
+import '/Users/antoine/Documents/popper/src/test2.txt'
 
-struct A {a; b; c}
-let b = typeof A
-
-@println(b)
+@println(test2::a)

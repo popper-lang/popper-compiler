@@ -8,13 +8,20 @@ use crate::value::Type;
 #[derive(Clone)]
 pub struct To {
     pub value: Box<Expr>,
-    pub type_: Type,
+    pub type_: Box<Expr>,
 }
 
 impl Evaluateur for To{
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let v = self.value.eval(vm)?;
-        match self.type_ {
+        let t = match *self.type_ {
+            Expr::TypeExpr(ref t) => t.0.clone(),
+            _ => return Err(Error::TypeMismatch(TypeMismatchError {
+                expected: Type::None,
+                found: Type::None,
+            })),
+        };
+        match t {
             Type::Int => {
                 match v {
                     Value::Number(i) => Ok(Value::Number(i)),

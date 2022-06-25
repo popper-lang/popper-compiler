@@ -21,7 +21,8 @@ pub enum Type {
     FieldStruct(String),
     Type,
     Any,
-    None
+    None,
+    Module(String),
 }
 
 pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>);
@@ -55,6 +56,10 @@ pub enum Value {
         field: String,
     },
     Type(Type),
+    Module {
+        context: HashMap<Ident, Var>,
+        name: String
+    },
     None,
 }
 
@@ -254,6 +259,7 @@ impl Value {
             Value::Enum { .. } => todo!(),
             Value::EnumCall { .. } => todo!(),
             Value::Type(n) => n.to_string(),
+            Value::Module {name  , ..} => format!("module {}", name), 
 
         }
     }
@@ -271,7 +277,8 @@ impl Value {
             Value::None => Type::None,
             Value::Enum { .. } => Type::Enum,
             Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
-            &Value::Type(_) => Type::Type,
+            Value::Type(_) => Type::Type,
+            Value::Module { name, .. } => Type::Module(name.to_string()),
         }
     }
 }
@@ -291,6 +298,7 @@ impl ToString for Type {
             Type::Enum => "enum".to_string(),
             Type::FieldEnum(name) => format!("enum {}", name),
             Type::Type => "type".to_string(),
+            Type::Module(name) => format!("module {}", name),
             Type::Any => "any".to_string(),
         }
     }
