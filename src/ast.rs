@@ -1,64 +1,41 @@
 
 use crate::errors::Error;
-use crate::expr::block::Block;
-use crate::expr::fundef::FunDef;
-use crate::expr::iop::IOp;
-use crate::expr::op::BinOp;
-use crate::expr::range::Range;
-use crate::expr::setvar::SetVar;
-use crate::expr::structdef::StructDef;
-use crate::expr::to::To;
-use crate::expr::litteral::Literal;
-use crate::expr::getfunc::GetFunc;
-use crate::expr::getattr::GetAttr;
-use crate::expr::index::Index;
-use crate::expr::call::Call;
-use crate::expr::callstruct::CallStruct;
-use crate::expr::ifthen::IfThen;
-use crate::expr::ifthenelse::IfThenElse;
-use crate::expr::loop_while::While;
-use crate::expr::loop_for::For;
-use crate::expr::impl_::Impl;
-use crate::expr::list::List;
-use crate::expr::enumcall::EnumCall;
-use crate::expr::assign::Assign;
-use crate::expr::match_::Match;
-use crate::expr::ident::Ident;
-use crate::expr::enum_::Enum;
-use crate::expr::typeof_::Typeof;
+
 use crate::value::Value;
 use crate::vm::{Evaluateur, Vm};
-#[derive(Clone)]
-pub enum Expr {
-    Block(Block),
-    FunDef(FunDef),
-    IOp(IOp),
-    Op(BinOp),
-    Range(Range),
-    SetVar(SetVar),
-    StructDef(StructDef),
-    To(To),
-    Litteral(Literal),
-    GetFunc(GetFunc),
-    GetAttr(GetAttr),
-    Index(Index),
-    Call(Call),
-    CallStruct(CallStruct),
-    IfThen(IfThen),
-    IfThenElse(IfThenElse),
-    While(While),
-    For(For),
-    Impl(Impl),
-    List(List),
-    EnumCall(EnumCall),
-    Assign(Assign),
-    Match(Match),
-    Ident(Ident),
-    Enum(Enum),
-    Typeof(Typeof),
+#[macro_use]
+use crate::import_expr;
 
 
-}
+import_expr!(
+    assign -> Assign,
+    binop -> BinOp,
+    block -> Block,
+    call -> Call,
+    callstruct -> CallStruct,
+    enum_ -> Enum,
+    enumcall -> EnumCall,
+    fundef -> FunDef,
+    getattr -> GetAttr,
+    getfunc -> GetFunc,
+    ident -> Ident,
+    ifthen -> IfThen,
+    ifthenelse -> IfThenElse,
+    impl_ -> Impl,
+    index -> Index,
+    iop -> IOp,
+    list -> List,
+    literal -> Literal,
+    loop_for -> For,
+    loop_while -> While,
+    match_ -> Match,
+    range -> Range,
+    setvar -> SetVar,
+    structdef -> StructDef,
+    to -> To,
+    typeof_ -> Typeof
+);
+
 
 impl Evaluateur for Expr {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
@@ -66,12 +43,12 @@ impl Evaluateur for Expr {
             Expr::Block(block) => block.eval(vm),
             Expr::FunDef(fun_def) => fun_def.eval(vm),
             Expr::IOp(iop) => iop.eval(vm),
-            Expr::Op(op) => op.eval(vm),
+            Expr::BinOp(op) => op.eval(vm),
             Expr::Range(range) => range.eval(vm),
             Expr::SetVar(set_var) => set_var.eval(vm),
             Expr::StructDef(struct_def) => struct_def.eval(vm),
             Expr::To(to) => to.eval(vm),
-            Expr::Litteral(litteral) => litteral.eval(vm),
+            Expr::Literal(litteral) => litteral.eval(vm),
             Expr::GetFunc(get_func) => get_func.eval(vm),
             Expr::GetAttr(get_attr) => get_attr.eval(vm),
             Expr::Index(index) => index.eval(vm),

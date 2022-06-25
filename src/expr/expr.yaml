@@ -1,9 +1,0 @@
-
-alias:
-  impl: "impl_.rs"
-  for: "loop_for.rs"
-  while: "loop_while.rs"
-  match: "match_.rs"
-  enum: "enum_.rs"
-
-lalrpop_gram: "../popper.lalrpop"

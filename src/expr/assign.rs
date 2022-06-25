@@ -16,6 +16,7 @@ pub struct Assign {
 }
 
 impl Evaluateur for Assign {
+
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let value_evaluate = self.value.eval(vm)?;
         if vm.get_ident(Ident(self.name.clone())).is_some() {

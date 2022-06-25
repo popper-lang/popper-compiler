@@ -11,12 +11,12 @@ use crate::expr::callstruct;
 use crate::expr::enum_;
 use crate::expr::enumcall;
 use crate::expr::fundef;
-use crate::expr::litteral;
+use crate::expr::literal;
 use crate::expr::ifthen;
 use crate::expr::ifthenelse;
 use crate::expr::loop_for;
 use crate::expr::loop_while;
-use crate::expr::op;
+use crate::expr::binop;
 use crate::expr::iop;
 use crate::expr::setvar;
 use crate::expr::list;
@@ -42,16 +42,16 @@ Identifier : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident(
     ident::Ident(i.to_string())
 );
 Block: Expr = "{" <e:Exprs> "}" => e;
-Num : Expr = <n:r"[0-9]+"> => Expr::Litteral(
-    litteral::Literal(
-        litteral::LiteralType::Number(
+Num : Expr = <n:r"[0-9]+"> => Expr::Literal(
+    literal::Literal(
+        literal::LiteralType::Number(
             n.parse().unwrap()
         )
     )
 );
-Str : Expr = <s:r#"'(\\.|[^'])*'"#> => Expr::Litteral(
-    litteral::Literal(
-        litteral::LiteralType::String(
+Str : Expr = <s:r#"'(\\.|[^'])*'"#> => Expr::Literal(
+    literal::Literal(
+        literal::LiteralType::String(
             s[1..s.len()-1].to_string()
         )
     )
@@ -110,15 +110,15 @@ LetExpr : Expr = "let" <e1:Identifier> <e2:(":" Type)?> "=" <e3:Expr>  => Expr::
 );
 
 Op: Expr = {
-    <e1:Value> "+" <e2:Fact> => Expr::Op(
-        op::BinOp {
+    <e1:Value> "+" <e2:Fact> => Expr::BinOp(
+        binop::BinOp {
             left: Box::new(e1), 
             op: Op::Add, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> "-" <e2:Fact> => Expr::Op (
-        op::BinOp {
+    <e1:Value> "-" <e2:Fact> => Expr::BinOp (
+        binop::BinOp {
             left: Box::new(e1), 
             op: Op::Sub, 
             right: Box::new(e2)
@@ -129,15 +129,15 @@ Op: Expr = {
 
 
 Fact: Expr = {
-    <e1:Fact> "*" <e2:Value> => Expr::Op (
-        op::BinOp {
+    <e1:Fact> "*" <e2:Value> => Expr::BinOp (
+        binop::BinOp {
             left: Box::new(e1), 
             op: Op::Mul, 
             right: Box::new(e2)
         }
     ),
-    <e1:Fact> "/" <e2:Value> => Expr::Op (
-        op::BinOp{
+    <e1:Fact> "/" <e2:Value> => Expr::BinOp (
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Div, 
             right: Box::new(e2)
@@ -148,43 +148,43 @@ Fact: Expr = {
 };
 
 CmpOp: Expr = {
-    <e1:Value> "==" <e2:Value> => Expr::Op (
-        op::BinOp{
+    <e1:Value> "==" <e2:Value> => Expr::BinOp (
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Eq, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> "!=" <e2:Value> => Expr::Op(
-        op::BinOp {
+    <e1:Value> "!=" <e2:Value> => Expr::BinOp(
+        binop::BinOp {
             left: Box::new(e1), 
             op: Op::Neq, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> "<" <e2:Value> => Expr::Op(
-        op::BinOp{
+    <e1:Value> "<" <e2:Value> => Expr::BinOp(
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Ge, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> "<=" <e2:Value> => Expr::Op(
-        op::BinOp{
+    <e1:Value> "<=" <e2:Value> => Expr::BinOp(
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Le, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> ">" <e2:Value> => Expr::Op(
-        op::BinOp{
+    <e1:Value> ">" <e2:Value> => Expr::BinOp(
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Gt, 
             right: Box::new(e2)
         }
     ),
-    <e1:Value> ">=" <e2:Value> => Expr::Op(
-        op::BinOp{
+    <e1:Value> ">=" <e2:Value> => Expr::BinOp(
+        binop::BinOp{
             left: Box::new(e1), 
             op: Op::Lt, 
             right: Box::new(e2)
@@ -271,12 +271,12 @@ FunDef : Expr = "def" <e1:Identifier>  <e2:ArgDef>  "{" <e3:Exprs> "}" => {
     }
 }; 
 
-True : Expr = "true" => Expr::Litteral(
-    litteral::Literal(litteral::LiteralType::Bool(true))
+True : Expr = "true" => Expr::Literal(
+    literal::Literal(literal::LiteralType::Bool(true))
 );
 
-False : Expr = "false" => Expr::Litteral(
-    litteral::Literal(litteral::LiteralType::Bool(false))
+False : Expr = "false" => Expr::Literal(
+    literal::Literal(literal::LiteralType::Bool(false))
 );
 
 Call : Expr = "@" <e1:Identifier> <e2:ArgCall>  => Expr::Call( call::Call {

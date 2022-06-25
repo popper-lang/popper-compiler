@@ -1,3 +1,5 @@
-let f: int = 5
 
-@println(typeof f)
+struct A {a; b; c}
+let b = typeof A
+
+@println(b)

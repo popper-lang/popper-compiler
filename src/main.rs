@@ -1,4 +1,5 @@
 
+mod api;
 mod expr;
 mod vm;
 mod errors;

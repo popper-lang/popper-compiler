@@ -1,0 +1,39 @@
+{
+  "alias": {
+    "for": "loop_for.rs",
+    "while": "loop_while.rs",
+    "enum": "enum_.rs",
+    "impl": "impl_.rs",
+    "match": "match_.rs",
+    "typeof": "typeof_.rs"
+
+  },
+  "lalrpop_file": "popper.lalrpop",
+  "target_dir": "../target",
+  "expr" : [
+    "assign",
+    "block",
+    "call",
+    "callstruct",
+    "fundef",
+    "getattr",
+    "getfunc",
+    "ident",
+    "ifthen",
+    "ifthenelse",
+    "impl",
+    "index",
+    "iop",
+    "list",
+    "literal",
+    "loop_for",
+    "loop_while",
+    "match",
+    "binop",
+    "range",
+    "setvar",
+    "structdef",
+    "to",
+    "typeof"
+  ]
+}

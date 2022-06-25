@@ -1,5 +1,3 @@
-
-
 use std::collections::HashMap;
 use std::rc::Rc;
 use crate::std_t::Builtin;
@@ -11,6 +9,7 @@ use crate::expr::ident::Ident;
 use crate::value::Var;
 use crate::value::Type;
 use crate::std_t::BuiltinFunction;
+
 
 
 pub trait Evaluateur {
