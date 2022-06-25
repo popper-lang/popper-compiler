@@ -72,8 +72,6 @@ pub struct IndexOutOfBoundsError {
     pub index: i32,
 }
 
-
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct FunctionArgumentMismatchError {
     pub name: String,
@@ -109,12 +107,12 @@ pub struct FieldEnumNotFoundError {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct InvalidCastNumberError {
-    pub elt: String
+    pub elt: String,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ItsAConstantError {
-    pub var_name: String
+    pub var_name: String,
 }
 
 impl DisplayError for VarNotFoundError {
@@ -243,7 +241,6 @@ impl DisplayError for ItsAConstantError {
     }
 }
 
-
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     VarNotFound(VarNotFoundError),
@@ -265,5 +262,5 @@ pub enum Error {
     EnumNotFound(EnumNotFoundError),
     FieldEnumNotFound(FieldEnumNotFoundError),
     InvalidCastNumber(InvalidCastNumberError),
-    ItsAConstant(ItsAConstantError)
+    ItsAConstant(ItsAConstantError),
 }

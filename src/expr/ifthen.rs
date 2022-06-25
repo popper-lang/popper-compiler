@@ -1,13 +1,13 @@
+use crate::ast::Expr;
 use crate::errors::*;
 use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::ast::Expr;
 
 #[derive(Clone)]
 pub struct IfThen {
     pub cond: Box<Expr>,
-    pub then: Box<Expr>
+    pub then: Box<Expr>,
 }
 
 impl Evaluateur for IfThen {

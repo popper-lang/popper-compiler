@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use super::ident::Ident;
 use crate::ast::Expr;
+use crate::errors::*;
+use crate::value::Type;
+use crate::value::Value;
+use crate::value::Var;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::value::Value;
-use crate::value::Type;
-use crate::value::Var;
-use super::ident::Ident;
-use crate::errors::*;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct CallStruct {
@@ -19,12 +19,12 @@ impl Evaluateur for CallStruct {
         let copy_vm = vm.clone();
         match copy_vm.get_ident(Ident(self.name.clone())) {
             Some(f) => match *f {
-                Var{value: Value::DefStruct {
-                    ref fields,
+                Var {
+                    value: Value::DefStruct { ref fields, .. },
                     ..
-                }, ..} => {
+                } => {
                     let mut map = HashMap::new();
-                    let mut a ;
+                    let mut a;
                     let mut _v;
                     for (arg, value) in self.args.clone() {
                         a = match arg {
@@ -42,7 +42,6 @@ impl Evaluateur for CallStruct {
                             if f == a {
                                 map.insert(field.clone(), value.eval(vm)?);
                             }
-
                         }
                     }
                     Ok(Value::CallStruct {

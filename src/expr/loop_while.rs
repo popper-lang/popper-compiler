@@ -1,13 +1,13 @@
 use crate::ast::Expr;
+use crate::errors::Error;
+use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::value::Value;
-use crate::errors::Error;
 
 #[derive(Clone)]
 pub struct While {
     pub cond: Box<Expr>,
-    pub body: Box<Expr>
+    pub body: Box<Expr>,
 }
 
 impl Evaluateur for While {

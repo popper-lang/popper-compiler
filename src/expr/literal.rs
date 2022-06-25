@@ -7,12 +7,11 @@ pub enum LiteralType {
     Number(f64),
     String(String),
     Bool(bool),
-    None
+    None,
 }
 
 #[derive(Clone)]
 pub struct Literal(pub LiteralType);
-
 
 impl Evaluateur for Literal {
     fn eval(&self, _vm: &mut Vm) -> Result<Value, Error> {

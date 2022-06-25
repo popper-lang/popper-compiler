@@ -1,9 +1,9 @@
 use crate::ast::Expr;
+use crate::errors::*;
 use crate::value::Type;
 use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::errors::*;
 
 #[derive(Clone)]
 pub struct Range {

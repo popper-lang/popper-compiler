@@ -1,8 +1,8 @@
+use crate::ast::Expr;
 use crate::errors::Error;
 use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::ast::Expr;
 
 #[derive(Clone)]
 pub struct IfThenElse {

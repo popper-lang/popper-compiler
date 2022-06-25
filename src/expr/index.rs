@@ -1,17 +1,16 @@
+use super::ident::Ident;
 use crate::ast::Expr;
+use crate::errors::*;
+use crate::value::Type;
+use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::value::Value;
-use crate::value::Type;
-use super::ident::Ident;
-use crate::errors::*;
 
 #[derive(Clone)]
 pub struct Index {
     pub name: Ident,
     pub index: Box<Expr>,
 }
-
 
 impl Evaluateur for Index {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
@@ -24,7 +23,7 @@ impl Evaluateur for Index {
                 }))
             }
         };
-        let copy_vm = vm.clone();
+        let _copy_vm = vm.clone();
         let list = match self.name.eval(vm)? {
             Value::List(list) => list,
             _ => {
@@ -72,7 +71,7 @@ impl Evaluateur for Index {
             _ => Err(Error::TypeMismatch(TypeMismatchError {
                 expected: Type::Int,
                 found: index.get_type(),
-            }))
+            })),
         }
     }
 }

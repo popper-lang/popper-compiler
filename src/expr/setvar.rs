@@ -1,15 +1,15 @@
+use super::ident::Ident;
 use crate::ast::Expr;
-use crate::vm::Vm;
-use crate::vm::Evaluateur;
 use crate::errors::*;
 use crate::value::Value;
 use crate::value::Var;
-use super::ident::Ident;
+use crate::vm::Evaluateur;
+use crate::vm::Vm;
 
 #[derive(Clone)]
 pub struct SetVar {
     pub name: String,
-    pub value: Box<Expr>
+    pub value: Box<Expr>,
 }
 
 impl Evaluateur for SetVar {
@@ -20,21 +20,27 @@ impl Evaluateur for SetVar {
                 var_name: self.name.clone(),
             }));
         } else if let Some(var) = vm.get_ident(Ident(self.name.clone())) {
-            if ! var.mutable {
+            if !var.mutable {
                 return Err(Error::ItsAConstant(ItsAConstantError {
-                    var_name: self.name.clone()
-                }))
+                    var_name: self.name.clone(),
+                }));
             }
             if var.type_ != v.get_type() {
                 return Err(Error::TypeMismatch(TypeMismatchError {
                     expected: var.type_.clone(),
-                    found: v.get_type()
-                }))
+                    found: v.get_type(),
+                }));
             }
         }
 
-        
-        vm.set_ident(Ident(self.name.clone()), Var {value: v.clone(), type_: v.get_type(), mutable: true});
+        vm.set_ident(
+            Ident(self.name.clone()),
+            Var {
+                value: v.clone(),
+                type_: v.get_type(),
+                mutable: true,
+            },
+        );
         Ok(Value::None)
     }
 }

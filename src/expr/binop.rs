@@ -1,10 +1,9 @@
 use crate::ast::Expr;
-use crate::errors::Error;
 use crate::ast::Op;
+use crate::errors::Error;
 use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-
 
 #[derive(Clone)]
 pub struct BinOp {
@@ -31,8 +30,6 @@ impl Evaluateur for BinOp {
             Op::Ge => Ok(left.ge(&right)?),
             Op::And => Ok(left.and(&right)?),
             Op::Or => Ok(left.or(&right)?),
-
         }
     }
 }
-

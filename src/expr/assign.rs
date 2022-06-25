@@ -1,11 +1,11 @@
+use super::ident::Ident;
 use crate::ast::Expr;
+use crate::errors::*;
+use crate::value::Type;
+use crate::value::Value;
+use crate::value::Var;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
-use crate::errors::*;
-use super::ident::Ident;
-use crate::value::Value;
-use crate::value::Type;
-use crate::value::Var;
 
 #[derive(Clone)]
 pub struct Assign {
@@ -16,9 +16,7 @@ pub struct Assign {
 }
 
 impl Evaluateur for Assign {
-
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
-
         let value_evaluate = self.value.eval(vm)?;
         if vm.get_ident(Ident(self.name.clone())).is_some() {
             return Err(Error::VarAlreadyDefined(VarAlreadyDefinedError {
@@ -29,18 +27,15 @@ impl Evaluateur for Assign {
             Some(type_) => {
                 let type_expr = match *type_ {
                     Expr::TypeExpr(type_expr) => type_expr.0,
-                    Expr::Typeof(type_of) => {
-                        match type_of.eval(vm)? {
-                            Value::Type(type_) => type_,
-                            _ => {
-                                return Err(Error::TypeMismatch(TypeMismatchError {
-                                    expected: Type::None,
-                                    found: Type::None,
-                                }));
-                            }
+                    Expr::Typeof(type_of) => match type_of.eval(vm)? {
+                        Value::Type(type_) => type_,
+                        _ => {
+                            return Err(Error::TypeMismatch(TypeMismatchError {
+                                expected: Type::None,
+                                found: Type::None,
+                            }));
                         }
-                        
-                    }
+                    },
                     _ => {
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: Type::None,
@@ -54,15 +49,18 @@ impl Evaluateur for Assign {
                         found: value_evaluate.get_type(),
                     }));
                 }
-            },
-            None => {},
+            }
+            None => {}
         }
 
-        vm.set_ident(Ident(self.name.clone()), Var {
-            value: value_evaluate.clone(),
-            type_: value_evaluate.get_type(),
-            mutable: self.mutable,
-        });
+        vm.set_ident(
+            Ident(self.name.clone()),
+            Var {
+                value: value_evaluate.clone(),
+                type_: value_evaluate.get_type(),
+                mutable: self.mutable,
+            },
+        );
         Ok(Value::None)
     }
 }

@@ -1,8 +1,8 @@
-use crate::vm::Evaluateur;
-use crate::vm::Vm;
+use crate::ast::Expr;
 use crate::errors::*;
 use crate::value::Value;
-use crate::ast::Expr;
+use crate::vm::Evaluateur;
+use crate::vm::Vm;
 
 #[derive(Clone)]
 pub struct Typeof {

@@ -1,11 +1,9 @@
-
 use crate::errors::Error;
 
 use crate::value::Value;
 use crate::vm::{Evaluateur, Vm};
 #[macro_use]
 use crate::import_expr;
-
 
 import_expr!(
     assign -> Assign,
@@ -53,7 +51,7 @@ pub enum Op {
     Le,
     Ge,
     And,
-    Or
+    Or,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -61,9 +59,5 @@ pub enum IOpType {
     IAdd,
     ISub,
     IMul,
-    IDiv
+    IDiv,
 }
-
-
-
-

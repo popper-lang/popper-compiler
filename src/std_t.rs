@@ -1,14 +1,11 @@
-
+use crate::errors::Error;
+use crate::value::Type;
+use crate::value::Value;
+use crate::value::Var;
+use crate::vm::Vm;
 use std::collections::HashMap;
 use std::io::Write;
 use std::rc::Rc;
-use crate::vm::Vm;
-use crate::value::Value;
-use crate::value::Var;
-use crate::value::Type;
-use crate::errors::Error;
-
-
 
 pub trait Builtin {
     type BuiltinValue;
@@ -17,18 +14,41 @@ pub trait Builtin {
 
 pub struct BuiltinFunction;
 
-impl Builtin for BuiltinFunction  {
+impl Builtin for BuiltinFunction {
     type BuiltinValue = Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>;
     fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)> {
         let mut map = HashMap::<String, (Self::BuiltinValue, Vec<(String, Type)>)>::new();
-        map.insert("print".to_string(), (Rc::new(BuiltinFunction::print), vec![("msg".to_string(), Type::String)]));
-        map.insert("println".to_string(), (Rc::new(BuiltinFunction::println), vec![("msg".to_string(), Type::Any)]));
-        
-        map.insert("len".to_string(), (Rc::new(BuiltinFunction::len), vec![("list".to_string(), Type::List)]));
-        map.insert("read".to_string(), (Rc::new(BuiltinFunction::read), vec![("msg".to_string(), Type::String)]));
+        map.insert(
+            "print".to_string(),
+            (
+                Rc::new(BuiltinFunction::print),
+                vec![("msg".to_string(), Type::String)],
+            ),
+        );
+        map.insert(
+            "println".to_string(),
+            (
+                Rc::new(BuiltinFunction::println),
+                vec![("msg".to_string(), Type::Any)],
+            ),
+        );
+
+        map.insert(
+            "len".to_string(),
+            (
+                Rc::new(BuiltinFunction::len),
+                vec![("list".to_string(), Type::List)],
+            ),
+        );
+        map.insert(
+            "read".to_string(),
+            (
+                Rc::new(BuiltinFunction::read),
+                vec![("msg".to_string(), Type::String)],
+            ),
+        );
         map
     }
-    
 }
 
 impl BuiltinFunction {
@@ -53,8 +73,14 @@ impl BuiltinFunction {
         } else {
             let value = args.get("0").unwrap();
             Ok(match value {
-                Var {value: Value::String(s), ..} => Value::Number(s.len() as f64),
-                Var {value: Value::List(l), ..} => Value::Number(l.len() as f64),
+                Var {
+                    value: Value::String(s),
+                    ..
+                } => Value::Number(s.len() as f64),
+                Var {
+                    value: Value::List(l),
+                    ..
+                } => Value::Number(l.len() as f64),
                 _ => Value::None,
             })
         }
@@ -66,16 +92,21 @@ impl BuiltinFunction {
         } else {
             let value = args.get("msg").unwrap();
             Ok(match value {
-                Var {value: Value::String(s), ..} => {
+                Var {
+                    value: Value::String(s),
+                    ..
+                } => {
                     let mut input = String::new();
                     print!("{}", s);
                     std::io::stdout().flush().unwrap();
-                    std::io::stdin().read_line(&mut input).expect("Failed to read line");
+                    std::io::stdin()
+                        .read_line(&mut input)
+                        .expect("Failed to read line");
                     if input.ends_with("\n") {
                         input.pop();
                     }
                     Value::String(input.to_string())
-                },
+                }
                 _ => Value::None,
             })
         }

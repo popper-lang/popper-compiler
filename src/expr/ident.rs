@@ -1,6 +1,6 @@
-use crate::vm::{Evaluateur, Vm};
-use crate::value::Value;
 use crate::errors::*;
+use crate::value::Value;
+use crate::vm::{Evaluateur, Vm};
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub struct Ident(pub String);

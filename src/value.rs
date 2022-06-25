@@ -1,15 +1,11 @@
-
-
-use std::{ops::Range, fmt, hash::Hash, collections::HashMap, rc::Rc};
-use crate::expr::ident::Ident;
 use crate::errors::*;
+use crate::expr::ident::Ident;
 use crate::vm::Vm;
-
-
+use std::{collections::HashMap, fmt, hash::Hash, ops::Range, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
-    Int, 
+    Int,
     String,
     Bool,
     List,
@@ -40,7 +36,7 @@ pub enum Value {
     DefStruct {
         name: String,
         fields: Vec<Ident>,
-        function: HashMap<String, Value>
+        function: HashMap<String, Value>,
     },
     CallStruct {
         name: String,
@@ -58,7 +54,7 @@ pub enum Value {
     Type(Type),
     Module {
         context: HashMap<Ident, Var>,
-        name: String
+        name: String,
     },
     None,
 }
@@ -68,7 +64,6 @@ pub struct Var {
     pub value: Value,
     pub mutable: bool,
     pub type_: Type,
-
 }
 
 impl Clone for Function {
@@ -83,8 +78,6 @@ impl fmt::Debug for Function {
     }
 }
 
-
-
 impl PartialEq for Function {
     fn eq(&self, other: &Self) -> bool {
         &self.0 as *const _ == &other.0 as *const _
@@ -96,9 +89,7 @@ impl Hash for Function {
     }
 }
 
-impl Eq for Function {
-
-}
+impl Eq for Function {}
 
 impl Value {
     pub fn add(&self, other: &Value) -> Result<Value, Error> {
@@ -259,8 +250,7 @@ impl Value {
             Value::Enum { .. } => todo!(),
             Value::EnumCall { .. } => todo!(),
             Value::Type(n) => n.to_string(),
-            Value::Module {name  , ..} => format!("module {}", name), 
-
+            Value::Module { name, .. } => format!("module {}", name),
         }
     }
 
@@ -272,7 +262,7 @@ impl Value {
             Value::Function { .. } => Type::Func,
             Value::List(_) => Type::List,
             Value::Range(_) => Type::Range,
-            Value::CallStruct { name , ..} => Type::FieldStruct(name.clone()),
+            Value::CallStruct { name, .. } => Type::FieldStruct(name.clone()),
             Value::DefStruct { name, .. } => Type::Struct(name.clone()),
             Value::None => Type::None,
             Value::Enum { .. } => Type::Enum,
