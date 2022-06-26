@@ -4,7 +4,7 @@ use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct While {
     pub cond: Box<Expr>,
     pub body: Box<Expr>,

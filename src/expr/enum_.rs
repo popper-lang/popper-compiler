@@ -6,7 +6,7 @@ use crate::value::Var;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Enum {
     pub name: String,
     pub fields: Vec<String>,

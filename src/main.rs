@@ -17,7 +17,7 @@ fn main() {
     let exprs = popper::ExprsParser::new().parse(&contents);
     match exprs {
         Ok(exprs) => {
-            let mut vm = vm::Vm::new();
+            /*let mut vm = vm::Vm::new();
 
             let value = exprs.eval(&mut vm);
             match value {
@@ -25,7 +25,8 @@ fn main() {
                 Err(err) => {
                     println!("erreur: {:?}", err);
                 }
-            };
+            };*/
+            println!("{:#?}", exprs);
         }
         Err(e) => {
             println!("erreur: {:?}", e);

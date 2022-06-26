@@ -7,7 +7,7 @@ use crate::value::Var;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct For {
     pub name: String,
     pub iter: Box<Expr>,

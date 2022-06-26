@@ -10,7 +10,7 @@ pub enum LiteralType {
     None,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Literal(pub LiteralType);
 
 impl Evaluateur for Literal {

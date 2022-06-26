@@ -6,7 +6,7 @@ use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Index {
     pub name: Ident,
     pub index: Box<Expr>,

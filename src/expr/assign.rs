@@ -7,7 +7,7 @@ use crate::value::Var;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Assign {
     pub name: String,
     pub value: Box<Expr>,

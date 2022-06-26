@@ -7,7 +7,7 @@ use crate::vm::Evaluateur;
 use crate::vm::Vm;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StructDef {
     pub name: String,
     pub fields: Vec<Ident>,

@@ -5,7 +5,7 @@ use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct To {
     pub value: Box<Expr>,
     pub type_: Box<Expr>,

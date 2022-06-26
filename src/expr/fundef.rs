@@ -10,7 +10,7 @@ use crate::vm::Vm;
 use super::ident::Ident;
 use crate::ast::Expr;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FunDef {
     pub name: String,
     pub args: Vec<(Ident, Expr)>,

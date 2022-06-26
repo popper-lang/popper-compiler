@@ -7,7 +7,7 @@ use crate::vm::Vm;
 
 use super::ident::Ident;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GetAttr {
     pub name: String,
     pub attr: String,

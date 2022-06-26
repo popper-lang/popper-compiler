@@ -11,7 +11,7 @@ use crate::vm::Vm;
 
 use super::ident::Ident;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GetFunc {
     pub name: String,
     pub func: String,

@@ -7,7 +7,7 @@ use crate::vm::Vm;
 
 use super::ident::Ident;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EnumCall {
     pub name: String,
     pub field: String,

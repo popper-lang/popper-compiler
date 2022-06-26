@@ -12,7 +12,7 @@ use crate::vm::Vm;
 
 use super::ident::Ident;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Call {
     pub name: String,
     pub args: Vec<Expr>,

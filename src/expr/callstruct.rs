@@ -8,7 +8,7 @@ use crate::vm::Evaluateur;
 use crate::vm::Vm;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CallStruct {
     pub name: String,
     pub args: Vec<(Ident, Expr)>,

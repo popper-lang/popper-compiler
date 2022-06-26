@@ -8,7 +8,7 @@ use crate::vm::function;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Impl {
     pub name_struct: String,
     pub name_method: String,

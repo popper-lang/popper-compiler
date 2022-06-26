@@ -1,4 +1,3 @@
-
 use crate::ast::Expr;
 use crate::ast::Op;
 use crate::ast::IOpType;
@@ -514,19 +513,17 @@ Expr = {
     Module,
     GetModAttr,
     GetModFunc,
-    GetAttr,
-    " " => panic!("Invalid expression")
+    GetAttr
 
 };
 
 
 
 MultiLine<T> : Vec<T> = {
-    <v:(<T> "\n") *> <e:T*>  => {
-        v.into_iter().chain(e).collect()
+    <v:(<T> ";") *>  => {
+        v.into_iter().collect()
     }
 };
-
 
 
 

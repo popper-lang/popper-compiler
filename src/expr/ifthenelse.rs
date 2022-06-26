@@ -4,7 +4,7 @@ use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct IfThenElse {
     pub cond: Box<Expr>,
     pub then: Box<Expr>,

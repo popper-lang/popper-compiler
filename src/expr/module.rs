@@ -9,7 +9,7 @@ use std::path;
 
 use super::ident::Ident;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Module {
     pub name: String,
 }
