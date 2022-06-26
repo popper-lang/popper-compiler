@@ -59,7 +59,7 @@ Str : Expr = <s:r#"'(\\.|[^'])*'"#> => Expr::Literal(
         )
     )
 );
-IfExpr : Expr = "if" <e:Expr> "{" <e1:Exprs>  "}" => Expr::IfThen(
+IfExpr : Expr = "if" <e:Expr> <e1:Block> => Expr::IfThen(
     ifthen::IfThen {
         cond: Box::new(e),
         then: Box::new(e1)
@@ -345,7 +345,7 @@ Struct : Expr = "struct" <e1:Identifier> "{" <e2:FieldDef> "}" => Expr::StructDe
     _ => panic!("Invalid struct")
 }, fields: e2});
 
-CallStruct : Expr = "@" <e1:Identifier>  <e2:FieldCall>   => Expr::CallStruct ( callstruct::CallStruct {
+CallStruct : Expr = "new" <e1:Identifier>  <e2:FieldCall>   => Expr::CallStruct ( callstruct::CallStruct {
     name: match e1 {
         Expr::Ident(ident::Ident(ident)) => ident,
         _ => panic!("Invalid struct call")
@@ -524,6 +524,8 @@ MultiLine<T> : Vec<T> = {
         v.into_iter().collect()
     }
 };
+
+
 
 
 

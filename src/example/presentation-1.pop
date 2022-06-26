@@ -1,0 +1,5 @@
+struct A {a; b; c};
+
+let b = new A {a => 8; b => 9; c => 10}
+
+b;

@@ -260,4 +260,5 @@ pub enum Error {
     FieldEnumNotFound(FieldEnumNotFoundError),
     InvalidCastNumber(InvalidCastNumberError),
     ItsAConstant(ItsAConstantError),
+    SyntaxError
 }

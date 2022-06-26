@@ -1,5 +1,6 @@
 use crate::ast::Expr;
 use crate::errors::*;
+use crate::value::Type;
 use crate::value::Value;
 use crate::vm::Evaluateur;
 use crate::vm::Vm;
@@ -13,10 +14,16 @@ pub struct IfThen {
 impl Evaluateur for IfThen {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let condition = self.cond.eval(vm)?;
+        
         if let Value::Bool(true) = condition {
             self.then.eval(vm)
-        } else {
+        } else if let Value::Bool(false) = condition {
             Ok(Value::None)
+        } else {
+            Err(Error::TypeMismatch(TypeMismatchError {
+                expected: Type::Bool,
+                found: condition.get_type(),
+            }))
         }
     }
 }

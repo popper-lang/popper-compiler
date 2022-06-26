@@ -1,4 +1,0 @@
-
-def a(b: int) {
-    @println(b)
-}
