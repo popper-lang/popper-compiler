@@ -25,7 +25,7 @@ pub fn get_ast_from_string(string: &str) -> Result<Expr, String> {
 }
 
 pub fn get_ast_from_file(path: &str) -> Result<Expr, String> {
-    let mut content = fs::read_to_string(path).expect("a error when reading the file");
+    let content = fs::read_to_string(path).expect("a error when reading the file");
     
     get_ast_from_string(content.as_str())
 }
@@ -45,7 +45,7 @@ pub fn execute_string(string: &str) -> Result<Value, Error> {
 pub fn execute_file(path: &str) -> Result<Value, Error> {
     eval_expr(match get_ast_from_file(path) {
         Ok(e) => e,
-        Err(d) => return Err(Error::SyntaxError)
+        Err(_) => return Err(Error::SyntaxError)
     })
 }
 
