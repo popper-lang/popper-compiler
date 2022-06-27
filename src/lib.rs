@@ -1,7 +1,7 @@
 
 mod api;
 mod ast;
-mod errors;
+pub mod errors;
 mod expr;
 mod std_t;
 mod value;
@@ -38,14 +38,14 @@ pub fn eval_expr(expr: Expr) -> Result<Value, Error> {
 pub fn execute_string(string: &str) -> Result<Value, Error> {
     eval_expr(match get_ast_from_string(string) {
         Ok(e) => e,
-        Err(d) => return Err(Error::SyntaxError)
+        Err(d) => return Err(Error::SyntaxError(d))
     })
 }
 
 pub fn execute_file(path: &str) -> Result<Value, Error> {
     eval_expr(match get_ast_from_file(path) {
         Ok(e) => e,
-        Err(_) => return Err(Error::SyntaxError)
+        Err(e) => return Err(Error::SyntaxError(e))
     })
 }
 

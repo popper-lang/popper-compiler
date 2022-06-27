@@ -38,9 +38,13 @@ use crate::expr::getmodfunc;
 use std::fs;
 
 grammar;
-pub Exprs : Expr = MultiLine<Expr> => Expr::Block( block::Block {
-    body: <>
-});
+pub Exprs : Expr = {
+    MultiLine<Expr> => Expr::Block( 
+        block::Block {
+            body: <>
+        }
+    )
+}
 Identifier : Expr = <i:r"[a-zA-Z_][a-zA-Z0-9_]*"> => Expr::Ident(
     ident::Ident(i.to_string())
 );
@@ -264,7 +268,7 @@ ArgCall: Vec<Expr> = {
     }
 };
 
-FunDef : Expr = "def" <e1:Identifier>  <e2:ArgDef>  "{" <e3:Exprs> "}" => {
+FunDef : Expr = "def" <e1:Identifier>  <e2:ArgDef>  ":" Type "{" <e3:Exprs> "}" => {
     match e1 {
         Expr::Ident(ident::Ident(ident)) => Expr::FunDef(
             fundef::FunDef{
@@ -294,16 +298,16 @@ Call : Expr =  <e1:Identifier> <e2:ArgCall>  => Expr::Call( call::Call {
     args: e2
 });
 
-FieldDef : Vec<ident::Ident> = {
-    <s:Identifier> <e:(";" Identifier)*>  => {
-        let mut i = vec![match s {
-            Expr::Ident(id) => id,
+FieldDef : Vec<(ident::Ident, Expr)> = {
+    <s:(Identifier ":" Type)> <e:(";" (Identifier ":" Type))*>  => {
+        let mut i = vec![match s.0 {
+            Expr::Ident(id) => (id, s.2),
             _ => panic!("Invalid field definition")
         }];
-        let n = &mut e.into_iter().map(|x| match x.1 {
-            Expr::Ident(id) => id,
+        let n = &mut e.into_iter().map(|x| match x.1.0 {
+            Expr::Ident(id) => (id, x.1.2),
             _ => panic!("Invalid field definition")
-        }).collect::<Vec<ident::Ident>>();
+        }).collect::<Vec<(ident::Ident, Expr)>>();
         i.append(n);
         i
     }

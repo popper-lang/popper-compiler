@@ -36,7 +36,7 @@ pub enum Value {
     },
     DefStruct {
         name: String,
-        fields: Vec<Ident>,
+        fields: Vec<(Ident, Type)>,
         function: HashMap<String, Value>,
     },
     CallStruct {

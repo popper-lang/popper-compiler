@@ -24,14 +24,20 @@ impl Evaluateur for CallStruct {
                     ..
                 } => {
                     let mut map = HashMap::new();
-                    let mut _v;
+                    let mut v;
                     for (arg, value) in self.args.clone() {
                         let Ident(a) = arg;
-                        _v = value.eval(vm)?;
+                        v = value.eval(vm)?;
                         for field in fields {
-                            let Ident(f) = field.clone();
+                            let Ident(f) = field.clone().0;
                             if f == a {
-                                map.insert(field.clone(), value.eval(vm)?);
+                                if v.get_type() != field.1 {
+                                    return Err(Error::TypeMismatch(TypeMismatchError {
+                                        expected: field.clone().1,
+                                        found: v.get_type(),
+                                    }));
+                                }
+                                map.insert(field.0.clone(), value.eval(vm)?);
                             }
                         }
                     }
