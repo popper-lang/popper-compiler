@@ -488,6 +488,9 @@ Value = {
     Index, 
     List, 
     Range,
+    GetModAttr,
+    GetModFunc,
+    GetAttr
     
 };
 
@@ -515,9 +518,7 @@ Expr = {
     Const,
     Type,
     Module,
-    GetModAttr,
-    GetModFunc,
-    GetAttr
+    
 
 };
 
