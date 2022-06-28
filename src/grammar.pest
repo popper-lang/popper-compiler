@@ -1,0 +1,46 @@
+letter = _{'a' .. 'z' | 'A' .. 'Z'}
+digit = _{'0' .. '9'}
+
+ident = @{ !reserved_word ~ (letter ~ (letter | digit | "_")*) }
+number = @{ digit+ }
+reserved_word = _{ keyword | type_builtin | bool }
+keyword = _{ "if" | "else" | "while" | "for" | "let" | "in" }
+bool = { "true" | "false" }
+list = { "[" ~ (expression ~ ","?)* ~ "]" }
+type_builtin = { "int" | "float" | "char" | "bool" }
+
+block = { "{" ~ statement* ~ "}" }
+
+declaration_with_type = { "let" ~ ident ~ ":" ~ type_builtin ~ "=" ~ expression}
+declaration = { "let" ~ ident ~ "=" ~ expression }
+assignment = { ident ~ "=" ~ expression }
+
+if_statement = { "if" ~ expression ~ block }
+if_else_statement = { "if" ~ expression ~ block ~ "else" ~ block }
+while_statement = { "while" ~ expression ~ block }
+
+for_statement = { "for" ~ ident ~ "in" ~ expression ~ block }
+
+to_expression = { value ~ "to" ~ type_builtin }
+
+expression = _{
+    to_expression |
+    value
+}
+
+
+statement = {
+    assignment |
+    declaration_with_type |
+    declaration |
+    if_else_statement |
+    if_statement |
+    while_statement |
+    for_statement |
+    expression
+}
+
+value = _{ ident | number | bool | list}
+
+
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }

@@ -1,15 +1,14 @@
 
-struct User {name: string; pwd: string; email: string};
-
+struct User {name: string, pwd: string, email: string} !
 impl User def hello(self: User) {
     println!("Hello, {}", self->name);
-};
+}
 
 let user1 = new User {
     name => '007';
     pwd => 'secret';
     email => 'zerozero@sept.com'
- };
+ }
  
-println(user1->name);
+println(user1->name)
  

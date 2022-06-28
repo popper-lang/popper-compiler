@@ -10,7 +10,6 @@ use crate::value::Type;
 use crate::value::Value;
 use crate::value::Var;
 
-use lalrpop_util::lalrpop_mod;
 use std::fs;
 
 pub trait Evaluateur {
@@ -247,11 +246,6 @@ impl Vm {
     }
 }
 
-pub fn execute_file(path: &str) -> Vm {
-    lalrpop_mod!(pub popper);
-    let string = fs::read_to_string(path).unwrap();
-    let expr = popper::ExprsParser::new().parse(&string).unwrap();
-    let mut vm = Vm::new();
-    expr.eval(&mut vm).unwrap();
-    return vm;
+pub fn execute_file(file: &str) -> Vm {
+    Vm::new()
 }

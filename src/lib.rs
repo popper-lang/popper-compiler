@@ -1,19 +1,18 @@
 
-mod api;
-mod ast;
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
+pub mod parser;
+pub mod ast;
+pub mod expr;
+pub mod value;
+pub mod vm;
 pub mod errors;
-mod expr;
-mod std_t;
-mod value;
-mod vm;
-use std::fs;
-use ast::Expr;
-use errors::Error;
-use lalrpop_util::lalrpop_mod;
-use value::Value;
-use vm::{Vm, Evaluateur};
+pub mod std_t;
+pub mod api;
 
 
+/*
 
 lalrpop_mod!(pub popper);
 
@@ -48,4 +47,4 @@ pub fn execute_file(path: &str) -> Result<Value, Error> {
         Err(e) => return Err(Error::SyntaxError(e))
     })
 }
-
+*/
