@@ -1,6 +1,10 @@
-use crate::errors::*;
+use crate::{errors::*, expr::ident};
 use crate::expr::ident::Ident;
 use crate::vm::Vm;
+use crate::std_t::int::BuiltinInt;
+use crate::std_t::string::BuiltinString;
+use crate::std_t::bool::BuiltinBool;
+use crate::std_t::Builtin;
 use std::{collections::HashMap, fmt, hash::Hash, ops::Range, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -58,6 +62,12 @@ pub enum Value {
         name: String,
     },
     None,
+}
+
+pub struct Object {
+    pub name: String,
+    pub attr: HashMap<String, Var>,
+    pub type_: Type,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -137,6 +147,16 @@ impl Value {
         match (self, other) {
             (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a % b)),
             _ => Err(Error::CannotMod(CannotModError {
+                left: self.to_string(),
+                right: other.to_string(),
+            })),
+        }
+    }
+
+    pub fn pow(&self, other: &Value) -> Result<Value, Error> {
+        match (self, other) {
+            (Value::Number(a), Value::Number(b)) => Ok(Value::Number(a.powf(*b))),
+            _ => Err(Error::CannotPow(CannotPowError {
                 left: self.to_string(),
                 right: other.to_string(),
             })),
@@ -271,6 +291,116 @@ impl Value {
             Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
             Value::Type(_) => Type::Type("unknow".to_string()),
             Value::Module { name, .. } => Type::Module(name.to_string()),
+        }
+    }
+
+    pub fn get_object(&self) -> Object {
+        match self {
+            Value::Number(n) => {
+                Object {
+                    name: "int".to_string(),
+                    attr: BuiltinInt::build(),
+                    type_: Type::Int,
+                }
+            },
+            Value::String(s) => {
+                Object {
+                    name: "string".to_string(),
+                    attr: BuiltinString::build(),
+                    type_: Type::String,
+                }
+            },
+            Value::Bool(b) => {
+                Object {
+                    name: "bool".to_string(),
+                    attr: BuiltinBool::build(),
+                    type_: Type::Bool,
+                }
+            },
+            Value::Function { .. } => {
+                Object {
+                    name: "function".to_string(),
+                    attr: HashMap::new(),
+                    type_: Type::Func,
+                }
+            },
+            Value::List(list) => {
+                Object {
+                    name: "list".to_string(),
+                    attr: HashMap::new(), // TODO: create a list type
+                    type_: Type::List,
+                }
+            },
+            Value::Range(range) => {
+                Object {
+                    name: "range".to_string(),
+                    attr: HashMap::new(), // TODO: create a range type
+                    type_: Type::Range,
+                }
+            },
+            Value::CallStruct { name, fields, .. } => {
+                let mut map = HashMap::new();
+                for (k, v) in fields.iter() {
+                    map.insert(match k {
+                        ident::Ident(e) => e.clone(),
+                        _ => unreachable!(),
+                    }, Var {
+                        value: v.clone(),
+                        type_: v.get_type(),
+                        mutable: false
+                    });
+                }
+                Object {
+                    name: name.clone(),
+                    attr: map,
+                    type_: Type::FieldStruct(name.clone()),
+                }
+            },
+            Value::DefStruct { name, .. } => {
+                Object {
+                    name: name.clone(),
+                    attr: HashMap::new(),
+                    type_: Type::Struct(name.clone()),
+                }
+            },
+            Value::None => {
+                Object {
+                    name: "None".to_string(),
+                    attr: HashMap::new(),
+                    type_: Type::None,
+                }
+            },
+            Value::Enum { .. } => {
+                Object {
+                    name: "enum".to_string(),
+                    attr: HashMap::new(),
+                    type_: Type::Enum,
+                }
+            },
+            Value::EnumCall { name, .. } => {
+                Object {
+                    name: name.clone(),
+                    attr: HashMap::new(),
+                    type_: Type::FieldEnum(name.clone()),
+                }
+            },
+            Value::Type(_) => todo!(),
+            Value::Module { context, name } => {
+                let mut map = HashMap::new();
+                for (k, v) in context.iter() {
+                    map.insert(match k {
+                        ident::Ident(e) => e.clone(),
+                        _ => unreachable!(),
+                    }, v.clone());
+                }
+                Object {
+                    name: name.clone(),
+                    attr: map,
+                    type_: Type::Module(name.clone()),
+                }
+            },
+        
+
         }
     }
 }

@@ -76,7 +76,7 @@ pub struct IndexOutOfBoundsError {
 pub struct FunctionArgumentMismatchError {
     pub name: String,
     pub expected: usize,
-    pub found: usize,
+    pub got: usize,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -114,6 +114,13 @@ pub struct InvalidCastNumberError {
 pub struct ItsAConstantError {
     pub var_name: String,
 }
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct  CannotPowError {
+    pub left: String,
+    pub right: String,
+}
+
 
 impl DisplayError for VarNotFoundError {
     fn display_error(&self) -> String {
@@ -206,7 +213,7 @@ impl DisplayError for FunctionArgumentMismatchError {
     fn display_error(&self) -> String {
         format!(
             "Function {} expected {} arguments, found {}",
-            self.name, self.expected, self.found
+            self.name, self.expected, self.got
         )
     }
 }
@@ -241,6 +248,14 @@ impl DisplayError for ItsAConstantError {
     }
 }
 
+impl DisplayError for CannotPowError {
+    fn display_error(&self) -> String {
+        format!("Cannot pow {} and {}", self.left, self.right)
+    }
+}
+
+
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
     VarNotFound(VarNotFoundError),
@@ -260,5 +275,8 @@ pub enum Error {
     FieldEnumNotFound(FieldEnumNotFoundError),
     InvalidCastNumber(InvalidCastNumberError),
     ItsAConstant(ItsAConstantError),
-    SyntaxError(String)
+    SyntaxError(String),
+    CannotPow(CannotPowError),
+    TooManyArgumentsForFunction(FunctionArgumentMismatchError),
+    NotEnoughArgumentsForFunction(FunctionArgumentMismatchError)
 }

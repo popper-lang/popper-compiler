@@ -4,13 +4,11 @@ use std::rc::Rc;
 
 use crate::errors::*;
 use crate::expr::ident::Ident;
-use crate::std_t::BuiltinFunction;
+use crate::std_t::function::BuiltinFunction;
 use crate::value::Function;
 use crate::value::Type;
 use crate::value::Value;
 use crate::value::Var;
-
-use std::fs;
 
 pub trait Evaluateur {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error>;

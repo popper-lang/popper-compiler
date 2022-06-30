@@ -28,6 +28,19 @@ impl Evaluateur for Call {
                     ..
                 } => {
                     let mut dict_args = HashMap::new();
+                    if a.len() < self.args.len() {
+                        return Err(Error::NotEnoughArgumentsForFunction(FunctionArgumentMismatchError {
+                            name: self.name.clone(),
+                            expected: a.len(),
+                            got: self.args.len(),
+                        }));
+                    } else if a.len() > self.args.len() {
+                        return Err(Error::TooManyArgumentsForFunction(FunctionArgumentMismatchError {
+                            name: self.name.clone(),
+                            expected: a.len(),
+                            got: self.args.len(),
+                        }));
+                    }
                     for (i, arg) in a.iter().enumerate() {
                         let value = self.args[i].eval(vm)?;
 

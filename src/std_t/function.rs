@@ -1,28 +1,21 @@
-use crate::errors::Error;
-use crate::value::Type;
-use crate::value::Value;
-use crate::value::Var;
-use crate::vm::Vm;
-use std::collections::HashMap;
 use std::io::Write;
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
-pub trait Builtin {
-    type BuiltinValue;
-    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)>;
-}
+use crate::value::{Value, Type, Var};
+use crate::vm::Vm;
+use crate::errors::*;
+use super::Builtin;
 
 pub struct BuiltinFunction;
-
 impl Builtin for BuiltinFunction {
-    type BuiltinValue = Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>;
-    fn build() -> HashMap<String, (Self::BuiltinValue, Vec<(String, Type)>)> {
-        let mut map = HashMap::<String, (Self::BuiltinValue, Vec<(String, Type)>)>::new();
+    type BuiltinValue = (Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>, Vec<(String, Type)>);
+    fn build() -> HashMap<String, Self::BuiltinValue> {
+        let mut map = HashMap::<String, Self::BuiltinValue>::new();
         map.insert(
             "print".to_string(),
             (
                 Rc::new(BuiltinFunction::print),
-                vec![("msg".to_string(), Type::String)],
+                vec![("msg".to_string(), Type::Any)],
             ),
         );
         map.insert(
@@ -47,6 +40,7 @@ impl Builtin for BuiltinFunction {
                 vec![("msg".to_string(), Type::String)],
             ),
         );
+        
         map
     }
 }
@@ -56,12 +50,13 @@ impl BuiltinFunction {
         for i in args {
             print!("{}", i.1.value.display_value());
         }
+        println!();
         Ok(Value::None)
     }
 
     pub fn println(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
         for i in args {
-            print!("{}", i.1.value.display_value());
+            println!("{}", i.1.value.display_value());
         }
         println!();
         Ok(Value::None)

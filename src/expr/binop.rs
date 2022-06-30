@@ -22,6 +22,7 @@ impl Evaluateur for BinOp {
             Op::Mul => Ok(left.mul(&right)?),
             Op::Div => Ok(left.div(&right)?),
             Op::Mod => Ok(left.modulo(&right)?),
+            Op::Pow => Ok(left.pow(&right)?),
             Op::Eq => Ok(left.eq(&right)?),
             Op::Neq => Ok(left.neq(&right)?),
             Op::Lt => Ok(left.lt(&right)?),

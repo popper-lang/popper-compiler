@@ -1,8 +1,12 @@
+
+
 use pest::iterators::Pair;
 
 use crate::ast::Expr;
 use crate::expr::*;
+use crate::expr::literal::LiteralType;
 use crate::value::Type;
+use crate::ast::Op;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -17,6 +21,10 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
                 Some(pair) => build_ast(pair),
                 None => Err("empty statement".to_string()),
             }
+        }
+        Rule::string => {
+            let s = rules.as_str()[1..rules.as_str().len() - 1].to_string();
+            Ok(Expr::Literal(literal::Literal(LiteralType::String(s))))
         }
         Rule::if_statement => {
             let condition = build_ast(rules.clone().into_inner().next().unwrap())?;
@@ -132,9 +140,165 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
                 elems: exprs,
             }))
         },
-        Rule::expression => todo!(),
+        Rule::fun_statement => {
+            let name = rules.clone().into_inner().next().unwrap().as_str();
+            let mut args = vec![];
+            let filrered = rules.clone().into_inner().skip(1).filter(|pair| pair.as_rule() != Rule::block);
+            let list_type = filrered.clone().filter(|pair| pair.as_rule() == Rule::type_builtin);
+            let list_ident = filrered.clone().filter(|pair| pair.as_rule() == Rule::ident);
+            let group = list_ident.zip(list_type);
+            for (ident, type_) in group {
+                args.push((match build_ast(ident)? {
+                    Expr::Ident(i) => i,
+                    e => panic!("expected ident found {:?}", e),
+                }, build_ast(type_)?));
+            }
+
+            let block = build_ast(rules.clone().into_inner().find(|e| e.as_rule() == Rule::block).unwrap())?;
+            return Ok(Expr::FunDef(fundef::FunDef {
+                name: name.to_string(),
+                args: args,
+                body: Box::new(block),
+            }))
+
+        },
+        Rule::call_expression => {
+            let name = rules.clone().into_inner().next().unwrap().as_str();
+            let mut args = vec![];
+            for pair in rules.clone().into_inner().skip(1) {
+                args.push(build_ast(pair)?);
+            }
+            Ok(Expr::Call(call::Call {
+                name: name.to_string(),
+                args: args,
+            }))
+        },
+        Rule::struct_statement => {
+            let name = rules.clone().into_inner().next().unwrap().as_str();
+            let mut fields = vec![];
+            let iter = rules
+            .clone()
+            .into_inner()
+            .skip(1)
+            .filter(
+                |pair| pair.as_rule() == Rule::ident
+            )
+            .zip(
+                rules.clone().into_inner().filter(
+                    |pair| pair.as_rule() == Rule::type_builtin
+                )
+            );
+            for (ident, type_) in iter {
+                fields.push((ident::Ident(ident.as_str().to_string()), build_ast(type_)?))
+            }
+            
+            Ok(Expr::StructDef(structdef::StructDef {
+                name: name.to_string(),
+                fields: fields,
+            }))
+        },
+        Rule::init_struct_expression => {
+            let name = rules.clone().into_inner().next().unwrap().as_str().to_string();
+            let mut name_attr = Vec::new();
+            let mut value = Vec::new();
+            let iter_one = rules.clone().into_inner().skip(1).step_by(2);
+            let iter_two =  rules.clone().into_inner().step_by(2).skip(1);
+            for i in iter_one {
+                name_attr.push(match build_ast(i)? {
+                    Expr::Ident(i) => i,
+                    e => { 
+                        panic!("expected ident, found {:#?}", e);
+                    }
+                })
+            }
+            for n in iter_two {
+                value.push(build_ast(n)?);
+            }
+            Ok(Expr::CallStruct(callstruct::CallStruct {
+                name,
+                args:  name_attr.into_iter().zip(value.into_iter()).collect()
+            }))
+        },
+        Rule::impl_statement => {
+            let name = rules.clone().into_inner().next().unwrap();
+            let func = match build_ast(rules.into_inner().nth(1).unwrap())? {
+                Expr::FunDef(f) => f,
+                e => panic!("expected function found {:#?}", e)
+            };
+            Ok(Expr::Impl(impl_::Impl {
+                name_struct: name.as_str().to_string(),
+                name_method: func.name,
+                args: func.args,
+                body: func.body
+            }))
+        },
+        Rule::attr_expression => {
+            let struct_name = rules.clone().into_inner().next().unwrap();
+            let attr_name = rules.into_inner().nth(1).unwrap();
+
+            Ok(Expr::GetAttr(getattr::GetAttr {
+                name: Box::new(build_ast(struct_name)?),
+                attr: match build_ast(attr_name)? {
+                    Expr::Ident(ident::Ident(i)) => i,
+                    e => panic!("expected ident found {:#?}", e)
+                }
+            }))
+        }
+        Rule::range_expression => {
+            let start = build_ast(rules.clone().into_inner().next().unwrap())?;
+            let end = build_ast(rules.clone().into_inner().nth(1).unwrap())?;
+            Ok(Expr::Range(range::Range {
+                start: Box::new(start),
+                end: Box::new(end),
+            }))
+        },
+        Rule::typeof_expression => {
+            let value = build_ast(rules.clone().into_inner().next().unwrap())?;
+            Ok(Expr::Typeof(typeof_::Typeof {
+                value: Box::new(value),
+            }))
+        },
+        Rule::expression => {
+            todo!()
+        },
+        Rule::parent_expression => {
+            build_ast(rules.clone().into_inner().next().unwrap())
+        },
+        Rule::call_attr_expression => {
+            let name = rules.clone().into_inner().next().unwrap();
+            let attr = rules.clone().into_inner().nth(1).unwrap();
+            println!("{:#?}", rules.clone());
+            let attr_string = match attr.as_str() {
+                "+" => "add",
+                "-" => "sub",
+                "*" => "mul",
+                "/" => "div",
+                ">" => "gt",
+                "<" => "lt",
+                ">=" => "ge",
+                "<=" => "le",
+                "==" => "eq",
+                "!=" => "ne",
+                "^" => "pow",
+                "&&" => "and",
+                "||" => "or",
+                e => e
+            };
+            let mut args = vec![];
+            for pair in rules.clone().into_inner().skip(2) {
+                args.push(build_ast(pair)?);
+            }
+            Ok(Expr::GetFunc(getfunc::GetFunc {
+                name: Box::new(build_ast(name)?),
+                func: attr_string.to_string(),
+                args: args,
+            }))
+        },
         Rule::WHITESPACE => todo!(),
         Rule::value => todo!(),
+        Rule::declaration_attr => todo!(),
+        Rule::EOI => Ok(Expr::Empty),
+        _ => unreachable!()
     }
 }
 

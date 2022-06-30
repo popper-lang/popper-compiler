@@ -1,46 +1,104 @@
 letter = _{'a' .. 'z' | 'A' .. 'Z'}
 digit = _{'0' .. '9'}
 
-ident = @{ !reserved_word ~ (letter ~ (letter | digit | "_")*) }
+ident = @{ !reserved_word ~ (letter ~ (letter | digit | "_")*) | op }
+string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
 number = @{ digit+ }
-reserved_word = _{ keyword | type_builtin | bool }
-keyword = _{ "if" | "else" | "while" | "for" | "let" | "in" }
+reserved_word = _{ keyword | type_builtin | bool  }
+keyword = _{ 
+    "if"    |
+    "else"  |
+    "while" | 
+    "for"   | 
+    "let"   | 
+    "in"    | 
+    "def"   |
+    "struct"|
+    "impl"  |
+    "to"    | 
+    "cast"
+}
 bool = { "true" | "false" }
-list = { "[" ~ (expression ~ ","?)* ~ "]" }
+list = { "[" ~ (expression ~ ",")* ~ "]" }
 type_builtin = { "int" | "float" | "char" | "bool" }
+typeof_expression = { "typeof" ~ expression }
 
 block = { "{" ~ statement* ~ "}" }
+op = _{
+    "+"     |
+    "-"     |
+    "*"     |
+    "/"     |
+    "%"     |
+    "^"     |
+    "=="    |
+    "!="    |
+    "<"     |
+    ">"     |
+    "<="    |
+    ">="    |
+    "&&"    |
+    "||"    
+}
 
-declaration_with_type = { "let" ~ ident ~ ":" ~ type_builtin ~ "=" ~ expression}
+
 declaration = { "let" ~ ident ~ "=" ~ expression }
+declaration_with_type = { "let" ~ ident ~ ":" ~ type_builtin ~ "=" ~ expression}
+declaration_attr = _{ (ident ~ ":" ~ type_builtin)? }
+
 assignment = { ident ~ "=" ~ expression }
 
 if_statement = { "if" ~ expression ~ block }
 if_else_statement = { "if" ~ expression ~ block ~ "else" ~ block }
+
 while_statement = { "while" ~ expression ~ block }
+for_statement   = { "for" ~ ident ~ "in" ~ expression ~ block }
 
-for_statement = { "for" ~ ident ~ "in" ~ expression ~ block }
+fun_statement   = { "def" ~ ident ~ "(" ~ (ident ~ ":" ~ type_builtin)? ~ ("," ~ ident ~ ":" ~ type_builtin)* ~ ")" ~ block }
+impl_statement  = { "impl" ~ ident ~ fun_statement }
+struct_statement = { "struct" ~ ident ~ "{" ~ declaration_attr ~ ("," ~ declaration_attr)* ~ "}" }
 
-to_expression = { value ~ "to" ~ type_builtin }
+
+
+
+to_expression = { "cast" ~ expression ~ "to" ~ type_builtin }
+call_expression = { ident ~ expression* }
+init_struct_expression = { ident ~ "{" ~ (ident ~ "=" ~ expression) ~ ("," ~ ident ~ "=" ~ expression)* ~ "}" }
+attr_expression = { value ~ "." ~ ident }
+call_attr_expression = { value ~ "." ~ ident ~ expression+  }
+range_expression = { value ~ ":" ~ value }
+parent_expression = { "(" ~ expression ~ ")" }
 
 expression = _{
-    to_expression |
-    value
+    call_expression         |
+    init_struct_expression  |
+    call_attr_expression    |
+    attr_expression         |
+    range_expression        |
+    to_expression           |
+    typeof_expression       |
+    parent_expression       |
+    value                              
 }
 
 
 statement = {
-    assignment |
-    declaration_with_type |
-    declaration |
-    if_else_statement |
-    if_statement |
-    while_statement |
-    for_statement |
-    expression
+    SOI ~ (
+    assignment              |
+    declaration_with_type   |
+    declaration             |
+    if_else_statement       |
+    if_statement            |
+    while_statement         |
+    for_statement           |
+    fun_statement           |
+    struct_statement        |
+    impl_statement          |
+    expression  
+    ) ~ EOI        
 }
 
-value = _{ ident | number | bool | list}
+value = _{ ident | number | bool | list | type_builtin | string }
 
 
 WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
