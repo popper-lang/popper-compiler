@@ -12,27 +12,25 @@ use super::ident::Ident;
 #[derive(Clone, Debug)]
 pub struct Module {
     pub name: String,
+    pub as_name: String,
 }
 
 impl Evaluateur for Module {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
-        let vm_of_module = execute_file(self.name.as_str());
-        let n = match path::Path::new(&self.name).file_name() {
-            Some(name) => name.to_str().unwrap().to_string(),
-            None => self.name.clone(),
-        }
-        .split(".")
-        .collect::<Vec<&str>>()[0]
-            .to_string();
+        let vm_of_module = match execute_file(self.name.as_str()) {
+            Ok(vm) => vm,
+            Err(e) => panic!("{}", e),
+        };
+        
 
         vm.set_ident(
-            Ident(n.clone()),
+            Ident(self.as_name.clone()),
             Var {
                 value: Value::Module {
                     context: vm_of_module.0,
-                    name: n.clone(),
+                    name: self.as_name.clone(),
                 },
-                type_: Type::Module(n),
+                type_: Type::Module(self.as_name.clone()),
                 mutable: false,
             },
         );

@@ -1,5 +1,9 @@
+use pest::Parser;
+
+use crate::parser::build_ast;
 use crate::std_t::Builtin;
 use std::collections::HashMap;
+use std::fs;
 use std::rc::Rc;
 
 use crate::errors::*;
@@ -9,6 +13,7 @@ use crate::value::Function;
 use crate::value::Type;
 use crate::value::Value;
 use crate::value::Var;
+use crate::parser::ExprParser;
 
 pub trait Evaluateur {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error>;
@@ -244,6 +249,26 @@ impl Vm {
     }
 }
 
-pub fn execute_file(file: &str) -> Vm {
-    Vm::new()
+pub fn execute_file(file: &str) -> Result<Vm, String> {
+    let content = fs::read_to_string(file).unwrap();
+    let mut result = ExprParser::parse(crate::parser::Rule::program, &content);
+    let mut vm = Vm::new();
+    match result {
+        Ok(ref mut e) => {
+            for rule in e {
+                
+                match build_ast(rule) {
+                    Ok(ast) => {
+                        ast.eval(&mut vm)
+                    }
+                    Err(e) => {
+                        return Err(e);
+                    }
+                };
+            };
+
+        },
+        Err(e) => return Err(e.to_string())
+    };
+    Ok(vm)
 }

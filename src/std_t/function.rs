@@ -66,7 +66,7 @@ impl BuiltinFunction {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
-            let value = args.get("0").unwrap();
+            let value = args.get("list").unwrap();
             Ok(match value {
                 Var {
                     value: Value::String(s),

@@ -1,14 +1,28 @@
+use "src/example/presentation2.pop" as presentation2
 
-struct User {name: string, pwd: string, email: string} !
-impl User def hello(self: User) {
-    println!("Hello, {}", self->name);
+presentation2.test 6
+println "Hello "
+
+fun hello with name: string = {
+    println "Hello ".+ name
 }
 
-let user1 = new User {
-    name => '007';
-    pwd => 'secret';
-    email => 'zerozero@sept.com'
- }
- 
-println(user1->name)
- 
+fun pop with l: list = {
+    let length = len l 
+    l[0:(length.- 1)]
+}
+
+fun remove_first with l: list = {
+    let length = len l 
+    l[1:length]
+}
+fun remove_n_first with l: list, n: int = {
+    let length = len l
+    l[n:length]
+}
+fun remove_n_last with l: list, n: int = {
+    let length = len l 
+    l[0:(length.- n)]
+}
+
+remove_n_first [29, 19, 30, 10,] 2

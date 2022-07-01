@@ -4,6 +4,7 @@ use pest::iterators::Pair;
 
 use crate::ast::Expr;
 use crate::expr::*;
+use crate::expr::ident::Ident;
 use crate::expr::literal::LiteralType;
 use crate::value::Type;
 use crate::ast::Op;
@@ -69,6 +70,7 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
                 "int" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::Int))),
                 "bool" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::Bool))),
                 "string" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::String))),
+                "list" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::List))),
                 _ => Err("invalid type".to_string()),
             }
         },
@@ -154,7 +156,7 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
                 }, build_ast(type_)?));
             }
 
-            let block = build_ast(rules.clone().into_inner().find(|e| e.as_rule() == Rule::block).unwrap())?;
+            let block = build_ast(rules.clone().into_inner().skip_while(|e| e.as_rule() != Rule::assign_op).nth(1).unwrap())?;
             return Ok(Expr::FunDef(fundef::FunDef {
                 name: name.to_string(),
                 args: args,
@@ -298,7 +300,26 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
         Rule::value => todo!(),
         Rule::declaration_attr => todo!(),
         Rule::EOI => Ok(Expr::Empty),
-        _ => unreachable!()
+        Rule::op => todo!(),
+        Rule::program => todo!(),
+        Rule::index_expression => {
+            let name = rules.clone().into_inner().next().unwrap();
+            let index = rules.clone().into_inner().nth(1).unwrap();
+            Ok(Expr::Index(index::Index {
+                name: Ident(name.as_str().to_string()),
+                index: Box::new(build_ast(index)?),
+            }))
+        },
+        Rule::use_statement => {
+            let name = rules.clone().into_inner().next().unwrap();
+            let as_name = rules.clone().into_inner().nth(1).unwrap();
+            Ok(Expr::Module(module::Module {
+                name: name.as_str()[1..name.as_str().len()-1].to_string(),
+                as_name: as_name.as_str().to_string(),
+            }))
+        },
+        Rule::assign_op => todo!(),
+        Rule::COMMENT => todo!(),
     }
 }
 

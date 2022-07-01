@@ -102,7 +102,7 @@ impl BuiltinString {
         };
         let right = args.get("right").unwrap();
         match (left.clone().value, right.clone().value) {
-            (Value::Number(l), Value::Number(r)) => Ok(Value::Number(l + r)),
+            (Value::String(l), Value::String(r)) => Ok(Value::String(l + r.as_str())),
             _ => Err(Error::CannotAdd(CannotAddError {
                 left: left.value.to_string(),
                 right: right.value.to_string(),
