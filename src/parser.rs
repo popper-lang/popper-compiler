@@ -66,13 +66,7 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
             ))))
         },
         Rule::type_builtin => {
-            match rules.as_str() {
-                "int" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::Int))),
-                "bool" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::Bool))),
-                "string" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::String))),
-                "list" => Ok(Expr::TypeExpr(type_::TypeExpr(Type::List))),
-                _ => Err("invalid type".to_string()),
-            }
+            build_ast(rules.into_inner().next().unwrap())
         },
         Rule::block => {
             let mut exprs = vec![];
@@ -269,7 +263,6 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
         Rule::call_attr_expression => {
             let name = rules.clone().into_inner().next().unwrap();
             let attr = rules.clone().into_inner().nth(1).unwrap();
-            println!("{:#?}", rules.clone());
             let attr_string = match attr.as_str() {
                 "+" => "add",
                 "-" => "sub",
@@ -299,7 +292,7 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
         Rule::WHITESPACE => todo!(),
         Rule::value => todo!(),
         Rule::declaration_attr => todo!(),
-        Rule::EOI => Ok(Expr::Empty),
+        //Rule::EOI => Ok(Expr::Empty),
         Rule::op => todo!(),
         Rule::program => todo!(),
         Rule::index_expression => {
@@ -317,6 +310,18 @@ pub fn build_ast(rules: Pair<Rule>) -> Result<Expr, String> {
                 name: name.as_str()[1..name.as_str().len()-1].to_string(),
                 as_name: as_name.as_str().to_string(),
             }))
+        },
+        Rule::int_type => {
+            Ok(Expr::TypeExpr(type_::TypeExpr(Type::Int)))
+        },
+        Rule::string_type => {
+            Ok(Expr::TypeExpr(type_::TypeExpr(Type::String)))
+        },
+        Rule::bool_type => {
+            Ok(Expr::TypeExpr(type_::TypeExpr(Type::Bool)))
+        },
+        Rule::list_type => {
+            Ok(Expr::TypeExpr(type_::TypeExpr(Type::List)))
         },
         Rule::assign_op => todo!(),
         Rule::COMMENT => todo!(),

@@ -21,9 +21,8 @@ pub struct GetFunc {
 
 impl Evaluateur for GetFunc {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
-        
         let name = self.name.eval(vm)?;
-
+        
         let s = match name.get_object() {
             Object {
                 attr,
@@ -52,6 +51,10 @@ impl Evaluateur for GetFunc {
                 for (argv, argn) in self.args.iter().zip(a) {
                     let value = argv.eval(vm)?;
                     if value.get_type() != argn.1 {
+                        println!("[ERROR] line 56 file 'getfunc.rs', {:#?}", Error::TypeMismatch(TypeMismatchError {
+                            expected: argn.clone().1,
+                            found: value.get_type(),
+                        }));
                         return Err(Error::TypeMismatch(TypeMismatchError {
                             expected: argn.clone().1,
                             found: value.get_type(),
@@ -66,18 +69,33 @@ impl Evaluateur for GetFunc {
                         },
                     );
                 }
-                new_vm.set_ident(
-                    Ident("self".to_string()),
-                    Var {
-                        value: call_struct,
-                        type_: Type::Struct(name.clone().get_object().name),
-                        mutable: false,
-                    },
-                );
+                if let Value::Module { context, .. } = name {
+                    let mut b = HashMap::new();
+                    for (k, v) in context.iter() {
+                        b.insert(match k {
+                            Ident(name) => name.clone()
+                        }, v.clone());
+                    }
+                    args_map.extend(b);
+                } else {
+                    new_vm.set_ident(
+                        Ident("self".to_string()),
+                        Var {
+                            value: call_struct,
+                            type_: Type::Struct(name.clone().get_object().name),
+                            mutable: false,
+                        },
+                    );
+                    
+                }
 
                 return f(args_map, new_vm);
             }
             _ => {
+                println!("[ERROR] line 95 file 'getfunc.rs', {:#?}", Error::TypeMismatch(TypeMismatchError {
+                    expected: Type::Func,
+                    found: s.get_type(),
+                }));
                 return Err(Error::TypeMismatch(TypeMismatchError {
                     expected: Type::Func,
                     found: Type::None,

@@ -12,6 +12,7 @@ pub struct Typeof {
 impl Evaluateur for Typeof {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let value = self.value.eval(vm)?;
+        
         Ok(Value::Type(value.get_type()))
     }
 }

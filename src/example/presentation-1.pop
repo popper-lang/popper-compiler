@@ -1,28 +1,17 @@
-use "src/example/presentation2.pop" as presentation2
 
-presentation2.test 6
-println "Hello "
-
-fun hello with name: string = {
-    println "Hello ".+ name
+struct A {
+    a: int,
+    b: int,
+    c: int
+}
+impl A fun hello with l: int = {
+     39
 }
 
-fun pop with l: list = {
-    let length = len l 
-    l[0:(length.- 1)]
+let a = A {
+    a = 7,
+    b = 8,
+    c = 9
 }
 
-fun remove_first with l: list = {
-    let length = len l 
-    l[1:length]
-}
-fun remove_n_first with l: list, n: int = {
-    let length = len l
-    l[n:length]
-}
-fun remove_n_last with l: list, n: int = {
-    let length = len l 
-    l[0:(length.- n)]
-}
-
-remove_n_first [29, 19, 30, 10,] 2
+a.hello 9998

@@ -1,6 +1,6 @@
 use crate::value::Type;
 
-trait DisplayError {
+pub trait DisplayError {
     fn display_error(&self) -> String;
 }
 
@@ -121,6 +121,10 @@ pub struct  CannotPowError {
     pub right: String,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct MethodAlreadyExistsError {
+    pub name: String,
+}
 
 impl DisplayError for VarNotFoundError {
     fn display_error(&self) -> String {
@@ -250,10 +254,15 @@ impl DisplayError for ItsAConstantError {
 
 impl DisplayError for CannotPowError {
     fn display_error(&self) -> String {
-        format!("Cannot pow {} and {}", self.left, self.right)
+        format!("Cannot pow '{}' and '{}'", self.left, self.right)
     }
 }
 
+impl DisplayError for MethodAlreadyExistsError {
+    fn display_error(&self) -> String {
+        format!("Method '{}' already exists", self.name)
+    }
+}
 
 
 #[derive(Debug, PartialEq, Clone)]
@@ -278,5 +287,35 @@ pub enum Error {
     SyntaxError(String),
     CannotPow(CannotPowError),
     TooManyArgumentsForFunction(FunctionArgumentMismatchError),
-    NotEnoughArgumentsForFunction(FunctionArgumentMismatchError)
+    NotEnoughArgumentsForFunction(FunctionArgumentMismatchError),
+    MethodAlreadyExists(MethodAlreadyExistsError),
+}
+
+impl DisplayError for Error {
+    fn display_error(&self) -> String {
+        match self {
+            Error::VarNotFound(err) => err.display_error(),
+            Error::VarAlreadyDefined(err) => err.display_error(),
+            Error::TypeMismatch(err) => err.display_error(),
+            Error::CannotAdd(err) => err.display_error(),
+            Error::CannotSub(err) => err.display_error(),
+            Error::CannotMul(err) => err.display_error(),
+            Error::CannotDiv(err) => err.display_error(),
+            Error::CannotMod(err) => err.display_error(),
+            Error::CannotCompare(err) => err.display_error(),
+            Error::FunctionNotFound(err) => err.display_error(),
+            Error::IndexOutOfBounds(err) => err.display_error(),
+            Error::StructNotFound(err) => err.display_error(),
+            Error::AttrNotFound(err) => err.display_error(),
+            Error::EnumNotFound(err) => err.display_error(),
+            Error::FieldEnumNotFound(err) => err.display_error(),
+            Error::InvalidCastNumber(err) => err.display_error(),
+            Error::ItsAConstant(err) => err.display_error(),
+            Error::CannotPow(err) => err.display_error(),
+            Error::TooManyArgumentsForFunction(err) => err.display_error(),
+            Error::NotEnoughArgumentsForFunction(err) => err.display_error(),
+            Error::MethodAlreadyExists(err) => err.display_error(),
+            Error::SyntaxError(err) => err.to_string(),
+        }
+    }
 }

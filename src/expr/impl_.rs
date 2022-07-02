@@ -32,6 +32,13 @@ impl Evaluateur for Impl {
             }) => {
                 fiw = fields.clone();
                 fuw = function.clone();
+                for (k, _) in fiw.clone() {
+                    if k == Ident(self.clone().name_method) {
+                        return Err(Error::MethodAlreadyExists(MethodAlreadyExistsError {
+                            name: self.name_method.clone(),
+                        }));
+                    }
+                }
             }
             None => {
                 return Err(Error::StructNotFound(StructNotFoundError {

@@ -3,6 +3,7 @@ use pest::Parser;
 use crate::parser::build_ast;
 use crate::std_t::Builtin;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::fs;
 use std::rc::Rc;
 
@@ -19,7 +20,7 @@ pub trait Evaluateur {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error>;
 }
 
-pub fn function<T: Evaluateur + 'static>(body: T) -> Function {
+pub fn function<T: Evaluateur + 'static + Debug>(body: T) -> Function {
     Function(Rc::new(
         move |args: HashMap<String, Var>, vm: Vm| -> Result<Value, Error> {
             let mut vm = vm.clone();
@@ -259,7 +260,13 @@ pub fn execute_file(file: &str) -> Result<Vm, String> {
                 
                 match build_ast(rule) {
                     Ok(ast) => {
-                        ast.eval(&mut vm)
+                        match ast.eval(&mut vm) {
+                            Ok(e) => println!("[DEBUG] line 263 file 'mod.rs'(vm) : result = {:#?}", e),
+                            Err(e) => {
+                                println!("[ERROR] line 263 file 'mod.rs'(vm) : {:#?}", e);
+                                return Err(format!("{:#?}", e));
+                            }
+                        }
                     }
                     Err(e) => {
                         return Err(e);

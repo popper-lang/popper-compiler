@@ -1,3 +1,4 @@
+use super::ident;
 use super::ident::Ident;
 use crate::ast::Expr;
 use crate::errors::*;
@@ -18,13 +19,17 @@ impl Evaluateur for CallStruct {
     fn eval(&self, vm: &mut Vm) -> Result<Value, Error> {
         let copy_vm = vm.clone();
         match copy_vm.get_ident(Ident(self.name.clone())) {
-            Some(f) => match *f {
+            Some(f) => match f.clone() {
                 Var {
-                    value: Value::DefStruct { ref fields, .. },
+                    value: Value::DefStruct { ref fields, function, .. },
                     ..
                 } => {
                     let mut map = HashMap::new();
                     let mut v;
+                    let mut fu = HashMap::new();
+                    function.into_iter().for_each(|(k, v)| {
+                        fu.insert(ident::Ident(k), v);
+                    });
                     for (arg, value) in self.args.clone() {
                         let Ident(a) = arg;
                         v = value.eval(vm)?;
@@ -41,6 +46,7 @@ impl Evaluateur for CallStruct {
                             }
                         }
                     }
+                    map.extend(fu);
                     Ok(Value::CallStruct {
                         name: self.name.clone(),
                         fields: map,

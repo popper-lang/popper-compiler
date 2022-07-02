@@ -19,14 +19,19 @@ keyword = _{
     "cast"  |
     "fun"   |
     "use"   |
-    "as"    
+    "as"    |
+    "type"  
 }
 
 assign_op = { "=" }
 bool = { "true" | "false" }
 list = { "[" ~ (expression ~ ",")* ~ "]" }
-type_builtin = { "int" | "string" | "bool" | "list" }
-typeof_expression = { "typeof" ~ expression }
+type_builtin = { int_type | string_type | bool_type | list_type | typeof_expression }
+int_type = { "int" }
+string_type = { "string" }
+bool_type = { "bool" }
+list_type = { "list" }
+typeof_expression = { "type" ~ expression }
 
 block = { "{" ~  "\n"* ~ (statement ~ "\n"+) * ~ statement? ~ "}" }
 op = _{
@@ -59,17 +64,16 @@ if_else_statement = { "if" ~ expression ~ block ~ "else" ~ block }
 while_statement = { "while" ~ expression ~ block }
 for_statement   = { "for" ~ ident ~ "in" ~ expression ~ block }
 
-// fun_statement   = { "def" ~ ident ~ "(" ~ (ident ~ ":" ~ type_builtin)? ~ ("," ~ ident ~ ":" ~ type_builtin)* ~ ")" ~ block }
-fun_statement   = { "fun" ~ ident ~ "with" ~ ((ident ~ ":" ~ type_builtin)? ~ ("," ~ ident ~ ":" ~ type_builtin)*)  ~ assign_op ~ block }
+fun_statement   = { "fun" ~ ident ~ "with" ~ ((ident ~ ":" ~ type_builtin)? ~ ("," ~ ident ~ ":" ~ type_builtin)*)  ~ assign_op ~ statement }
 impl_statement  = { "impl" ~ ident ~ fun_statement }
 struct_statement = { "struct" ~ ident ~ "{" ~ declaration_attr ~ ("," ~ declaration_attr)* ~ "}" }
 use_statement = { "use" ~ string ~ "as" ~ ident }
 
 to_expression = { "cast" ~ expression ~ "to" ~ type_builtin }
-call_expression = { ident ~ expression+ }
-init_struct_expression = { ident ~ "{" ~ (ident ~ "=" ~ expression) ~ ("," ~ ident ~ "=" ~ expression)* ~ "}" }
+call_expression = { ident ~ expression ~ ("," ~ expression)* }
+init_struct_expression = !{ ident ~ "{" ~ (ident ~ "=" ~ expression) ~ ("," ~ ident ~ "=" ~ expression)* ~ "}" }
 attr_expression = { value ~ "." ~ ident }
-call_attr_expression = { value ~ "." ~ ident ~ expression+  }
+call_attr_expression = { value ~ "." ~ ident ~ expression ~ ("," ~ expression)*  }
 range_expression = { value ~ ":" ~ expression }
 parent_expression = { "(" ~ expression ~ ")" }
 index_expression = { ident ~ "[" ~ expression ~ "]" }
@@ -86,6 +90,7 @@ expression = _{
     index_expression        |
     value                              
 }
+
 
 
 statement = _{
@@ -105,9 +110,9 @@ statement = _{
     use_statement
     )
 }
-program = _{ SOI ~ "\n"* ~ (statement ~ "\n"+) * ~ statement? ~ EOI }
+program = _{ SOI ~ statement+ }
 value = _{ ident | number | bool | list | type_builtin | string }
 
 
-WHITESPACE = _{ " " | "\t"}
+WHITESPACE = _{ " " | "\t" | "\n" }
 COMMENT = _{ "//" ~ (!"\n" ~ ANY)* }

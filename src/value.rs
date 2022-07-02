@@ -284,7 +284,7 @@ impl Value {
             Value::Function { .. } => Type::Func,
             Value::List(_) => Type::List,
             Value::Range(_) => Type::Range,
-            Value::CallStruct { name, .. } => Type::FieldStruct(name.clone()),
+            Value::CallStruct { name, .. } => Type::Struct(name.clone()),
             Value::DefStruct { name, .. } => Type::Struct(name.clone()),
             Value::None => Type::None,
             Value::Enum { .. } => Type::Enum,
@@ -342,8 +342,7 @@ impl Value {
                 let mut map = HashMap::new();
                 for (k, v) in fields.iter() {
                     map.insert(match k {
-                        ident::Ident(e) => e.clone(),
-                        _ => unreachable!(),
+                        ident::Ident(e) => e.clone()
                     }, Var {
                         value: v.clone(),
                         type_: v.get_type(),
@@ -357,6 +356,7 @@ impl Value {
                 }
             },
             Value::DefStruct { name, .. } => {
+                
                 Object {
                     name: name.clone(),
                     attr: HashMap::new(),

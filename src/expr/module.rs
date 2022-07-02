@@ -22,7 +22,6 @@ impl Evaluateur for Module {
             Err(e) => panic!("{}", e),
         };
         
-
         vm.set_ident(
             Ident(self.as_name.clone()),
             Var {

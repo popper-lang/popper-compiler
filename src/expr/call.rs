@@ -59,7 +59,6 @@ impl Evaluateur for Call {
                             },
                         );
                     }
-
                     let Function(f) = func;
                     f(dict_args, vm.clone())
                 }
@@ -68,9 +67,11 @@ impl Evaluateur for Call {
                     found: f.value.get_type(),
                 })),
             },
-            None => Err(Error::FunctionNotFound(FunctionNotFoundError {
+            None => {
+                println!("[DEBUG] line 71 file 'call.rs' , value of vm: {:#?}", vm);
+                Err(Error::FunctionNotFound(FunctionNotFoundError {
                 name: self.name.clone(),
-            })),
+            })) },
         }
     }
 }
