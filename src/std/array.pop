@@ -1,19 +1,9 @@
 
-
-fun remove_n_first with l: list , n: int = {
-    let length = len l
-    l[n:length]
+struct Array {
+    array: list
 }
 
-fun remove_first with l: list = {
-    remove_n_first l, 1
+impl Array fun new with l: list = Array {
+    array = l
 }
 
-fun remove_n_last with l: list , n: int = {
-    let length = len l
-    l[0:length.- n]
-}
-
-fun pop with l: list, n: int = {
-    remove_n_last l, 1
-}

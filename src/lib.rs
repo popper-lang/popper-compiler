@@ -1,15 +1,13 @@
 
-extern crate pest;
-#[macro_use]
-extern crate pest_derive;
-pub mod parser;
+pub mod lexer;
 pub mod ast;
+pub mod parser;
 pub mod expr;
-pub mod value;
 pub mod vm;
 pub mod errors;
-pub mod std_t;
 pub mod api;
+pub mod value;
+pub mod std_t;
 
 
 /*

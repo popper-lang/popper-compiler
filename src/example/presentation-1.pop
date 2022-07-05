@@ -1,17 +1,4 @@
+use "src/std/array.pop" as array
 
-struct A {
-    a: int,
-    b: int,
-    c: int
-}
-impl A fun hello with l: int = {
-     39
-}
-
-let a = A {
-    a = 7,
-    b = 8,
-    c = 9
-}
-
-a.hello 9998
+let n = array.Array.new [9 9 2]
+println "hello"

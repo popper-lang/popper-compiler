@@ -355,11 +355,15 @@ impl Value {
                     type_: Type::FieldStruct(name.clone()),
                 }
             },
-            Value::DefStruct { name, .. } => {
+            Value::DefStruct { name, fields, function } => {
+                let mut f = HashMap::new();
+                for (k, v) in function {
+                    f.insert(k.clone(), Var { value: v.clone(), type_: v.get_type(), mutable: false });
+                }
                 
                 Object {
                     name: name.clone(),
-                    attr: HashMap::new(),
+                    attr: f,
                     type_: Type::Struct(name.clone()),
                 }
             },
