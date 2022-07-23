@@ -17,6 +17,7 @@ pub struct Program {
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
+    
 }
 
 impl Parser {
@@ -42,7 +43,7 @@ impl Parser {
             Token::Keyword(Keyword::IF) => self.parse_if_statement(),
             Token::Keyword(Keyword::WHILE) => self.parse_while_statement(),
             Token::Keyword(Keyword::CONST) => self.parse_const_statement(),
-            _ => self.parse_expression(),
+            _ => self.parse_expression(true),
         };
         
         statement
@@ -56,13 +57,13 @@ impl Parser {
         let type_;
         if self.match_token(Token::TWODOTS) {
             
-            type_ = Some(Box::new(self.parse_expression()));
+            type_ = Some(Box::new(self.parse_expression(true)));
             
         } else {
             type_ = None;
         }
         let value = if self.match_token(Token::Op(Op::ASSIGN)) {
-            self.parse_expression()
+            self.parse_expression(true)
         } else {
             panic!("expected '=' after let");
         };
@@ -77,9 +78,11 @@ impl Parser {
         })
     }
 
+
+
     pub fn parse_while_statement(&mut self) -> Expr {
         self.advance();
-        let condition = self.parse_expression();
+        let condition = self.parse_expression(true);
         self.advance();
         let body = self.parse_block_statement();
         Expr::While(loop_while::While {
@@ -94,13 +97,13 @@ impl Parser {
         self.advance();
         let type_;
         if self.match_token(Token::TWODOTS) {
-            type_ = Some(Box::new(self.parse_expression()));
+            type_ = Some(Box::new(self.parse_expression(true)));
             
         } else {
             type_ = None;
         }
         let value = if self.match_token(Token::Op(Op::ASSIGN)) {
-            self.parse_expression()
+            self.parse_expression(true)
             
         } else {
             panic!("expected '=' after let");
@@ -117,18 +120,30 @@ impl Parser {
     }
 
     pub fn parse_type_expression(&mut self) -> Expr {
-        let mut type_ = self.peek();
+        let type_ = self.peek();
         match type_ {
             Token::Type(TypeToken::INT) => {
                 self.advance();
                 Expr::TypeExpr(type_::TypeExpr(Type::Int))
             }
+            
+            Token::Type(TypeToken::BOOL) => {
+                self.advance();
+                Expr::TypeExpr(type_::TypeExpr(Type::Bool))
+            }
+
+            Token::Type(TypeToken::STRING) => {
+                self.advance();
+                Expr::TypeExpr(type_::TypeExpr(Type::String))
+            }
+
+
             _ => panic!("expected type"),
         }
     }
     pub fn parse_if_statement(&mut self) -> Expr {
         self.advance();
-        let condition = self.parse_expression();
+        let condition = self.parse_expression(true);
         self.advance();
         
         let then_branch = self.parse_statement();
@@ -166,10 +181,12 @@ impl Parser {
     }
 
     pub fn parse_op_expression(&mut self) -> Expr {
-        let token = self.advance();
-        let left = self.parse_expression();
-        let right = self.parse_expression();
-        match token {
+
+        let left = self.parse_expression(false);
+        let op = self.peek();
+        self.advance();
+        let right = self.parse_expression(true);
+        match op {
             Token::Op(Op::ADD) => Expr::BinOp(binop::BinOp {
                 left: Box::new(left),
                 right: Box::new(right),
@@ -218,7 +235,11 @@ impl Parser {
         Expr::Ident(ident::Ident(name))
     }
 
-    pub fn parse_expression(&mut self) -> Expr {
+    pub fn parse_expression(&mut self, enable_checking_op: bool) -> Expr {
+        if enable_checking_op && self.check_for_operator() {
+            return self.parse_op_expression();
+        }
+
         let expression = match self.clone().peek() {
             Token::Number(_) => self.parse_number(),
             Token::Ident(_) => self.parse_identifier(),
@@ -228,6 +249,7 @@ impl Parser {
             Token::Type(TypeToken::BOOL)    | 
             Token::Type(TypeToken::STRING)  |
             Token::Type(TypeToken::ARRAY) => self.parse_type_expression(),
+            Token::Keyword(Keyword::CAST) => self.parse_cast_expression(),
             Token::LBRACE => self.parse_block_statement(),
             _ => panic!("Expected expression: {:?}", self.clone().peek()),
         };
@@ -237,9 +259,30 @@ impl Parser {
 
     pub fn parse_grouped_expression(&mut self) -> Expr {
         self.advance();
-        let expression = self.parse_expression();
+        let expression = self.parse_expression(true);
         self.expect_token(Token::RPAREN);
         expression
+    }
+
+    pub fn parse_cast_expression(&mut self) -> Expr {
+        self.advance();
+        let elt = self.parse_expression(true);
+        self.expect_token(Token::Keyword(Keyword::TO));
+        let type_ = self.parse_type_expression();
+        Expr::To(to::To {
+            value: Box::new(elt),
+            type_: Box::new(type_),
+        })
+    }
+
+    pub fn check_for_operator(&mut self) -> bool {
+        let op = self.advance();
+        let res = match op {
+            Token::Op(_) => true,
+            _ => false,
+        };
+        self.bake_up();
+        res
     }
 
     pub fn match_token(&mut self, token: Token) -> bool {
@@ -273,6 +316,13 @@ impl Parser {
         self.current += 1;
         self.peek()
     }
+
+    pub fn bake_up(&mut self) -> Token {
+        self.current -= 1;
+        self.peek()
+    }
+
+    
 
 
     pub fn is_at_end(&self) -> bool {

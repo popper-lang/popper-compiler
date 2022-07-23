@@ -11,7 +11,9 @@ pub enum Keyword {
     IF,
     ELSE,
     WHILE,
-    CONST
+    CONST,
+    TO,
+    CAST
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -58,6 +60,8 @@ impl FromStr for Keyword {
             "else" => Ok(Keyword::ELSE),
             "while" => Ok(Keyword::WHILE),
             "const" => Ok(Keyword::CONST),
+            "to" => Ok(Keyword::TO),
+            "cast" => Ok(Keyword::CAST),
             _ => Err(format!("invalid keyword: {}", s))
         }
     }
