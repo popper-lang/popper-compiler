@@ -2,107 +2,38 @@ use std::{str::FromStr};
 
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Keyword {
-    /*
-    * Keywords list from:
-    */
-    FUN,
-    LET,
-    IF,
-    ELSE,
-    WHILE,
-    CONST,
-    TO,
-    CAST
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum TypeToken {
-    /*
-    * Type(int, string, bool, array) list from:
-    */
-    INT,
-    STRING,
-    BOOL,
-    ARRAY,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Op {
-    /*
-    * Operators list from:
-    */
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    EQ,
-    NEQ,
-    GT,
-    LT,
-    GTE,
-    LTE,
-    AND,
-    OR,
-    NOT,
-    ASSIGN,
-    
-}
-
-impl FromStr for Keyword {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "fun" => Ok(Keyword::FUN),
-            "let" => Ok(Keyword::LET),
-            "if" => Ok(Keyword::IF),
-            "else" => Ok(Keyword::ELSE),
-            "while" => Ok(Keyword::WHILE),
-            "const" => Ok(Keyword::CONST),
-            "to" => Ok(Keyword::TO),
-            "cast" => Ok(Keyword::CAST),
-            _ => Err(format!("invalid keyword: {}", s))
-        }
-    }
-}
-
-impl FromStr for TypeToken {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "int" => Ok(TypeToken::INT),
-            "string" => Ok(TypeToken::STRING),
-            "bool" => Ok(TypeToken::BOOL),
-            "array" => Ok(TypeToken::ARRAY),
-            _ => Err(format!("invalid type: {}", s))
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Token {
+pub enum TokenType {
     /* 
     * The token type is represented by a single character.
     */
-    LPAREN,
-    RPAREN,
-    LBRACE,
-    RBRACE,
-    LBRACKET,
-    RBRACKET,
-    COMMA,
-    DOT,
-    Number(i32),
-    String(String),
-    Ident(String),
-    Keyword(Keyword),
-    Op(Op),
-    Type(TypeToken),
+
+    // symbol token
+    LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, COMMA, DOT, SEMICOLON, TWODOTS,
+
+    // literal token
+    Number(i32), String(String), Ident(String),
+
+    // keyword token
+    IF, ELSE, WHILE, CONST, FUN, LET, TO, CAST,
+    
+    // operator token
+    ADD, SUB, MUL, DIV, MOD, POW, EQ, NEQ, LT, GT, LTE, GTE, EQUAL, OR, AND, ASSIGN, NOT,
+
+    // type token
+    INT, STRING, BOOLEAN, ARRAY,
+
+    // bool token
+    TRUE, FALSE,
+
     Illegal,
-    SEMICOLON,
-    TWODOTS,
     EOF,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Token {
+    pub line: i32,
+    pub pos: usize,
+    pub token_type: TokenType,
 }
 
 #[derive(Debug, Clone)]
@@ -113,7 +44,9 @@ pub struct Lexer {
     input: String,
     position: usize,
     read_position: usize,
+    pos: usize,
     ch: char,
+    line: i32
 }
 
 impl Lexer {
@@ -123,6 +56,8 @@ impl Lexer {
             position: 0,
             read_position: 0,
             ch: ' ',
+            line: 1,
+            pos: 0
         };
         l.read_char();
         l
@@ -135,6 +70,8 @@ impl Lexer {
         }
         self.position = self.read_position;
         self.read_position += 1;
+        self.pos += 1;
+        
     }
     pub fn peek_char(&self) -> char {
         if self.read_position >= self.input.len() {
@@ -144,7 +81,11 @@ impl Lexer {
         }
     }
     pub fn skip_whitespace(&mut self) {
-        while self.ch == ' ' || self.ch == '\t' || self.ch == '\n' || self.ch == '\r' {
+        while self.ch == ' ' || self.ch == '\t' || self.ch == '\r' || self.ch == '\n' {
+            if self.ch == '\n' {
+                self.line += 1;
+                self.pos = 0;
+            }
             self.read_char();
         }
     }
@@ -177,146 +118,170 @@ impl Lexer {
 
     pub fn read_token(&mut self) -> Token {
         self.skip_whitespace();
-        let token = match self.ch {
+        let token = Token {
+            line: self.line,
+            pos: self.read_position,
+            token_type: match self.ch {
             '(' => {
                 self.read_char();
-                Token::LPAREN
+                TokenType::LPAREN
             }
             ')' => {
                 self.read_char();
-                Token::RPAREN
+                TokenType::RPAREN
             }
             '{' => {
                 self.read_char();
-                Token::LBRACE
+                TokenType::LBRACE
             }
             '}' => {
                 self.read_char();
-                Token::RBRACE
+                TokenType::RBRACE
             }
             '[' => {
                 self.read_char();
-                Token::LBRACKET
+                TokenType::LBRACKET
             }
             ']' => {
                 self.read_char();
-                Token::RBRACKET
+                TokenType::RBRACKET
             }
             ',' => {
                 self.read_char();
-                Token::COMMA
+                TokenType::COMMA
             }
             '.' => {
                 self.read_char();
-                Token::DOT
+                TokenType::DOT
             }
             '"' => {
                 let s = self.read_string();
-                Token::String(s)
+                TokenType::String(s)
             }
             '0'..='9' => {
                 let n = self.read_number();
-                Token::Number(n)
+                TokenType::Number(n)
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 let s = self.read_identifier();
-                Keyword::from_str(s.as_str())
-                .ok()
-                .map(Token::Keyword)
-                .unwrap_or(
-                    TypeToken::from_str(s.as_str()).ok().map(Token::Type).unwrap_or(
-                        Token::Ident(s)
-                    )
-                )
+                match s.as_str() {
+                    "if" => TokenType::IF,
+                    "else" => TokenType::ELSE,
+                    "to" => TokenType::TO,
+                    "cast" => TokenType::CAST,
+                    "const" => TokenType::CONST,
+                    "true" => TokenType::TRUE,
+                    "false" => TokenType::FALSE,
+                    "let" => TokenType::LET,
+                    "int" => TokenType::INT,
+                    "string" => TokenType::STRING,
+                    "bool" => TokenType::BOOLEAN,
+                    "array" => TokenType::ARRAY,
+                    "while" => TokenType::WHILE,
+                    _ => TokenType::Ident(s)
+                }
+                
             }
             '+' => {
                 self.read_char();
-                Token::Op(Op::ADD)
+                TokenType::ADD
             }
             '-' => {
                 self.read_char();
-                Token::Op(Op::SUB)
+                TokenType::SUB
             }
             '*' => {
                 self.read_char();
-                Token::Op(Op::MUL)
+                TokenType::MUL
             }
             '/' => {
                 self.read_char();
-                Token::Op(Op::DIV)
+                TokenType::DIV
             }
             '%' => {
                 self.read_char();
-                Token::Op(Op::MOD)
+                TokenType::MOD
             }
             '=' => {
                 self.read_char();
-                Token::Op(Op::ASSIGN)
+                TokenType::ASSIGN
             }
             '!' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    Token::Op(Op::NEQ)
+                    TokenType::NEQ
                 } else {
-                    Token::Op(Op::NOT)
+                    TokenType::NOT
                 }
             }
             '>' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    Token::Op(Op::GTE)
+                    TokenType::GTE
                 } else {
-                    Token::Op(Op::GT)
+                    TokenType::GT
                 }
             }
             '<' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    Token::Op(Op::LTE)
+                    TokenType::LTE
                 } else {
-                    Token::Op(Op::LT)
+                    TokenType::LT
                 }
             }
             '&' => {
                 self.read_char();
                 if self.ch == '&' {
                     self.read_char();
-                    Token::Op(Op::AND)
+                    TokenType::AND
                 } else {
-                    Token::Illegal
+                    TokenType::Illegal
                 }
             }
             '|' => {
                 self.read_char();
                 if self.ch == '|' {
                     self.read_char();
-                    Token::Op(Op::OR)
+                    TokenType::OR
                 } else {
-                    Token::Illegal
+                    TokenType::Illegal
                 }
             }
             ';' => {
                 self.read_char();
-                Token::SEMICOLON
+                TokenType::SEMICOLON
             }
             ':' => {
                 self.read_char();
-                Token::TWODOTS
+                TokenType::TWODOTS
             }
-            '\0' => Token::EOF,
+            
+            '\0' => TokenType::EOF,
             _ => {
                 self.read_char();
-                Token::Illegal
+                TokenType::Illegal
             }
-        };
+        }};
         token
     }
+
+    pub fn scan_token(&mut self) -> Vec<Token> {
+        let mut current = self.read_token();
+        let mut list_token = Vec::new();
+        while current.token_type != TokenType::EOF {
+            list_token.push(current);
+            current = self.read_token();
+        }
+        list_token.push(Token { token_type: TokenType::EOF, line: current.line, pos: current.pos});
+        list_token
+     }
     
 }
-
+/* 
 mod tests {
     use super::*;
     #[test]
@@ -324,7 +289,7 @@ mod tests {
         let input = "foobar";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::Ident("foobar".to_string()));
+        assert_eq!(token, TokenType::Ident("foobar".to_string()));
     }
 
     #[test]
@@ -332,7 +297,7 @@ mod tests {
         let input = "12345";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::Number(12345));
+        assert_eq!(token, TokenType::Number(12345));
     }
 
     #[test]
@@ -340,7 +305,7 @@ mod tests {
         let input = r#""foo bar""#;
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::String("foo bar".to_string()));
+        assert_eq!(token, TokenType::String("foo bar".to_string()));
     }
 
     #[test]
@@ -348,7 +313,7 @@ mod tests {
         let input = "let";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::Keyword(Keyword::LET));
+        assert_eq!(token, TokenType::Keyword(Keyword::LET));
     }
 
     #[test]
@@ -356,7 +321,7 @@ mod tests {
         let input = "int";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::Type(TypeToken::INT));
+        assert_eq!(token, TokenType::Type(TypeToken::INT));
     }
 
     #[test]
@@ -364,7 +329,7 @@ mod tests {
         let input = "+";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::Op(Op::ADD));
+        assert_eq!(token, TokenType::Op(Op::ADD));
     }
 
     #[test]
@@ -372,7 +337,7 @@ mod tests {
         let input = ";";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::SEMICOLON);
+        assert_eq!(token, TokenType::SEMICOLON);
     }
 
     #[test]
@@ -380,8 +345,8 @@ mod tests {
         let input = ":";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token, Token::TWODOTS);
+        assert_eq!(token, TokenType::TWODOTS);
     }
 }
 
-        
+*/

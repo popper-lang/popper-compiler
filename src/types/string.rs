@@ -1,8 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::expr::ident::Ident;
 use crate::value::{Value, Type, Function, Var};
-use crate::vm::Vm;
+use crate::interpreter::Interpreter;
 use crate::errors::*;
 use super::Builtin;
 
@@ -93,8 +92,8 @@ impl Builtin for BuiltinString {
 }
 
 impl BuiltinString {
-    pub fn add(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn add(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -110,8 +109,8 @@ impl BuiltinString {
         }
     }
 
-    pub fn mul(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn mul(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -134,8 +133,8 @@ impl BuiltinString {
     }
 
 
-    pub fn eq(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn eq(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -152,8 +151,8 @@ impl BuiltinString {
         
     }
 
-    pub fn neq(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn neq(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -169,8 +168,8 @@ impl BuiltinString {
         }
     }
 
-    pub fn lt(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn lt(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -186,8 +185,8 @@ impl BuiltinString {
         }
     }
 
-    pub fn gt(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn gt(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -203,8 +202,8 @@ impl BuiltinString {
         }
     }
 
-    pub fn le(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn le(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()
@@ -220,8 +219,8 @@ impl BuiltinString {
         }
     }
 
-    pub fn ge(args: HashMap<String, Var>, vm: Vm) -> Result<Value, Error> {
-        let left = match vm.get_ident(Ident("self".to_string())) {
+    pub fn ge(args: HashMap<String, Var>, interpreter: &mut Interpreter) -> Result<Value, Error> {
+        let left = match interpreter.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
                 attr_name: "self".to_string()

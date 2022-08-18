@@ -1,14 +1,14 @@
 use std::io::Write;
 use std::{collections::HashMap, rc::Rc};
 
+use crate::interpreter::Interpreter;
 use crate::value::{Value, Type, Var};
-use crate::vm::Vm;
 use crate::errors::*;
 use super::Builtin;
 
 pub struct BuiltinFunction;
 impl Builtin for BuiltinFunction {
-    type BuiltinValue = (Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>, Vec<(String, Type)>);
+    type BuiltinValue = (Rc<dyn Fn(HashMap<String, Var>, Interpreter) -> Result<Value, Error>>, Vec<(String, Type)>);
     fn build() -> HashMap<String, Self::BuiltinValue> {
         let mut map = HashMap::<String, Self::BuiltinValue>::new();
         map.insert(
@@ -46,7 +46,7 @@ impl Builtin for BuiltinFunction {
 }
 
 impl BuiltinFunction {
-    pub fn print(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
+    pub fn print(args: HashMap<String, Var>, interpreter: Interpreter) -> Result<Value, Error> {
         for i in args {
             print!("{}", i.1.value.display_value());
         }
@@ -54,7 +54,7 @@ impl BuiltinFunction {
         Ok(Value::None)
     }
 
-    pub fn println(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
+    pub fn println(args: HashMap<String, Var>, interpreter: Interpreter) -> Result<Value, Error> {
         for i in args {
             println!("{}", i.1.value.display_value());
         }
@@ -62,7 +62,7 @@ impl BuiltinFunction {
         Ok(Value::None)
     }
 
-    pub fn len(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
+    pub fn len(args: HashMap<String, Var>, interpreter: Interpreter) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {
@@ -81,7 +81,7 @@ impl BuiltinFunction {
         }
     }
 
-    pub fn read(args: HashMap<String, Var>, _vm: Vm) -> Result<Value, Error> {
+    pub fn read(args: HashMap<String, Var>, interpreter: Interpreter) -> Result<Value, Error> {
         if args.len() != 1 {
             return Ok(Value::None);
         } else {

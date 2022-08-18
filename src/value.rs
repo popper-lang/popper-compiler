@@ -1,10 +1,9 @@
-use crate::{errors::*, expr::ident};
-use crate::expr::ident::Ident;
-use crate::vm::Vm;
-use crate::std_t::int::BuiltinInt;
-use crate::std_t::string::BuiltinString;
-use crate::std_t::bool::BuiltinBool;
-use crate::std_t::Builtin;
+use crate::errors::*;
+use crate::interpreter::Interpreter;
+use crate::types::int::BuiltinInt;
+use crate::types::string::BuiltinString;
+use crate::types::bool::BuiltinBool;
+use crate::types::Builtin;
 use std::{collections::HashMap, fmt, hash::Hash, ops::Range, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
@@ -26,7 +25,7 @@ pub enum Type {
     Function
 }
 
-pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, Vm) -> Result<Value, Error>>);
+pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, &mut Interpreter) -> Result<Value, Error>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -40,12 +39,12 @@ pub enum Value {
     },
     DefStruct {
         name: String,
-        fields: Vec<(Ident, Type)>,
+        fields: Vec<(String, Type)>,
         function: HashMap<String, Value>,
     },
     CallStruct {
         name: String,
-        fields: HashMap<Ident, Value>,
+        fields: HashMap<String, Value>,
     },
     List(Vec<Value>),
     Range(Range<isize>),
@@ -58,7 +57,7 @@ pub enum Value {
     },
     Type(Type),
     Module {
-        context: HashMap<Ident, Var>,
+        context: HashMap<String, Var>,
         name: String,
     },
     None,
@@ -247,6 +246,25 @@ impl Value {
         }
     }
 
+    pub fn opposante(&self) -> Result<Value, Error> {
+        match self {
+            Value::Number(n) => Ok(Value::Number(-n)),
+            _ => Err(Error::CannotUnaryOp(CannotUnaryOpError {
+                operand: self.to_string(),
+                }))
+        }
+    }
+
+    pub fn not(&self) -> Result<Value, Error> {
+        match self {
+            Value::Bool(n) => Ok(Value::Bool(!n)),
+            _ => Err(Error::CannotUnaryOp(CannotUnaryOpError {
+                operand: self.to_string(),
+                }))
+        }
+    }
+    
+
     pub fn display_value(&self) -> String {
         match self {
             Value::Number(n) => n.to_string(),
@@ -296,21 +314,21 @@ impl Value {
 
     pub fn get_object(&self) -> Object {
         match self {
-            Value::Number(n) => {
+            Value::Number(_) => {
                 Object {
                     name: "int".to_string(),
                     attr: BuiltinInt::build(),
                     type_: Type::Int,
                 }
             },
-            Value::String(s) => {
+            Value::String(_) => {
                 Object {
                     name: "string".to_string(),
                     attr: BuiltinString::build(),
                     type_: Type::String,
                 }
             },
-            Value::Bool(b) => {
+            Value::Bool(_) => {
                 Object {
                     name: "bool".to_string(),
                     attr: BuiltinBool::build(),
@@ -324,14 +342,14 @@ impl Value {
                     type_: Type::Func,
                 }
             },
-            Value::List(list) => {
+            Value::List(_) => {
                 Object {
                     name: "list".to_string(),
                     attr: HashMap::new(), // TODO: create a list type
                     type_: Type::List,
                 }
             },
-            Value::Range(range) => {
+            Value::Range(_) => {
                 Object {
                     name: "range".to_string(),
                     attr: HashMap::new(), // TODO: create a range type
@@ -341,9 +359,7 @@ impl Value {
             Value::CallStruct { name, fields, .. } => {
                 let mut map = HashMap::new();
                 for (k, v) in fields.iter() {
-                    map.insert(match k {
-                        ident::Ident(e) => e.clone()
-                    }, Var {
+                    map.insert(k.clone(), Var {
                         value: v.clone(),
                         type_: v.get_type(),
                         mutable: false
@@ -355,7 +371,7 @@ impl Value {
                     type_: Type::FieldStruct(name.clone()),
                 }
             },
-            Value::DefStruct { name, fields, function } => {
+            Value::DefStruct { name, fields: _, function } => {
                 let mut f = HashMap::new();
                 for (k, v) in function {
                     f.insert(k.clone(), Var { value: v.clone(), type_: v.get_type(), mutable: false });
@@ -392,10 +408,7 @@ impl Value {
             Value::Module { context, name } => {
                 let mut map = HashMap::new();
                 for (k, v) in context.iter() {
-                    map.insert(match k {
-                        ident::Ident(e) => e.clone(),
-                        _ => unreachable!(),
-                    }, v.clone());
+                    map.insert(k.clone(), v.clone());
                 }
                 Object {
                     name: name.clone(),

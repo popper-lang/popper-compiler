@@ -122,6 +122,11 @@ pub struct  CannotPowError {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct CannotUnaryOpError {
+    pub operand: String
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct MethodAlreadyExistsError {
     pub name: String,
 }
@@ -264,6 +269,13 @@ impl DisplayError for MethodAlreadyExistsError {
     }
 }
 
+impl DisplayError for CannotUnaryOpError {
+    fn display_error(&self) -> String {
+        format!("cannot unary op: {}", self.operand)
+    }
+}
+
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Error {
@@ -289,6 +301,7 @@ pub enum Error {
     TooManyArgumentsForFunction(FunctionArgumentMismatchError),
     NotEnoughArgumentsForFunction(FunctionArgumentMismatchError),
     MethodAlreadyExists(MethodAlreadyExistsError),
+    CannotUnaryOp(CannotUnaryOpError),
 }
 
 impl DisplayError for Error {
@@ -316,6 +329,22 @@ impl DisplayError for Error {
             Error::NotEnoughArgumentsForFunction(err) => err.display_error(),
             Error::MethodAlreadyExists(err) => err.display_error(),
             Error::SyntaxError(err) => err.to_string(),
+            Error::CannotUnaryOp(err) => err.display_error()
         }
     }
 }
+
+#[macro_export]
+macro_rules! error {
+    ($msg:expr, $line:expr, $pos:expr) => {
+        panic!("[line {}, pos {}] {}", $line, $pos, $msg);
+    };
+
+    ($msg: expr) => {
+        panic!($msg);
+    };
+
+}
+
+
+pub(crate) use error;

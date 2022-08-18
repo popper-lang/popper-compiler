@@ -1,15 +1,14 @@
-use crate::ast::Expr;
-use crate::ast::Op as AstOp;
-use crate::expr::*;
-use crate::lexer::{Token, Keyword, Op, TypeToken};
-use crate::value::Type;
+use crate::ast::expr::Expr;
+use crate::ast::stmt::Stmt;
+use crate::lexer::{Token, TokenType};
+use crate::errors::error;
+use crate::value::Value;
 
-#[derive(Debug, Clone)]
-pub struct Statement(Expr);
+
 
 #[derive(Debug, Clone)]
 pub struct Program {
-    pub statements: Vec<Statement>
+    pub statements: Vec<Stmt>
 }
 
 
@@ -32,260 +31,283 @@ impl Parser {
             statements: vec![],
         };
         while !self.is_at_end()  {
-            program.statements.push(Statement(self.parse_statement()));
+            program.statements.push(self.parse_statement());
             
         }
         program
     }
-    pub fn parse_statement(&mut self) -> Expr {
-        let statement = match self.clone().peek() {
-            Token::Keyword(Keyword::LET) => self.parse_let_statement(),
-            Token::Keyword(Keyword::IF) => self.parse_if_statement(),
-            Token::Keyword(Keyword::WHILE) => self.parse_while_statement(),
-            Token::Keyword(Keyword::CONST) => self.parse_const_statement(),
-            _ => self.parse_expression(true),
+    fn parse_statement(&mut self) -> Stmt {
+        let statement = match self.clone().peek().token_type {
+            TokenType::LET => self.parse_let_statement(),
+            TokenType::IF => self.parse_if_statement(),
+            TokenType::WHILE => self.parse_while_statement(),
+            TokenType::CONST => self.parse_const_statement(),
+            TokenType::LBRACE => self.parse_block_statement(),
+            _ => self.parse_expression_statement(),
         };
         
         statement
     }
 
-    pub fn parse_let_statement(&mut self) -> Expr {
+
+    fn parse_expression_statement(&mut self) -> Stmt {
+        let expr = self.term();
+        Stmt::Expression {
+            expr: expr,
+        }
+    }
+    fn parse_let_statement(&mut self) -> Stmt {
         self.advance();
         let name = self.parse_identifier();
         
         self.advance();
         let type_;
-        if self.match_token(Token::TWODOTS) {
+        if self.match_token(TokenType::TWODOTS) {
             
-            type_ = Some(Box::new(self.parse_expression(true)));
+            type_ = Some(self.parse_type_expression());
             
         } else {
             type_ = None;
         }
-        let value = if self.match_token(Token::Op(Op::ASSIGN)) {
-            self.parse_expression(true)
+        let value = if self.match_token(TokenType::ASSIGN) {
+            self.parse_expression()
         } else {
             panic!("expected '=' after let");
         };
-        Expr::Assign(assign::Assign {
+        Stmt::Assign {
             name: match name {
-                Expr::Ident(ident::Ident(n)) => n,
+                Expr::Ident { ident } => ident,
                 _ => panic!("expected identifier"),
             },
             value: Box::new(value),
             mutable: true,
             type_: type_,
-        })
+        }
     }
 
 
 
-    pub fn parse_while_statement(&mut self) -> Expr {
+    fn parse_while_statement(&mut self) -> Stmt {
         self.advance();
-        let condition = self.parse_expression(true);
+        let condition = self.parse_expression();
         self.advance();
         let body = self.parse_block_statement();
-        Expr::While(loop_while::While {
-            cond: Box::new(condition),
+        Stmt::While { 
+            cond: condition,
             body: Box::new(body),
-        })
+        }
     }
 
-    pub fn parse_const_statement(&mut self) -> Expr {
+    fn parse_const_statement(&mut self) -> Stmt {
         self.advance();
         let name = self.parse_identifier();
         self.advance();
         let type_;
-        if self.match_token(Token::TWODOTS) {
-            type_ = Some(Box::new(self.parse_expression(true)));
+        if self.match_token(TokenType::TWODOTS) {
+            type_ = Some(self.parse_expression());
             
         } else {
             type_ = None;
         }
-        let value = if self.match_token(Token::Op(Op::ASSIGN)) {
-            self.parse_expression(true)
+        let value = if self.match_token(TokenType::ASSIGN) {
+            self.term()
             
         } else {
             panic!("expected '=' after let");
         };
-        Expr::Assign(assign::Assign {
+        Stmt::Assign {
             name: match name {
-                Expr::Ident(ident::Ident(n)) => n,
+                Expr::Ident { ident } => ident,
                 _ => panic!("expected identifier"),
             },
             value: Box::new(value),
             mutable: false,
             type_: type_,
-        })
-    }
-
-    pub fn parse_type_expression(&mut self) -> Expr {
-        let type_ = self.peek();
-        match type_ {
-            Token::Type(TypeToken::INT) => {
-                self.advance();
-                Expr::TypeExpr(type_::TypeExpr(Type::Int))
-            }
-            
-            Token::Type(TypeToken::BOOL) => {
-                self.advance();
-                Expr::TypeExpr(type_::TypeExpr(Type::Bool))
-            }
-
-            Token::Type(TypeToken::STRING) => {
-                self.advance();
-                Expr::TypeExpr(type_::TypeExpr(Type::String))
-            }
-
-
-            _ => panic!("expected type"),
         }
     }
-    pub fn parse_if_statement(&mut self) -> Expr {
+
+    fn parse_type_expression(&mut self) -> Expr {
+        println!("parse_type_expression peek: {:?}", self.peek());
+        let type_ = self.peek();
+        match type_.token_type {
+            TokenType::INT | TokenType::BOOLEAN | TokenType::STRING => {
+                Expr::Type { type_ }
+            }
+            
+            _ => {
+                error!("invalid expression", type_.line, type_.pos);
+            },
+        }
+    }
+    fn parse_if_statement(&mut self) -> Stmt {
         self.advance();
-        let condition = self.parse_expression(true);
+        let condition = self.term();
         self.advance();
         
-        let then_branch = self.parse_statement();
-        if self.check(Token::Keyword(Keyword::ELSE)) {
-            self.advance();
-            Expr::IfThenElse(ifthenelse::IfThenElse {
-                cond: Box::new(condition), 
+        let then_branch = self.parse_block_statement();
+        
+        if self.match_token(TokenType::ELSE) {
+            Stmt::IfElse {
+                cond: condition, 
                 then: Box::new(then_branch),
                 else_: Box::new(self.parse_block_statement())
             }
-        )                
+                    
         } else {
-            Expr::IfThen(ifthen::IfThen {
-                cond: Box::new(condition),
+            Stmt::If {
+                cond: condition,
                 then: Box::new(then_branch),
                 
-            })
+            }
         }
         
     }
 
-    pub fn parse_block_statement (&mut self) -> Expr {
+    fn parse_block_statement(&mut self) -> Stmt {
         let mut statements = vec![];
-        self.advance();
         
-        while !self.check(Token::RBRACE) {
-            
+        while !self.match_token(TokenType::RBRACE) {
             statements.push(self.parse_statement());
-            self.advance();
+            
+            
         }
-        self.advance();
-        Expr::Block(block::Block {
+        Stmt::Block {
             body: statements,
-        })
-    }
-
-    pub fn parse_op_expression(&mut self) -> Expr {
-
-        let left = self.parse_expression(false);
-        let op = self.peek();
-        self.advance();
-        let right = self.parse_expression(true);
-        match op {
-            Token::Op(Op::ADD) => Expr::BinOp(binop::BinOp {
-                left: Box::new(left),
-                right: Box::new(right),
-                op: AstOp::Add,
-            }),
-            Token::Op(Op::SUB) => Expr::BinOp(binop::BinOp {
-                left: Box::new(left),
-                right: Box::new(right),
-                op: AstOp::Sub,
-            }),
-            Token::Op(Op::MUL) => Expr::BinOp(binop::BinOp {
-                left: Box::new(left),
-                right: Box::new(right),
-                op: AstOp::Mul,
-            }),
-            Token::Op(Op::DIV) => Expr::BinOp(binop::BinOp {
-                left: Box::new(left),
-                right: Box::new(right),
-                op: AstOp::Div,
-            }),
-            Token::Op(Op::MOD) => Expr::BinOp(binop::BinOp {
-                left: Box::new(left),
-                right: Box::new(right),
-                op: AstOp::Mod,
-            }),
-            _ => panic!("Expected binary operator"),
-
         }
     }
 
-    pub fn parse_number (&mut self) -> Expr {
-        let n = match self.peek() {
-            Token::Number(n) => n,
-            _ => panic!("Expected number"),
-        };
-        self.advance();
-        Expr::Literal(literal::Literal(literal::LiteralType::Number(n.into())))
+    fn term(&mut self) -> Expr {
+        let mut left = self.factor();
+        let mut op;
+        let mut right;
+        while self.check(TokenType::ADD) || self.check(TokenType::SUB) {
+            println!("peek term: {:?}", self.peek());
+            op = self.peek();
+            self.advance();
+            right = self.factor();
+            println!("right: {:?}", right);
+            left = Expr::BinOp {
+                op,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+            
+        }
+
+        left
     }
 
-    pub fn parse_identifier (&mut self) -> Expr {
+    fn factor(&mut self) -> Expr {
+        let mut left = self.unary();
+        let mut op;
+        let mut right;
+        while self.check(TokenType::MUL) || self.check(TokenType::DIV) {
+            op = self.peek();
+            self.advance();
+            right = self.unary();
+            left = Expr::BinOp {
+                op,
+                left: Box::new(left),
+                right: Box::new(right),
+            };
+            
+        }
+
+        left 
+    }
+    
+    fn unary(&mut self) -> Expr {
+        if self.match_token(TokenType::NOT) || self.match_token(TokenType::SUB) {
+            let op = self.previous();
+            let operand = self.unary();
+            return Expr::UnaryOp {
+                op,
+                operand: Box::new(operand),
+            };
+        }
+        self.primary()
+    }
+
+    fn primary(&mut self) -> Expr {
         
-        let name = match self.peek() {
-            Token::Ident(name) => name,
-            _ => panic!("Expected identifier"),
-        };
-        Expr::Ident(ident::Ident(name))
-    }
-
-    pub fn parse_expression(&mut self, enable_checking_op: bool) -> Expr {
-        if enable_checking_op && self.check_for_operator() {
-            return self.parse_op_expression();
+        if self.match_token(TokenType::FALSE) { 
+            return Expr::Literal {
+                literal: Value::Bool(false),
+            };
+            
+        }
+        if self.match_token(TokenType::TRUE) { 
+            return Expr::Literal {
+                literal: Value::Bool(true),
+            }
         }
 
-        let expression = match self.clone().peek() {
-            Token::Number(_) => self.parse_number(),
-            Token::Ident(_) => self.parse_identifier(),
-            Token::LPAREN => self.parse_grouped_expression(),
-            Token::Op(_) => self.parse_op_expression(),
-            Token::Type(TypeToken::INT)     | 
-            Token::Type(TypeToken::BOOL)    | 
-            Token::Type(TypeToken::STRING)  |
-            Token::Type(TypeToken::ARRAY) => self.parse_type_expression(),
-            Token::Keyword(Keyword::CAST) => self.parse_cast_expression(),
-            Token::LBRACE => self.parse_block_statement(),
-            _ => panic!("Expected expression: {:?}", self.clone().peek()),
+        let res = match self.peek().token_type {
+            TokenType::Number(n) => Expr::Literal {
+                literal: Value::Number(n.into()),
+            },
+            TokenType::String(s) => Expr::Literal {
+                literal: Value::String(s),
+            },
+            TokenType::Ident(_) => Expr::Ident { ident: self.peek() },
+            TokenType::LPAREN => {
+                self.parse_grouped_expression()
+            },
+            _ => {
+                self.parse_expression()
+            }
+        };
+        self.advance();
+        res
+
+    }
+    
+    fn parse_identifier(&mut self) -> Expr {
+        let mut identifier = String::new();
+        if let TokenType::Ident(s) = self.peek().token_type {
+            identifier.push_str(&s);
+        } else {
+            error!("expected identifier", self.peek().line, self.peek().pos);
+        }
+        Expr::Ident { ident: self.peek() }
+    }
+
+
+    fn parse_expression(&mut self) -> Expr {
+        let expression = match self.clone().peek().token_type {
+            TokenType::INT        | 
+            TokenType::BOOLEAN    | 
+            TokenType::STRING     |
+            TokenType::ARRAY => self.parse_type_expression(),
+            TokenType::CAST => self.parse_cast_expression(),
+            _ => panic!("Unexpected token: {:?}", self.clone().peek()),
         };
 
         expression
     }
 
-    pub fn parse_grouped_expression(&mut self) -> Expr {
+    fn parse_grouped_expression(&mut self) -> Expr {
         self.advance();
-        let expression = self.parse_expression(true);
-        self.expect_token(Token::RPAREN);
-        expression
+        let expression = self.term();
+        self.expect_token(TokenType::RPAREN);
+        Expr::Grouping {
+            group: Box::new(expression)
+        }
     }
 
-    pub fn parse_cast_expression(&mut self) -> Expr {
+    fn parse_cast_expression(&mut self) -> Expr {
         self.advance();
-        let elt = self.parse_expression(true);
-        self.expect_token(Token::Keyword(Keyword::TO));
+        println!("parse_cast_expression peek: {:?}", self.peek());
+        let elt = self.term();
+        self.expect_token(TokenType::TO);
         let type_ = self.parse_type_expression();
-        Expr::To(to::To {
+        Expr::To {
             value: Box::new(elt),
             type_: Box::new(type_),
-        })
+        }
     }
 
-    pub fn check_for_operator(&mut self) -> bool {
-        let op = self.advance();
-        let res = match op {
-            Token::Op(_) => true,
-            _ => false,
-        };
-        self.bake_up();
-        res
-    }
-
-    pub fn match_token(&mut self, token: Token) -> bool {
+    pub fn match_token(&mut self, token: TokenType) -> bool {
         if self.check(token) {
             self.advance();
             true
@@ -294,22 +316,26 @@ impl Parser {
         }
     }
 
-    pub fn expect_token(&mut self, token: Token) {
+    pub fn expect_token(&mut self, token: TokenType) {
         if !self.match_token(token.clone()) {
             panic!("Expected {:?}", token.clone());
         }
     }
 
-    pub fn check(&mut self, token: Token) -> bool {
+    pub fn check(&mut self, token: TokenType) -> bool {
         if self.is_at_end() {
             return false;
         }
-        self.peek() == token
+        self.peek().token_type == token
     }
 
     pub fn peek(&self) -> Token {
         
         self.tokens[self.current].clone()
+    }
+
+    pub fn previous(&self) -> Token {
+        self.tokens[self.current - 1].clone()
     }
 
     pub fn advance(&mut self) -> Token {
@@ -326,7 +352,7 @@ impl Parser {
 
 
     pub fn is_at_end(&self) -> bool {
-        self.peek() == Token::EOF
+        self.peek().token_type == TokenType::EOF
     }
     
     

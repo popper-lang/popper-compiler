@@ -2,12 +2,11 @@
 pub mod lexer;
 pub mod ast;
 pub mod parser;
-pub mod expr;
-pub mod vm;
 pub mod errors;
 pub mod api;
 pub mod value;
-pub mod std_t;
+pub mod types;
+pub mod interpreter;
 
 
 /*
