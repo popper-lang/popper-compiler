@@ -1,6 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::value::{Value, Type, Function, Var};
+use crate::value::{Value, Type, Var};
+use crate::value::function::Function;
 use crate::interpreter::Interpreter;
 use crate::errors::*;
 use super::Builtin;
@@ -38,7 +39,7 @@ impl Builtin for BuiltinBool {
 
 impl BuiltinBool {
     
-    pub fn and(args: HashMap<String, Var>, interpreteur: &mut Interpreter) -> Result<Value, Error> {
+    pub fn and(args: HashMap<String, Var>, _interpreteur: &mut Interpreter) -> Result<Value, Error> {
         let left = args.get("left").unwrap();
         let right = args.get("right").unwrap();
         match (left.clone().value, right.clone().value) {
@@ -50,7 +51,7 @@ impl BuiltinBool {
         }
     }
 
-    pub fn or(args: HashMap<String, Var>, interpreteur: &mut Interpreter) -> Result<Value, Error> {
+    pub fn or(args: HashMap<String, Var>, _interpreteur: &mut Interpreter) -> Result<Value, Error> {
         let left = args.get("left").unwrap();
         let right = args.get("right").unwrap();
         match (left.clone().value, right.clone().value) {

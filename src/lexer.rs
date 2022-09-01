@@ -1,7 +1,16 @@
-use std::{str::FromStr};
 
+macro_rules! token {
+    ($type: ident,$lexeme: expr, $line: expr, $pos: expr) => {
+        Token {
+            line: $line,
+            pos: $pos,
+            token_type: TokenType::$type,
+            lexeme: $lexeme.to_string()
+        }
+    };
+}
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum TokenType {
     /* 
     * The token type is represented by a single character.
@@ -11,16 +20,16 @@ pub enum TokenType {
     LPAREN, RPAREN, LBRACE, RBRACE, LBRACKET, RBRACKET, COMMA, DOT, SEMICOLON, TWODOTS,
 
     // literal token
-    Number(i32), String(String), Ident(String),
+    NUMBER, STRING, IDENT,
 
     // keyword token
-    IF, ELSE, WHILE, CONST, FUN, LET, TO, CAST,
+    IF, ELSE, WHILE, CONST, FUN, LET, TO, CAST, CLASS,
     
     // operator token
     ADD, SUB, MUL, DIV, MOD, POW, EQ, NEQ, LT, GT, LTE, GTE, EQUAL, OR, AND, ASSIGN, NOT,
 
     // type token
-    INT, STRING, BOOLEAN, ARRAY,
+    INT_TYPE, STRING_TYPE, BOOLEAN_TYPE, ARRAY_TYPE,
 
     // bool token
     TRUE, FALSE,
@@ -29,12 +38,14 @@ pub enum TokenType {
     EOF,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Token {
     pub line: i32,
     pub pos: usize,
     pub token_type: TokenType,
+    pub lexeme: String
 }
+
 
 #[derive(Debug, Clone)]
 pub struct Lexer {
@@ -118,154 +129,153 @@ impl Lexer {
 
     pub fn read_token(&mut self) -> Token {
         self.skip_whitespace();
-        let token = Token {
-            line: self.line,
-            pos: self.read_position,
-            token_type: match self.ch {
+        let token = match self.ch {
             '(' => {
                 self.read_char();
-                TokenType::LPAREN
+                token!(LPAREN, "(", self.line, self.pos)
             }
             ')' => {
                 self.read_char();
-                TokenType::RPAREN
+                token!(RPAREN, ")", self.line, self.pos)
             }
             '{' => {
                 self.read_char();
-                TokenType::LBRACE
+                token!(LBRACE, "{", self.line, self.pos)
             }
             '}' => {
                 self.read_char();
-                TokenType::RBRACE
+                token!(RBRACE, "}", self.line, self.pos)
             }
             '[' => {
                 self.read_char();
-                TokenType::LBRACKET
+                token!(LBRACKET, "[", self.line, self.pos)
             }
             ']' => {
                 self.read_char();
-                TokenType::RBRACKET
+                token!(RBRACKET, "]", self.line, self.pos)
             }
             ',' => {
                 self.read_char();
-                TokenType::COMMA
+                token!(COMMA, ",", self.line, self.pos)
             }
             '.' => {
                 self.read_char();
-                TokenType::DOT
+                token!(DOT, ".", self.line, self.pos)
             }
             '"' => {
                 let s = self.read_string();
-                TokenType::String(s)
+                token!(STRING, s.as_str(), self.line, self.pos)
             }
             '0'..='9' => {
                 let n = self.read_number();
-                TokenType::Number(n)
+                token!(NUMBER, n.to_string().as_str(), self.line, self.pos)
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 let s = self.read_identifier();
                 match s.as_str() {
-                    "if" => TokenType::IF,
-                    "else" => TokenType::ELSE,
-                    "to" => TokenType::TO,
-                    "cast" => TokenType::CAST,
-                    "const" => TokenType::CONST,
-                    "true" => TokenType::TRUE,
-                    "false" => TokenType::FALSE,
-                    "let" => TokenType::LET,
-                    "int" => TokenType::INT,
-                    "string" => TokenType::STRING,
-                    "bool" => TokenType::BOOLEAN,
-                    "array" => TokenType::ARRAY,
-                    "while" => TokenType::WHILE,
-                    _ => TokenType::Ident(s)
+                    "if" => token!(IF, "if", self.line, self.pos),
+                    "else" => token!(ELSE, "else", self.line, self.pos),
+                    "to" => token!(TO, "to", self.line, self.pos),
+                    "cast" => token!(CAST, "cast", self.line, self.pos),
+                    "const" => token!(CONST, "const", self.line, self.pos),
+                    "true" => token!(TRUE, "true", self.line, self.pos),
+                    "false" => token!(FALSE, "false", self.line, self.pos),
+                    "let" => token!(LET, "let", self.line, self.pos),
+                    "int" => token!(INT_TYPE, "int", self.line, self.pos),
+                    "string" => token!(STRING_TYPE, "string", self.line, self.pos),
+                    "bool" => token!(BOOLEAN_TYPE, "bool", self.line, self.pos),
+                    "array" => token!(ARRAY_TYPE, "array", self.line, self.pos),
+                    "while" => token!(WHILE, "while", self.line, self.pos),
+                    "fun" => token!(FUN, "fun", self.line, self.pos),
+                    "class" => token!(CLASS, "class", self.line, self.pos),
+                    e => token!(IDENT, e, self.line, self.pos)
                 }
                 
             }
             '+' => {
                 self.read_char();
-                TokenType::ADD
+                token!(ADD, "+", self.line, self.pos)
             }
             '-' => {
                 self.read_char();
-                TokenType::SUB
+                token!(SUB, "-", self.line, self.pos)
             }
             '*' => {
                 self.read_char();
-                TokenType::MUL
+                token!(MUL, "*", self.line, self.pos)
             }
             '/' => {
                 self.read_char();
-                TokenType::DIV
+                token!(DIV, "/", self.line, self.pos)
             }
             '%' => {
                 self.read_char();
-                TokenType::MOD
+                token!(MOD, "%", self.line, self.pos)
             }
             '=' => {
                 self.read_char();
-                TokenType::ASSIGN
+                token!(ASSIGN, "=", self.line, self.pos)
             }
             '!' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    TokenType::NEQ
+                    token!(NEQ, "!", self.line, self.pos)
                 } else {
-                    TokenType::NOT
+                    token!(NOT, "!", self.line, self.pos)
                 }
             }
             '>' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    TokenType::GTE
+                    token!(GTE, ">=", self.line, self.pos)
                 } else {
-                    TokenType::GT
+                    token!(GT, ">", self.line, self.pos)
                 }
             }
             '<' => {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    TokenType::LTE
+                    token!(LTE, "<=", self.line, self.pos)
                 } else {
-                    TokenType::LT
+                    token!(LT, "<", self.line, self.pos)
                 }
             }
             '&' => {
                 self.read_char();
                 if self.ch == '&' {
                     self.read_char();
-                    TokenType::AND
+                    token!(AND, "&&", self.line, self.pos)
                 } else {
-                    TokenType::Illegal
+                    token!(Illegal, "", self.line, self.pos)
                 }
             }
             '|' => {
                 self.read_char();
                 if self.ch == '|' {
                     self.read_char();
-                    TokenType::OR
+                    token!(OR, "||", self.line, self.pos)
                 } else {
-                    TokenType::Illegal
+                    token!(Illegal, "", self.line, self.pos)
                 }
             }
             ';' => {
                 self.read_char();
-                TokenType::SEMICOLON
+                token!(SEMICOLON, ";", self.line, self.pos)
             }
             ':' => {
                 self.read_char();
-                TokenType::TWODOTS
+                token!(TWODOTS, ":", self.line, self.pos)
             }
             
-            '\0' => TokenType::EOF,
+            '\0' => token!(EOF, "", self.line, self.pos),
             _ => {
                 self.read_char();
-                TokenType::Illegal
+                token!(Illegal, "", self.line, self.pos)
             }
-        }};
+        };
         token
     }
 
@@ -276,7 +286,7 @@ impl Lexer {
             list_token.push(current);
             current = self.read_token();
         }
-        list_token.push(Token { token_type: TokenType::EOF, line: current.line, pos: current.pos});
+        list_token.push(token!(EOF, "", self.line, self.pos));
         list_token
      }
     

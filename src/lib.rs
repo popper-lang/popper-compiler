@@ -5,8 +5,8 @@ pub mod parser;
 pub mod errors;
 pub mod api;
 pub mod value;
-pub mod types;
 pub mod interpreter;
+pub mod builtin_function;
 
 
 /*

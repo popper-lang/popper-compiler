@@ -337,11 +337,11 @@ impl DisplayError for Error {
 #[macro_export]
 macro_rules! error {
     ($msg:expr, $line:expr, $pos:expr) => {
-        panic!("[line {}, pos {}] {}", $line, $pos, $msg);
+        panic!("[line {}, pos {}] {}", $line, $pos, $msg)
     };
 
     ($msg: expr) => {
-        panic!($msg);
+        panic!($msg)
     };
 
 }

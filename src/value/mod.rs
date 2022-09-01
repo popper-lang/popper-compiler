@@ -1,10 +1,14 @@
-use crate::errors::*;
+pub mod callable;
+pub mod function;
+
+use crate::interpreter::class::Class;
+use crate::interpreter::environement::Environment;
+use crate::{errors::*, interpreter::instance::Instance};
 use crate::interpreter::Interpreter;
-use crate::types::int::BuiltinInt;
-use crate::types::string::BuiltinString;
-use crate::types::bool::BuiltinBool;
-use crate::types::Builtin;
-use std::{collections::HashMap, fmt, hash::Hash, ops::Range, rc::Rc};
+
+use std::{fmt::{self, Debug}, hash::Hash, ops::Range, rc::Rc};
+
+use self::callable::Callable;
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
@@ -14,58 +18,60 @@ pub enum Type {
     List,
     Func,
     Range,
-    Enum,
-    FieldEnum(String),
-    Struct(String),
-    FieldStruct(String),
     Type(String),
     Any,
     None,
-    Module(String),
-    Function
+    Function,
+    Instance(String),
+    Class(String)
 }
 
-pub struct Function(pub Rc<dyn Fn(HashMap<String, Var>, &mut Interpreter) -> Result<Value, Error>>);
+pub struct Func(pub  String, pub Rc<dyn Callable>);
+
+impl Debug for Func {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Func").field(&self.0).finish()
+    }
+}
+
+impl Clone for Func {
+    fn clone_from(&mut self, source: &Self)
+    {
+        *self = source.clone()
+    }
+
+    fn clone(&self) -> Self {
+        Self(self.0.clone(), self.1.clone())
+    }
+}
+
+impl PartialEq for Func {
+
+
+    fn eq(&self, other: &Self) -> bool {
+        &self.0 as *const _ == &other.0 as *const _
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Number(f64),
     String(String),
     Bool(bool),
-    Function {
-        name: String,
-        func: Function,
-        args: Vec<(String, Type)>,
-    },
-    DefStruct {
-        name: String,
-        fields: Vec<(String, Type)>,
-        function: HashMap<String, Value>,
-    },
-    CallStruct {
-        name: String,
-        fields: HashMap<String, Value>,
-    },
+    Function(Func),
     List(Vec<Value>),
     Range(Range<isize>),
-    Enum {
-        variants: Vec<String>,
-    },
-    EnumCall {
-        name: String,
-        field: String,
-    },
     Type(Type),
-    Module {
-        context: HashMap<String, Var>,
-        name: String,
-    },
+    Instance(Instance),
+    Class(Class),
     None,
 }
 
+
+
 pub struct Object {
     pub name: String,
-    pub attr: HashMap<String, Var>,
+    pub attr: Environment<String, Var>,
     pub type_: Type,
 }
 
@@ -76,30 +82,7 @@ pub struct Var {
     pub type_: Type,
 }
 
-impl Clone for Function {
-    fn clone(&self) -> Self {
-        Function(self.0.clone())
-    }
-}
 
-impl fmt::Debug for Function {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Function")
-    }
-}
-
-impl PartialEq for Function {
-    fn eq(&self, other: &Self) -> bool {
-        &self.0 as *const _ == &other.0 as *const _
-    }
-}
-impl Hash for Function {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        (&self.0 as *const _ as usize).hash(state);
-    }
-}
-
-impl Eq for Function {}
 
 impl Value {
     pub fn add(&self, other: &Value) -> Result<Value, Error> {
@@ -270,7 +253,7 @@ impl Value {
             Value::Number(n) => n.to_string(),
             Value::String(s) => s.clone(),
             Value::Bool(b) => b.to_string(),
-            Value::Function { .. } => "function".to_string(),
+            Value::Function(_) => "function".to_string(),
             Value::List(list) => {
                 let mut s = String::new();
                 s.push_str("[");
@@ -285,12 +268,9 @@ impl Value {
             }
             Value::Range(_) => "range".to_string(),
             Value::None => "None".to_string(),
-            Value::DefStruct { .. } => todo!(),
-            Value::CallStruct { .. } => todo!(),
-            Value::Enum { .. } => todo!(),
-            Value::EnumCall { .. } => todo!(),
             Value::Type(n) => n.to_string(),
-            Value::Module { name, .. } => format!("module {}", name),
+            Value::Instance( ins ) => format!("instance of class {}", ins.class.name),
+            Value::Class(c) => format!("class {}", c.name),
         }
     }
 
@@ -299,16 +279,13 @@ impl Value {
             Value::Number(_) => Type::Int,
             Value::String(_) => Type::String,
             Value::Bool(_) => Type::Bool,
-            Value::Function { .. } => Type::Func,
+            Value::Function (_) => Type::Func,
             Value::List(_) => Type::List,
             Value::Range(_) => Type::Range,
-            Value::CallStruct { name, .. } => Type::Struct(name.clone()),
-            Value::DefStruct { name, .. } => Type::Struct(name.clone()),
             Value::None => Type::None,
-            Value::Enum { .. } => Type::Enum,
-            Value::EnumCall { name, .. } => Type::FieldEnum(name.clone()),
             Value::Type(_) => Type::Type("unknow".to_string()),
-            Value::Module { name, .. } => Type::Module(name.to_string()),
+            Value::Instance(e) => Type::Instance(e.class.name.clone()),
+            Value::Class(c) => Type::Class(c.name.clone()),
         }
     }
 
@@ -317,104 +294,65 @@ impl Value {
             Value::Number(_) => {
                 Object {
                     name: "int".to_string(),
-                    attr: BuiltinInt::build(),
+                    attr: Environment::new(None), //BuiltinInt::build(),
                     type_: Type::Int,
                 }
             },
             Value::String(_) => {
                 Object {
                     name: "string".to_string(),
-                    attr: BuiltinString::build(),
+                    attr: Environment::new(None),//BuiltinString::build(),
                     type_: Type::String,
                 }
             },
             Value::Bool(_) => {
                 Object {
                     name: "bool".to_string(),
-                    attr: BuiltinBool::build(),
+                    attr: Environment::new(None),//BuiltinBool::build(),
                     type_: Type::Bool,
                 }
             },
-            Value::Function { .. } => {
+            Value::Function (_) => {
                 Object {
                     name: "function".to_string(),
-                    attr: HashMap::new(),
+                    attr: Environment::new(None),
                     type_: Type::Func,
                 }
             },
             Value::List(_) => {
                 Object {
                     name: "list".to_string(),
-                    attr: HashMap::new(), // TODO: create a list type
+                    attr: Environment::new(None), // TODO: create a list type
                     type_: Type::List,
                 }
             },
             Value::Range(_) => {
                 Object {
                     name: "range".to_string(),
-                    attr: HashMap::new(), // TODO: create a range type
+                    attr: Environment::new(None), // TODO: create a range type
                     type_: Type::Range,
-                }
-            },
-            Value::CallStruct { name, fields, .. } => {
-                let mut map = HashMap::new();
-                for (k, v) in fields.iter() {
-                    map.insert(k.clone(), Var {
-                        value: v.clone(),
-                        type_: v.get_type(),
-                        mutable: false
-                    });
-                }
-                Object {
-                    name: name.clone(),
-                    attr: map,
-                    type_: Type::FieldStruct(name.clone()),
-                }
-            },
-            Value::DefStruct { name, fields: _, function } => {
-                let mut f = HashMap::new();
-                for (k, v) in function {
-                    f.insert(k.clone(), Var { value: v.clone(), type_: v.get_type(), mutable: false });
-                }
-                
-                Object {
-                    name: name.clone(),
-                    attr: f,
-                    type_: Type::Struct(name.clone()),
                 }
             },
             Value::None => {
                 Object {
                     name: "None".to_string(),
-                    attr: HashMap::new(),
+                    attr: Environment::new(None),
                     type_: Type::None,
                 }
             },
-            Value::Enum { .. } => {
-                Object {
-                    name: "enum".to_string(),
-                    attr: HashMap::new(),
-                    type_: Type::Enum,
-                }
-            },
-            Value::EnumCall { name, .. } => {
-                Object {
-                    name: name.clone(),
-                    attr: HashMap::new(),
-                    type_: Type::FieldEnum(name.clone()),
-                }
-            },
             Value::Type(_) => todo!(),
-            Value::Module { context, name } => {
-                let mut map = HashMap::new();
-                for (k, v) in context.iter() {
-                    map.insert(k.clone(), v.clone());
-                }
+            Value::Instance(i) => {
+                let map = &i.class.methods;
                 Object {
-                    name: name.clone(),
-                    attr: map,
-                    type_: Type::Module(name.clone()),
+                    name: i.class.name.clone(),
+                    attr: map.clone(),
+                    type_: Type::Instance(i.class.name.clone()),
                 }
+            },
+            Value::Class(e) => Object {
+                name: e.name.clone(),
+                attr: Environment::new(None),
+                type_: Type::Class(e.name.clone()),
             },
         
 
@@ -431,15 +369,12 @@ impl ToString for Type {
             Type::Func => "func".to_string(),
             Type::List => "list".to_string(),
             Type::Range => "range".to_string(),
-            Type::FieldStruct(name) => format!("struct {}", name),
-            Type::Struct(name) => format!("struct {}", name),
             Type::None => "None".to_string(),
-            Type::Enum => "enum".to_string(),
-            Type::FieldEnum(name) => format!("enum {}", name),
             Type::Type(_) => "type".to_string(),
-            Type::Module(name) => format!("module {}", name),
             Type::Any => "any".to_string(),
             Type::Function => "function".to_string(),
+            Type::Instance(i) => format!("instance of class {}", i),
+            Type::Class(e) => format!("class {}", e),
         }
     }
 }

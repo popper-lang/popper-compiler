@@ -399,7 +399,7 @@ impl BuiltinInt {
         }
     }
 
-    pub fn opposante(args: HashMap<String, Var>, interpret: &mut Interpreter) -> Result<Value, Error> {
+    pub fn opposante(_args: HashMap<String, Var>, interpret: &mut Interpreter) -> Result<Value, Error> {
         let left = match interpret.env.fetch("self".to_string()) {
             Some(v) => v,
             None => return Err(Error::AttrNotFound(AttrNotFoundError {
