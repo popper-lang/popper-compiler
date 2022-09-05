@@ -1,6 +1,6 @@
 use crate::interpreter::Interpreter;
-use super::Value;
+use super::Object;
 
 pub trait Callable {
-    fn call(&self, interpreter: &mut Interpreter, args: Vec<Value>) -> Value;
+    fn call(&self, interpreter: &mut Interpreter, args: Vec<Box<dyn Object>>) -> Box<dyn Object>;
 }

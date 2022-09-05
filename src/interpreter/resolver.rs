@@ -89,7 +89,7 @@ impl ExprVisitor for Resolver {
         }
     }
 
-    fn visit_get(&mut self, name: Expr, attr: Expr) -> Self::Output {
+    fn visit_get(&mut self, name: Expr, attr: String) -> Self::Output {
         todo!()
     }
 

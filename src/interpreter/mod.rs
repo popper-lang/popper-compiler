@@ -1,14 +1,16 @@
+#![feature(type_alias_impl_trait)]
+
+
 pub mod environement;
-pub mod class;
-pub mod instance;
 pub mod resolver;
 use std::rc::Rc;
-
+use std::any::type_name;
+use crate::value::class;
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::ast::expr::{Expr, LiteralType};
 use crate::ast::stmt::Stmt;
 use crate::lexer::{Token, TokenType};
-use crate::value::{Value, Var, Type, Func};
+use crate::value::{Object, Var, Type};
 use crate::value::function::Function;
 use crate::value::callable::Callable;
 use crate::errors::{error, DisplayError};
@@ -30,19 +32,17 @@ impl Interpreter {
             locals: Environment::new(None)
         };
         inter.env.define("print".to_string(), Var {
-            value: Value::Function(
-                Func("print".to_string(),
-                    Rc::new(io::Print))
-                ),
+            value: Box::new(
+                io::Print
+            ),
             mutable: false,
             type_: Type::Func,
         });
 
         inter.env.define("println".to_string(), Var {
-            value: Value::Function(
-                Func("println".to_string(),
-                    Rc::new(io::Println))
-                ),
+            value: Box::new(
+                io::Println
+            ),
             mutable: false,
             type_: Type::Func,
         });
@@ -73,24 +73,26 @@ impl Interpreter {
 }
 
 impl ExprVisitor for Interpreter {
-    type Output = Value;
+    type Output = Box<dyn Object>;
 
     fn visit_bin_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output {
-        let left = left.accept(self);
-        let right = right.accept(self);
-        let res = match op {
-            Token { token_type: TokenType::ADD, .. } => left.add(&right),
-            Token { token_type: TokenType::SUB, .. } => left.sub(&right),
-            Token { token_type: TokenType::MUL, .. } => left.mul(&right),
-            Token { token_type: TokenType::DIV, .. } => left.div(&right),
-            Token { token_type: TokenType::MOD, .. } => left.modulo(&right),
-            _ => error!("Unexpected operand type", op.line, op.pos)
+        // let left = left.accept(self);
+        // let right = right.accept(self);
+        // let res = match op {
+        //     Token { token_type: TokenType::ADD, .. } => left.add(&right),
+        //     Token { token_type: TokenType::SUB, .. } => left.sub(&right),
+        //     Token { token_type: TokenType::MUL, .. } => left.mul(&right),
+        //     Token { token_type: TokenType::DIV, .. } => left.div(&right),
+        //     Token { token_type: TokenType::MOD, .. } => left.modulo(&right),
+        //     _ => error!("Unexpected operand type", op.line, op.pos)
 
-        };
-        match res {
-            Ok(e) => e,
-            Err(e) => error!(e.display_error(), op.line, op.pos)
-        }
+        // };
+        // match res {
+        //     Ok(e) => e,
+        //     Err(e) => error!(e.display_error(), op.line, op.pos)
+        // }
+
+        Box::new(())
 
     }
 
@@ -100,22 +102,22 @@ impl ExprVisitor for Interpreter {
         for arg in args {
             arguments.push(arg.accept(self));
         };
-        match resolved_name {
-            Value::Function(f) => f.1.call(self, arguments),
-            Value::Class(c) => c.call(self, arguments),
-            _ => error!("expected function")
+
+        if let Some(e) = resolved_name.called() {
+            e.call(self, arguments)
+        } else {
+            error!("doen't implemente the trait Callable")
         }
+        
 
     }
 
-    fn visit_get(&mut self, name: Expr, attr: Expr) -> Self::Output {
+    fn visit_get(&mut self, name: Expr, attr: String) -> Self::Output {
         let name = name.accept(self);
-        match name {
-            Value::Instance(c) => {
-                let mut interpreteur = Interpreter::new_with_env(c.class.methods);
-                attr.accept(&mut interpreteur)
-            },
-            e => panic!("expected class")
+        if let Some(e) = name.getter() {
+            e.fetch(attr)
+        } else {
+            error!("can't get")
         }
     }
 
@@ -137,9 +139,9 @@ impl ExprVisitor for Interpreter {
 
     fn visit_literal(&mut self, literal: LiteralType) -> Self::Output {
         match literal {
-            LiteralType::Number(n) => Value::Number(n as f64),
-            LiteralType::Bool(b) => Value::Bool(b),
-            LiteralType::String(s) => Value::String(s.clone())
+            LiteralType::Number(n) => Box::new(n),
+            LiteralType::Bool(b) => Box::new(b),
+            LiteralType::String(s) => Box::new(s)
         }
     }
 
@@ -165,7 +167,7 @@ impl ExprVisitor for Interpreter {
                 mutable: true,
             });
         }
-        Value::None
+        Box::new(())
 
     }
 
@@ -193,24 +195,21 @@ impl ExprVisitor for Interpreter {
 }
 
 impl StmtVisitor for Interpreter {
-    type Output = Value;
+    type Output = Box<dyn Object>;
 
     fn visit_let(&mut self, name: Token, value: Option<Expr>, mutable: bool, type_: Option<Expr>) -> Self::Output {
         let name = name.lexeme.to_string();
         if let Some(v) = value {
             let value = v.accept(&mut self.clone());
-
-            self.env.define(name, Var { value: value.clone(), mutable: mutable, type_: match type_ {
-                Some(e) => match e.accept(&mut self.clone()) {
-                    Value::Type(t) => t,
-                    e => panic!("expected type found {:?}", e.get_type())
-                }
-                _ => value.get_type()
-
-            } });
+            let ty = if let Some(e) = type_ {
+                e.accept(self).get_type()
+            } else {
+                value.get_type()
+            };
+            self.env.define(name, Var { value: value.clone(), mutable: mutable, type_: ty});
             
         }
-        Value::None
+        Box::new(())
     }
 
     fn visit_block(&mut self, stmts: Vec<Stmt>) -> Self::Output {
@@ -218,7 +217,7 @@ impl StmtVisitor for Interpreter {
         let env = Environment::new(
             Some(self.env.clone())
         );
-        let mut res = Value::None;
+        let mut res: Box<dyn Object> = Box::new(());
         for mut stmt in stmts {
             self.env = env.clone();
             res = stmt.accept(self);
@@ -234,14 +233,10 @@ impl StmtVisitor for Interpreter {
     fn visit_if(&mut self, cond: Expr, then: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if let Value::Bool(e) = cond {
-            if e {
-                then.accept(self)
-            } else {
-                Value::None
-            }
+        if cond == Box::new(true) {
+            then.accept(self)
         } else {
-            error!("expected bool")
+            Box::new(())
         }
 
     }
@@ -249,12 +244,10 @@ impl StmtVisitor for Interpreter {
     fn visit_if_else(&mut self, cond: Expr, then: Stmt, else_: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if let Value::Bool(e) = cond {
-            if e {
-                then.accept(self)
-            } else {
-                else_.accept(self)
-            }
+        if cond == Box::new(true)  {
+            then.accept(self)
+        } else if cond == Box::new(false) {
+            Box::new(())
         } else {
             error!("expected bool")
         }
@@ -275,16 +268,15 @@ impl StmtVisitor for Interpreter {
     fn visit_function(&mut self, name: Token, args: Vec<String>, body: Stmt) -> Self::Output {
         let s = Stmt::Function { name: name.clone(), args: args.clone(), body: Box::new(body.clone()) };
         let n = name.lexeme.to_string();
-        let func = Func(n.clone(), Rc::new(Function { declaration: s }));
         
 
         self.env.define(n, Var {
-            value: Value::Function(func),
+            value: Box::new(Function { declaration: s }),
             mutable: false,
             type_: Type::Function
 
         });
-        Value::None
+        Box::new(())
     }
 
     fn visit_class(&mut self, name: String, methods: Vec<Stmt>) -> Self::Output {
@@ -320,7 +312,7 @@ impl StmtVisitor for Interpreter {
                 );
         }*/
         self.env.define(name.clone(), Var { 
-            value: Value::Class(
+            value: Box::new(
                 Class {
                     name: name.clone(),
                     methods: interpreter.env
@@ -329,8 +321,13 @@ impl StmtVisitor for Interpreter {
             mutable: false,
             type_: Type::Class(name.clone())
         });
-        Value::None
+        Box::new(())
     }
+}
+
+
+fn type_of<T>(_: T) -> &'static str {
+    type_name::<T>()
 }
 
 

@@ -260,10 +260,13 @@ impl Parser {
         println!("name {:#?}", name);
         if self.match_token(TokenType::DOT) {
             println!("get peek 1: {:?}", self.peek());
-            let attr = self.get();
+            let attr = match self.identifier() {
+                Expr::Ident { ident } => ident.lexeme,
+                _ => unreachable!()
+            };
             name = Expr::Get {
                 name: Box::new(name),
-                attr: Box::new(attr),
+                attr,
             }
         }
         

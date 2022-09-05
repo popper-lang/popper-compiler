@@ -9,7 +9,7 @@ pub trait ExprVisitor {
 
     fn visit_bin_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output;
     fn visit_call(&mut self, name: Expr, args: Vec<Expr>) -> Self::Output;
-    fn visit_get(&mut self, name: Expr, attr: Expr) -> Self::Output;
+    fn visit_get(&mut self, name: Expr, attr: String) -> Self::Output;
     fn visit_grouping(&mut self, group: Expr) -> Self::Output;
     fn visit_index(&mut self, name: Expr, index: Expr) -> Self::Output;
     fn visit_iop(&mut self, name: Token, op: Token, value: Expr) -> Self::Output;
@@ -43,7 +43,7 @@ impl Expr {
         match self {
             Expr::BinOp { left, op, right } => visitor.visit_bin_op(*left, op, *right),
             Expr::Call { name, args } => visitor.visit_call(*name, args),
-            Expr::Get { name, attr } => visitor.visit_get(*name, *attr),
+            Expr::Get { name, attr } => visitor.visit_get(*name, attr),
             Expr::Grouping { group } => visitor.visit_grouping(*group),
             Expr::Index { name, index } => visitor.visit_index(*name, *index),
             Expr::IOp { name, op, value } => visitor.visit_iop(name, op, *value),

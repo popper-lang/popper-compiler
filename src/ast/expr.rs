@@ -1,11 +1,10 @@
 use crate::lexer::Token;
-use crate::value::Value;
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Expr { 
     BinOp { left: Box<Expr>, op: Token, right: Box<Expr> },
     Call { name: Box<Expr>, args: Vec<Expr> },
-    Get { name: Box<Expr>, attr: Box<Expr> },
+    Get { name: Box<Expr>, attr: String },
     Grouping { group: Box<Expr> },
     Index { name: Box<Expr>, index: Box<Expr> },
     IOp { name: Token, op: Token, value: Box<Expr> },
