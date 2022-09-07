@@ -4,45 +4,52 @@ pub mod lexer;
 pub mod ast;
 pub mod parser;
 pub mod errors;
-pub mod api;
 pub mod value;
 pub mod interpreter;
 pub mod builtin_function;
 
+use std::fs;
+use lexer::{Token, Lexer};
+use ast::stmt::Stmt;
+use parser::Parser;
+use interpreter::Interpreter;
+use interpreter::resolver::Resolver;
 
-/*
-
-lalrpop_mod!(pub popper);
-
-pub fn get_ast_from_string(string: &str) -> Result<Expr, String> {
-    match popper::ExprsParser::new().parse(string) {
-        Ok(e) => Ok(e),
-        Err(d) => Err(format!("invalid syntax: {:#?}", d))
-    }
+fn read_file(filename: &str) -> String {
+    let content = fs::read_to_string(filename).expect("file not found");
+    content
 }
 
-pub fn get_ast_from_file(path: &str) -> Result<Expr, String> {
-    let content = fs::read_to_string(path).expect("a error when reading the file");
-    
-    get_ast_from_string(content.as_str())
+pub fn tokenize(string: String) -> Vec<Token> {
+    let mut lexer = Lexer::new(string);
+    lexer.scan_token()
 }
 
-pub fn eval_expr(expr: Expr) -> Result<Value, Error> {
-    let mut vm = Vm::new();
-    expr.eval(&mut vm)
+pub fn parse(tokens: Vec<Token>) -> Stmt{
+    let mut parser = Parser::new(tokens);
+    parser.parse()
 }
 
-pub fn execute_string(string: &str) -> Result<Value, Error> {
-    eval_expr(match get_ast_from_string(string) {
-        Ok(e) => e,
-        Err(d) => return Err(Error::SyntaxError(d))
-    })
+pub fn interpret(stmts: Stmt) {
+    let mut interpreter = Interpreter::new();
+    resolve(stmts.clone(), interpreter.clone());
+    stmts.accept(&mut interpreter);
 }
 
-pub fn execute_file(path: &str) -> Result<Value, Error> {
-    eval_expr(match get_ast_from_file(path) {
-        Ok(e) => e,
-        Err(e) => return Err(Error::SyntaxError(e))
-    })
+pub fn resolve(stmt: Stmt, interpreter: Interpreter) {
+    let mut resolve = Resolver::new(interpreter);
+    stmt.accept(&mut resolve);
 }
-*/
+
+pub fn execute(string: &str) {
+    let tokens = tokenize(string.to_string());
+    let stmts = parse(tokens);
+
+    interpret(stmts);
+}
+
+pub fn execute_file(filename: &str) {
+    let content = read_file(filename);
+    execute(content.as_str());
+}
+

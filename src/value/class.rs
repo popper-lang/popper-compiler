@@ -1,6 +1,4 @@
-use crate::value::instance::Instance;
-use crate::interpreter::{environement::Environment, Interpreter};
-use crate::value::callable::Callable;
+use crate::interpreter::{environement::Environment};
 use crate::value::{Var, Object, Type};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -29,8 +27,3 @@ impl Object for Class {
     }
 }
 
-impl Callable for Class {
-    fn call(&self, _interpreter: &mut Interpreter, _args: Vec<Box<dyn Object>>) -> Box<dyn Object> {
-        Box::new(Instance::new(self.clone(), "".to_string()))
-    }
-}

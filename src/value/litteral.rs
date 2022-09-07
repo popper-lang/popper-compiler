@@ -1,5 +1,3 @@
-use std::fmt::format;
-
 use super::{Object, Type};
 
 impl Object for String {

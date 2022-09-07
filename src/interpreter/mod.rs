@@ -1,19 +1,14 @@
-#![feature(type_alias_impl_trait)]
-
-
 pub mod environement;
 pub mod resolver;
 use std::rc::Rc;
-use std::any::type_name;
 use crate::value::class;
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::ast::expr::{Expr, LiteralType};
 use crate::ast::stmt::Stmt;
-use crate::lexer::{Token, TokenType};
+use crate::lexer::Token;
 use crate::value::{Object, Var, Type};
 use crate::value::function::Function;
-use crate::value::callable::Callable;
-use crate::errors::{error, DisplayError};
+use crate::errors::{error};
 use crate::builtin_function::io;
 use self::class::Class;
 use self::environement::Environment;
@@ -32,7 +27,7 @@ impl Interpreter {
             locals: Environment::new(None)
         };
         inter.env.define("print".to_string(), Var {
-            value: Box::new(
+            value: Rc::new(
                 io::Print
             ),
             mutable: false,
@@ -40,7 +35,7 @@ impl Interpreter {
         });
 
         inter.env.define("println".to_string(), Var {
-            value: Box::new(
+            value: Rc::new(
                 io::Println
             ),
             mutable: false,
@@ -73,9 +68,9 @@ impl Interpreter {
 }
 
 impl ExprVisitor for Interpreter {
-    type Output = Box<dyn Object>;
+    type Output = Rc<dyn Object>;
 
-    fn visit_bin_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output {
+    fn visit_bin_op(&mut self, _left: Expr, _op: Token, _right: Expr) -> Self::Output {
         // let left = left.accept(self);
         // let right = right.accept(self);
         // let res = match op {
@@ -92,7 +87,7 @@ impl ExprVisitor for Interpreter {
         //     Err(e) => error!(e.display_error(), op.line, op.pos)
         // }
 
-        Box::new(())
+        Rc::new(())
 
     }
 
@@ -135,9 +130,9 @@ impl ExprVisitor for Interpreter {
 
     fn visit_literal(&mut self, literal: LiteralType) -> Self::Output {
         match literal {
-            LiteralType::Number(n) => Box::new(n),
-            LiteralType::Bool(b) => Box::new(b),
-            LiteralType::String(s) => Box::new(s)
+            LiteralType::Number(n) => Rc::new(n),
+            LiteralType::Bool(b) => Rc::new(b),
+            LiteralType::String(s) => Rc::new(s)
         }
     }
 
@@ -152,18 +147,18 @@ impl ExprVisitor for Interpreter {
         let distance = self.locals.fetch(Expr::Assign { name: name, value: Box::new(value) });
         if let Some(d) = distance {
             self.env.define_at(d, name_string, Var {
-                value: value_evaluated,
+                value: value_evaluated.clone(),
                 type_: value_evaluated.get_type(),
                 mutable: true,
             });
         } else {
             self.env.define(name_string.clone(), Var {
-                value: value_evaluated,
+                value: value_evaluated.clone(),
                 type_: value_evaluated.get_type(),
                 mutable: true,
             });
         }
-        Box::new(())
+        Rc::new(())
 
     }
 
@@ -191,7 +186,7 @@ impl ExprVisitor for Interpreter {
 }
 
 impl StmtVisitor for Interpreter {
-    type Output = Box<dyn Object>;
+    type Output = Rc<dyn Object>;
 
     fn visit_let(&mut self, name: Token, value: Option<Expr>, mutable: bool, type_: Option<Expr>) -> Self::Output {
         let name = name.lexeme.to_string();
@@ -205,7 +200,7 @@ impl StmtVisitor for Interpreter {
             self.env.define(name, Var { value: value, mutable: mutable, type_: ty});
             
         }
-        Box::new(())
+        Rc::new(())
     }
 
     fn visit_block(&mut self, stmts: Vec<Stmt>) -> Self::Output {
@@ -213,8 +208,8 @@ impl StmtVisitor for Interpreter {
         let env = Environment::new(
             Some(self.env.clone())
         );
-        let mut res: Box<dyn Object> = Box::new(());
-        for mut stmt in stmts {
+        let mut res: Rc<dyn Object> = Rc::new(());
+        for stmt in stmts {
             self.env = env.clone();
             res = stmt.accept(self);
         }
@@ -229,10 +224,10 @@ impl StmtVisitor for Interpreter {
     fn visit_if(&mut self, cond: Expr, then: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if cond == Box::new(true) {
+        if cond.boolean(){
             then.accept(self)
         } else {
-            Box::new(())
+            Rc::new(())
         }
 
     }
@@ -240,10 +235,10 @@ impl StmtVisitor for Interpreter {
     fn visit_if_else(&mut self, cond: Expr, then: Stmt, else_: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if cond == Box::new(true)  {
+        if cond.boolean() {
             then.accept(self)
-        } else if cond == Box::new(false) {
-            Box::new(())
+        } else if ! cond.boolean() {
+            else_.accept(self)
         } else {
             error!("expected bool")
         }
@@ -267,17 +262,17 @@ impl StmtVisitor for Interpreter {
         
 
         self.env.define(n, Var {
-            value: Box::new(Function { declaration: s }),
+            value: Rc::new(Function { declaration: s }),
             mutable: false,
             type_: Type::Function
 
         });
-        Box::new(())
+        Rc::new(())
     }
 
     fn visit_class(&mut self, name: String, methods: Vec<Stmt>) -> Self::Output {
         let mut functions = Vec::new();
-        let mut env = self.env.clone();
+        let env = self.env.clone();
         let mut interpreter = Interpreter::new_with_env(env);
 
         for method in methods {
@@ -308,7 +303,7 @@ impl StmtVisitor for Interpreter {
                 );
         }*/
         self.env.define(name.clone(), Var { 
-            value: Box::new(
+            value: Rc::new(
                 Class {
                     name: name.clone(),
                     methods: interpreter.env
@@ -317,13 +312,9 @@ impl StmtVisitor for Interpreter {
             mutable: false,
             type_: Type::Class(name.clone())
         });
-        Box::new(())
+        Rc::new(())
     }
 }
 
-
-fn type_of<T>(_: T) -> &'static str {
-    type_name::<T>()
-}
 
 

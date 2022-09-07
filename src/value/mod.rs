@@ -1,4 +1,3 @@
-pub mod callable;
 pub mod function;
 pub mod litteral;
 pub mod list;
@@ -6,23 +5,22 @@ pub mod instance;
 pub mod get;
 pub mod class;
 
-use std::{hash::Hash, fmt::Debug};
+use std::{hash::Hash, fmt::Debug, rc::Rc};
 use crate::error;
 use crate::interpreter::Interpreter;
 
-use self::callable::Callable;
 use self::get::{Getter, Setter};
 
-type Args = Vec<Box<dyn Object>>;
+type Args = Vec<Rc<dyn Object>>;
 
-pub trait Object {
+pub trait Object: Debug {
     fn display_value(&self) -> String;
     fn get_type(&self) -> Type;
     fn is_callable(&self) -> bool {
         false
     }
 
-    fn call(&self, interpreter: &mut Interpreter, args: Vec<Box<dyn Object>>) -> Box<dyn Object> {
+    fn call(&self, _interpreter: &mut Interpreter, _args: Args) -> Rc<dyn Object> {
         error!("this object cant be call")
     }
  
@@ -34,17 +32,11 @@ pub trait Object {
         None
     }
 
-
+    fn boolean(&self) -> bool {
+        false
+    }
 
 } 
-
-fn call_object(obj: Box<dyn Object>, interpreter: &mut Interpreter, args: Args) -> Box<dyn Object> {
-    if obj.is_callable() {
-        obj.call(interpreter, args)
-    } else {
-        error!("cant call")
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
@@ -65,27 +57,25 @@ pub enum Type {
 
 
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Var {
-    pub value: Box<dyn Object>,
+    pub value: Rc<dyn Object>,
     pub mutable: bool,
     pub type_: Type,
 }
 
 
-
-impl PartialEq for Box<dyn Object> {
+impl PartialEq for Var {
     fn eq(&self, other: &Self) -> bool {
-        self == other
+        self.value.display_value() == other.value.display_value() && self.mutable == other.mutable && self.type_ == other.type_
     }
 }
 
 
-impl Debug for Box<dyn Object> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("Box").finish()
-    }
-}
+
+
+
+
 
 
 

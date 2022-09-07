@@ -1,5 +1,5 @@
 /target
 
 .idea 
-newfile.sh
-rmv.txt
+Cargo.lock
+.DS_Store

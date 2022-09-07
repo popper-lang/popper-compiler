@@ -1,20 +1,15 @@
-use crate::value::callable::Callable;
 use crate::value::{Object, Type};
 use crate::interpreter::Interpreter;
+use std::rc::Rc;
 
-
+#[derive(Clone, Debug)]
 pub struct Print;
+
+#[derive(Clone, Debug)]
 pub struct Println;
 
 
-impl Callable for Print {
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Box<dyn Object>>) -> Box<dyn Object> {
-        for i in args {
-            print!("{}", i.display_value())
-        }
-        Box::new(())
-    }
-}
+
 
 impl Object for Print {
     fn display_value(&self) -> String {
@@ -24,16 +19,15 @@ impl Object for Print {
     fn get_type(&self) -> Type {
         Type::Function
     }
-}
-
-impl Callable for Println {
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Box<dyn Object>>) -> Box<dyn Object> {
-        for i in args {
-            println!("{}", i.display_value())
+    
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Rc<dyn Object>>) -> Rc<dyn Object> {
+        for arg in args {
+            print!("{}", arg.display_value());
         }
-        Box::new(())
+        Rc::new(())
     }
 }
+
 
 impl Object for Println {
     fn display_value(&self) -> String {
@@ -42,5 +36,13 @@ impl Object for Println {
 
     fn get_type(&self) -> Type {
         Type::Function
+    }
+
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Rc<dyn Object>>) -> Rc<dyn Object> {
+        for arg in args {
+            print!("{}", arg.display_value());
+        }
+        println!();
+        Rc::new(())
     }
 }

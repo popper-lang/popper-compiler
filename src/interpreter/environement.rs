@@ -81,7 +81,7 @@ where K: PartialEq + Eq + Hash + Clone,
 
     pub fn ancestore(&mut self, distance: i32) -> Option<Environment<K, V>> {
         let mut env = Some(self.clone());
-        for i in 0..distance as usize {
+        for _ in 0..distance as usize {
             env = if let Some(e) = env {
                 *e.enclosing
             } else {

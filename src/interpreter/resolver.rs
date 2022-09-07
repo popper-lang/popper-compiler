@@ -7,22 +7,14 @@ use std::collections::HashMap;
 
 use super::Interpreter;
 
-struct Resolver {
+pub struct Resolver {
     pub stack: Vec<HashMap<String, bool>>,
-    interpreteur: Interpreter,
-    current_function: FunctionType
+    interpreteur: Interpreter
 }
-
-enum FunctionType {
-    FUNCTION,
-    METHOD,
-    NONE
-}
-
 
 impl Resolver {
     pub fn new(interpreteur: Interpreter) -> Self {
-        Resolver { stack: Vec::new(), interpreteur, current_function: FunctionType::NONE }
+        Resolver { stack: Vec::new(), interpreteur}
     }
 
     fn resolve_statements(&mut self, stmts: Vec<Stmt>) {
@@ -57,14 +49,6 @@ impl Resolver {
         self.stack.last_mut().unwrap().insert(name, true);
     }
 
-    fn declare_local(&mut self, name: String) {
-        let mut reversed_stack = self.stack.clone();
-        reversed_stack.reverse();
-        for s in reversed_stack {
-
-        }
-    }
-
     fn resolve_local(&mut self, expr: Expr, name: String) {
         for (i, scope) in self.stack.clone().into_iter().enumerate() {
             if scope.contains_key(&name) {
@@ -77,7 +61,7 @@ impl Resolver {
 impl ExprVisitor for Resolver { 
     type Output = ();
 
-    fn visit_bin_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output {
+    fn visit_bin_op(&mut self, left: Expr, _op: Token, right: Expr) -> Self::Output {
         self.resolve_expression(left);
         self.resolve_expression(right);
     }
@@ -89,7 +73,7 @@ impl ExprVisitor for Resolver {
         }
     }
 
-    fn visit_get(&mut self, name: Expr, attr: String) -> Self::Output {
+    fn visit_get(&mut self, _name: Expr, _attr: String) -> Self::Output {
         todo!()
     }
 
@@ -102,7 +86,7 @@ impl ExprVisitor for Resolver {
         self.resolve_expression(index);
     }
 
-    fn visit_iop(&mut self, name: Token, op: Token, value: Expr) -> Self::Output {
+    fn visit_iop(&mut self, name: Token, _op: Token, value: Expr) -> Self::Output {
         self.visit_ident(name);
         self.resolve_expression(value);
     }
@@ -200,11 +184,11 @@ impl StmtVisitor for Resolver {
         }
     }
 
-    fn visit_function(&mut self, name: Token, args: Vec<String>, body: Stmt) -> Self::Output {
+    fn visit_function(&mut self, name: Token, _args: Vec<String>, _body: Stmt) -> Self::Output {
         self.define(name.lexeme);
     }
 
-    fn visit_class(&mut self, name: String, methods: Vec<Stmt>) -> Self::Output {
+    fn visit_class(&mut self, _name: String, _methods: Vec<Stmt>) -> Self::Output {
         todo!()
     }
     

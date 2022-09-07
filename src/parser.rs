@@ -6,12 +6,6 @@ use crate::ast::expr::LiteralType;
 
 
 #[derive(Debug, Clone)]
-pub struct Program {
-    pub statements: Vec<Stmt>
-}
-
-
-#[derive(Debug, Clone)]
 pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
@@ -25,15 +19,14 @@ impl Parser {
             current: 0,
         }
     }
-    pub fn parse(&mut self) -> Program {
-        let mut program = Program {
-            statements: vec![],
-        };
+    pub fn parse(&mut self) -> Stmt {
+        let mut stmts = Vec::new();
+
         while !self.is_at_end()  {
-            program.statements.push(self.parse_statement());
+            stmts.push(self.parse_statement());
             
         }
-        program
+        Stmt::Block { body: stmts }
     }
     fn parse_statement(&mut self) -> Stmt {
         let statement = match self.clone().peek().token_type {
@@ -152,7 +145,7 @@ impl Parser {
     fn parse_type_expression(&mut self) -> Expr {
         let type_ = self.peek();
         match type_.token_type {
-            TokenType::INT_TYPE | TokenType::BOOLEAN_TYPE | TokenType::STRING_TYPE | TokenType::ARRAY_TYPE => {
+            TokenType::IntType | TokenType::BouleanType | TokenType::StringType | TokenType::ArrayType => {
                 Expr::Type { type_ }
             }
             
@@ -200,17 +193,13 @@ impl Parser {
     }
 
     fn term(&mut self) -> Expr {
-        println!("term peek 1: {:?}", self.peek());
         let mut left = self.factor();
-        println!("term peek 2: {:?}", self.peek());
         let mut op;
         let mut right;
         while self.check(TokenType::ADD) || self.check(TokenType::SUB) {
-            println!("peek term: {:?}", self.peek());
             op = self.peek();
             self.advance();
             right = self.factor();
-            println!("right: {:?}", right);
             left = Expr::BinOp {
                 op,
                 left: Box::new(left),
@@ -223,7 +212,6 @@ impl Parser {
     }
 
     fn factor(&mut self) -> Expr {
-        println!("factor peek 1: {:?}", self.peek());
         let mut left = self.unary();
         let mut op;
         let mut right;
@@ -243,7 +231,6 @@ impl Parser {
     }
     
     fn unary(&mut self) -> Expr {
-        println!("unary peek 1: {:?}", self.peek());
         if self.match_token(TokenType::NOT) || self.match_token(TokenType::SUB) {
             let op = self.previous();
             let operand = self.unary();
@@ -257,9 +244,7 @@ impl Parser {
 
     fn get(&mut self) -> Expr {
         let mut name = self.primary();
-        println!("name {:#?}", name);
         if self.match_token(TokenType::DOT) {
-            println!("get peek 1: {:?}", self.peek());
             let attr = match self.identifier() {
                 Expr::Ident { ident } => ident.lexeme,
                 _ => unreachable!()
@@ -275,19 +260,14 @@ impl Parser {
     }
 
     fn call(&mut self) -> Expr {
-        println!("call peek 1: {:?}", self.peek());
         let callee = self.get();
-        println!("call 1-2: {:?}", self.peek());
         if self.is_at_end() {
             return callee;
         }
-        println!("call peek 2: {:?}", self.peek());
         loop {
             if self.match_token(TokenType::LPAREN) {
-                println!("[call] match token LPAREN");
                 let mut args = Vec::new();
                 if !self.check(TokenType::RPAREN) {
-                    println!("call: {:?}", self.peek());
                     args.push(self.term());
                     while self.match_token(TokenType::COMMA) {
                         args.push(self.primary())
@@ -297,7 +277,6 @@ impl Parser {
                 return Expr::Call { name: Box::new(callee), args }
             } else {
                 
-                println!("call peek 3: {:?}", self.peek());
                 break callee;
             };
         }
@@ -306,7 +285,6 @@ impl Parser {
 
 
     fn primary(&mut self) -> Expr {
-        println!("primary peek 1: {:?}", self.peek());
         if self.match_token(TokenType::FALSE) { 
             return Expr::Literal {
                 literal: LiteralType::Bool(false),
@@ -335,7 +313,6 @@ impl Parser {
             }
         };
         self.advance();
-        println!("primary peek 2: {:?}", self.peek());
         res
 
     }
@@ -351,10 +328,10 @@ impl Parser {
 
     fn expression(&mut self) -> Expr {
         let expression = match self.clone().peek().token_type {
-            TokenType::INT_TYPE        | 
-            TokenType::BOOLEAN_TYPE    | 
-            TokenType::STRING_TYPE     |
-            TokenType::ARRAY_TYPE => self.parse_type_expression(),
+            TokenType::IntType        | 
+            TokenType::BouleanType    | 
+            TokenType::StringType     |
+            TokenType::ArrayType => self.parse_type_expression(),
             TokenType::CAST => self.parse_cast_expression(),
             _ => panic!("Unexpected token: {:?}", self.clone().peek()),
         };
@@ -373,7 +350,6 @@ impl Parser {
 
     fn parse_cast_expression(&mut self) -> Expr {
         self.advance();
-        println!("parse_cast_expression peek: {:?}", self.peek());
         let elt = self.term();
         self.expect_token(TokenType::TO);
         let type_ = self.parse_type_expression();
@@ -385,7 +361,6 @@ impl Parser {
 
     fn function(&mut self) -> Stmt {
         self.advance();
-        println!("function peek 1 (loop): {:?}", self.peek());
         let name = match self.identifier() {
             Expr::Ident { ident } => ident,
             _ => panic!("Expected identifier"),
@@ -409,9 +384,7 @@ impl Parser {
                 
             }
         }
-        println!("function peek 2 (loop): {:?}", self.peek());
         self.expect_token(TokenType::RPAREN);
-        println!("function peek 3 (loop): {:?}", self.peek());
         let body = self.parse_statement();
         Stmt::Function { name, args, body: Box::new(body) }
     }

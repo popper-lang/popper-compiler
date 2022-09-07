@@ -29,7 +29,7 @@ pub enum TokenType {
     ADD, SUB, MUL, DIV, MOD, POW, EQ, NEQ, LT, GT, LTE, GTE, EQUAL, OR, AND, ASSIGN, NOT,
 
     // type token
-    INT_TYPE, STRING_TYPE, BOOLEAN_TYPE, ARRAY_TYPE,
+    IntType, StringType, BouleanType, ArrayType,
 
     // bool token
     TRUE, FALSE,
@@ -181,10 +181,10 @@ impl Lexer {
                     "true" => token!(TRUE, "true", self.line, self.pos),
                     "false" => token!(FALSE, "false", self.line, self.pos),
                     "let" => token!(LET, "let", self.line, self.pos),
-                    "int" => token!(INT_TYPE, "int", self.line, self.pos),
-                    "string" => token!(STRING_TYPE, "string", self.line, self.pos),
-                    "bool" => token!(BOOLEAN_TYPE, "bool", self.line, self.pos),
-                    "array" => token!(ARRAY_TYPE, "array", self.line, self.pos),
+                    "int" => token!(IntType, "int", self.line, self.pos),
+                    "string" => token!(StringType, "string", self.line, self.pos),
+                    "bool" => token!(BouleanType, "bool", self.line, self.pos),
+                    "array" => token!(ArrayType, "array", self.line, self.pos),
                     "while" => token!(WHILE, "while", self.line, self.pos),
                     "fun" => token!(FUN, "fun", self.line, self.pos),
                     "class" => token!(CLASS, "class", self.line, self.pos),
