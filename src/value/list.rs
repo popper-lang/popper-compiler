@@ -6,7 +6,7 @@ impl Object for Vec<Box<dyn Object>> {
     }
 
     fn display_value(&self) -> String {
-        let res = String::from("[");
+        let mut res = String::from("[");
         for i in self {
             res += i.display_value().as_str();
             res += ",";

@@ -7,15 +7,23 @@ pub mod get;
 pub mod class;
 
 use std::{hash::Hash, fmt::Debug};
+use crate::error;
+use crate::interpreter::Interpreter;
 
 use self::callable::Callable;
 use self::get::{Getter, Setter};
 
+type Args = Vec<Box<dyn Object>>;
+
 pub trait Object {
     fn display_value(&self) -> String;
     fn get_type(&self) -> Type;
-    fn called(self) -> Option<Box<dyn Callable>> {
-        None
+    fn is_callable(&self) -> bool {
+        false
+    }
+
+    fn call(&self, interpreter: &mut Interpreter, args: Vec<Box<dyn Object>>) -> Box<dyn Object> {
+        error!("this object cant be call")
     }
  
     fn getter(&self) -> Option<Box<dyn Getter>> {
@@ -29,6 +37,14 @@ pub trait Object {
 
 
 } 
+
+fn call_object(obj: Box<dyn Object>, interpreter: &mut Interpreter, args: Args) -> Box<dyn Object> {
+    if obj.is_callable() {
+        obj.call(interpreter, args)
+    } else {
+        error!("cant call")
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
@@ -56,11 +72,7 @@ pub struct Var {
     pub type_: Type,
 }
 
-impl Clone for Box<dyn Object> {
-    fn clone(&self) -> Self {
-        self.clone()
-    }
-}
+
 
 impl PartialEq for Box<dyn Object> {
     fn eq(&self, other: &Self) -> bool {

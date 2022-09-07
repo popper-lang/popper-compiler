@@ -23,6 +23,6 @@ impl Object for Instance {
     }
 
     fn get_type(&self) -> Type {
-        Type::Instance(self.name)
+        Type::Instance(self.class.name.clone())
     }
 }

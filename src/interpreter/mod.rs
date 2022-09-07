@@ -103,11 +103,7 @@ impl ExprVisitor for Interpreter {
             arguments.push(arg.accept(self));
         };
 
-        if let Some(e) = resolved_name.called() {
-            e.call(self, arguments)
-        } else {
-            error!("doen't implemente the trait Callable")
-        }
+        resolved_name.call(self, arguments)
         
 
     }
@@ -156,13 +152,13 @@ impl ExprVisitor for Interpreter {
         let distance = self.locals.fetch(Expr::Assign { name: name, value: Box::new(value) });
         if let Some(d) = distance {
             self.env.define_at(d, name_string, Var {
-                value: value_evaluated.clone(),
+                value: value_evaluated,
                 type_: value_evaluated.get_type(),
                 mutable: true,
             });
         } else {
             self.env.define(name_string.clone(), Var {
-                value: value_evaluated.clone(),
+                value: value_evaluated,
                 type_: value_evaluated.get_type(),
                 mutable: true,
             });
@@ -183,7 +179,7 @@ impl ExprVisitor for Interpreter {
         let id = ident.lexeme.to_string();
          
         match self.look_up_var(id, Expr::Ident { ident: ident.clone() }) {
-            Some(v) => v.value.clone(),
+            Some(v) => v.value,
             None => error!("ident not found", ident.line, ident.pos)
         }
     }
@@ -206,7 +202,7 @@ impl StmtVisitor for Interpreter {
             } else {
                 value.get_type()
             };
-            self.env.define(name, Var { value: value.clone(), mutable: mutable, type_: ty});
+            self.env.define(name, Var { value: value, mutable: mutable, type_: ty});
             
         }
         Box::new(())
@@ -289,7 +285,7 @@ impl StmtVisitor for Interpreter {
                 Stmt::Function { name: e, args: a, body: b }  => {
                     interpreter.visit_function(e.clone(), a, *b);
                     if let Some(v) = interpreter.env.fetch(e.lexeme.to_string())  {
-                        functions.push(v.value.clone())
+                        functions.push(v.value)
                     } else {
                         unreachable!()
                     }
