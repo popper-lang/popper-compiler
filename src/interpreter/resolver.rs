@@ -14,9 +14,21 @@ pub struct Resolver {
 
 impl Resolver {
     pub fn new(interpreteur: Interpreter) -> Self {
-        Resolver { stack: Vec::new(), interpreteur}
-    }
+        let mut resolver = Resolver { stack: Vec::new(), interpreteur: interpreteur.clone()};
+        for (k,_) in interpreteur.env.into_iter() {
+            resolver.define(k)
+        }
+        resolver
 
+    }
+    pub fn resolve(&mut self, stmts: Vec<Stmt>) {
+        self.begin_scope();
+        for (k,_) in self.interpreteur.env.clone().into_iter() {
+            self.define(k)
+        }
+        self.resolve_statements(stmts);
+        self.end_scope();
+    }
     fn resolve_statements(&mut self, stmts: Vec<Stmt>) {
         for stmt in stmts {
             self.resolve_statement(stmt)
@@ -31,11 +43,15 @@ impl Resolver {
         expr.accept(self)
     }
 
-    fn begin_scope(&mut self) {
-        self.stack.push(HashMap::new());
+    pub fn begin_scope(&mut self) {
+        if self.stack.is_empty() {
+            self.stack.push(HashMap::new());
+        } else {
+            self.stack.push(self.stack.last().cloned().unwrap());
+        }
     }
 
-    fn end_scope(&mut self) {
+    pub fn end_scope(&mut self) {
         self.stack.pop();
     }
 
@@ -73,8 +89,8 @@ impl ExprVisitor for Resolver {
         }
     }
 
-    fn visit_get(&mut self, _name: Expr, _attr: String) -> Self::Output {
-        todo!()
+    fn visit_get(&mut self, name: Expr, _attr: String) -> Self::Output {
+        self.resolve_expression(name);
     }
 
     fn visit_grouping(&mut self, group: Expr) -> Self::Output {
@@ -121,7 +137,10 @@ impl ExprVisitor for Resolver {
 
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         if !self.stack.is_empty() {
+            
+
             if let None = self.stack.last().unwrap().get(&ident.lexeme) {
+                println!("{:?}, {:?}, {}", self.stack.last().unwrap().get(&ident.lexeme), self.stack.last().unwrap(), &ident.lexeme);
                 error!("Can't read local variable in its own initializer.", ident.line, ident.pos)
             }
         }

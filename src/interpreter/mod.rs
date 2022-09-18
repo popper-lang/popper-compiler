@@ -1,7 +1,7 @@
 pub mod environement;
 pub mod resolver;
 use std::rc::Rc;
-use crate::value::class;
+use crate::value::{class, BinaryOperation};
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::ast::expr::{Expr, LiteralType};
 use crate::ast::stmt::Stmt;
@@ -57,9 +57,11 @@ impl Interpreter {
 
     fn look_up_var(&mut self, name: String, expr: Expr) -> Option<Var> {
         let distance = self.locals.fetch(expr);
+        println!("{:?}", distance);
         if let Some(d) = distance {
             self.env.get_at(d.clone(), name)
         } else {
+            println!("{:?}", self.env);
             self.env.fetch(name)
         }
     }
@@ -70,24 +72,21 @@ impl Interpreter {
 impl ExprVisitor for Interpreter {
     type Output = Rc<dyn Object>;
 
-    fn visit_bin_op(&mut self, _left: Expr, _op: Token, _right: Expr) -> Self::Output {
-        // let left = left.accept(self);
-        // let right = right.accept(self);
-        // let res = match op {
-        //     Token { token_type: TokenType::ADD, .. } => left.add(&right),
-        //     Token { token_type: TokenType::SUB, .. } => left.sub(&right),
-        //     Token { token_type: TokenType::MUL, .. } => left.mul(&right),
-        //     Token { token_type: TokenType::DIV, .. } => left.div(&right),
-        //     Token { token_type: TokenType::MOD, .. } => left.modulo(&right),
-        //     _ => error!("Unexpected operand type", op.line, op.pos)
-
-        // };
-        // match res {
-        //     Ok(e) => e,
-        //     Err(e) => error!(e.display_error(), op.line, op.pos)
-        // }
-
-        Rc::new(())
+    fn visit_bin_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output {
+        let left = left.accept(self);
+        let right = right.accept(self);
+        let res = match op.lexeme.as_str() {
+            "+" => left.add(&right),
+            "-" => left.subtract(&right),
+            "*" => left.multiply(&right),
+            "/" => left.divide(&right),
+            _ => unreachable!()
+        };
+        if let Some(r) = res {
+            r
+        } else {
+            error!("error when binary operation")
+        }
 
     }
 
@@ -172,10 +171,10 @@ impl ExprVisitor for Interpreter {
 
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
-         
-        match self.look_up_var(id, Expr::Ident { ident: ident.clone() }) {
+        println!("{}", id);
+        match self.look_up_var(id, Expr::Ident { ident: ident }) {
             Some(v) => v.value,
-            None => error!("ident not found", ident.line, ident.pos)
+            None => error!("ident not found")
         }
     }
 
@@ -198,7 +197,7 @@ impl StmtVisitor for Interpreter {
                 value.get_type()
             };
             self.env.define(name, Var { value: value, mutable: mutable, type_: ty});
-            
+            println!("{:?}", self.env);
         }
         Rc::new(())
     }

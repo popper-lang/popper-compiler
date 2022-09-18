@@ -5,7 +5,7 @@ pub mod instance;
 pub mod get;
 pub mod class;
 
-use std::{hash::Hash, fmt::Debug, rc::Rc};
+use std::{hash::Hash, fmt::{Debug, Display}, rc::Rc};
 use crate::error;
 use crate::interpreter::Interpreter;
 
@@ -20,7 +20,7 @@ pub trait Object: Debug {
         false
     }
 
-    fn call(&self, _interpreter: &mut Interpreter, _args: Args) -> Rc<dyn Object> {
+    fn call(&self, _interpreter: &mut Interpreter, _args: Vec<Rc<dyn Object>>) -> Rc<dyn Object> {
         error!("this object cant be call")
     }
  
@@ -36,7 +36,39 @@ pub trait Object: Debug {
         false
     }
 
-} 
+}
+
+pub trait BinaryOperation {
+
+    fn add(&self, rhs: &Self) -> Option<Self> 
+    where Self: Sized {
+        None
+    }
+
+    fn subtract(&self, rhs: &Self) -> Option<Self> 
+    where Self: Sized {
+        None 
+    }
+
+    fn multiply(&self, rhs: &Self) -> Option<Self> 
+    where Self: Sized {
+        None     
+    }
+
+    fn divide(&self, rhs: &Self) -> Option<Self>
+    where Self: Sized  {
+        None   
+    }
+
+    fn pow(&self, rhs: &Self) -> Option<Self>
+    where Self: Sized  {
+        None
+    }
+
+}
+
+
+impl BinaryOperation for Rc<dyn Object> {}
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum Type {
@@ -80,22 +112,24 @@ impl PartialEq for Var {
 
 
 
-impl ToString for Type {
-    fn to_string(&self) -> String {
-        match self {
-            Type::Int => "int".to_string(),
-            Type::String => "string".to_string(),
-            Type::Bool => "bool".to_string(),
-            Type::Func => "func".to_string(),
-            Type::List => "list".to_string(),
-            Type::Range => "range".to_string(),
-            Type::None => "None".to_string(),
-            Type::Type(_) => "type".to_string(),
-            Type::Any => "any".to_string(),
-            Type::Function => "function".to_string(),
-            Type::Instance(i) => format!("instance of class {}", i),
-            Type::Class(e) => format!("class {}", e),
-        }
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Type::Int => "int",
+            Type::String => "string",
+            Type::Bool => "bool",
+            Type::Func => "func",
+            Type::List => "list",
+            Type::Range => "range",
+            Type::None => "None",
+            Type::Type(_) => "type",
+            Type::Any => "any",
+            Type::Function => "function",
+            Type::Instance(i) => "instance",
+            Type::Class(e) => "class",
+        })
+
     }
 }
 

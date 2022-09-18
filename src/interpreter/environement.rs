@@ -2,16 +2,16 @@ use std::{collections::HashMap, hash::Hash};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Environment<K, V> 
-where K: PartialEq + Eq + Hash + Clone,
-      V: PartialEq + Clone {
-    values: HashMap<K, V>,
-    enclosing: Box<Option<Environment<K, V>>>
+where K: PartialEq + Eq + Hash + Clone + std::fmt::Debug,
+      V: PartialEq + Clone + std::fmt::Debug {
+    pub values: HashMap<K, V>,
+    pub enclosing: Box<Option<Environment<K, V>>>
 }
 
 
 impl<K, V> Environment<K, V> 
-where K: PartialEq + Eq + Hash + Clone, 
-      V: PartialEq + Clone {
+where K: PartialEq + Eq + Hash + Clone + std::fmt::Debug,
+      V: PartialEq + Clone + std::fmt::Debug {
     pub fn new(enclosing: Option<Environment<K, V>>) -> Environment<K, V> {
         if let Some(e) = enclosing {
             Environment { 
@@ -28,6 +28,7 @@ where K: PartialEq + Eq + Hash + Clone,
 
     pub fn fetch(&mut self, key: K) -> Option<V> {
         if let Some(mut e) = *self.enclosing.clone() { 
+            println!("get encolsing: {:?}", e);
             e.fetch(key)
         } else {
             self.values.get(&key).map(|e| e.clone())
@@ -93,4 +94,16 @@ where K: PartialEq + Eq + Hash + Clone,
 
 
 
+}
+
+impl<K,V> IntoIterator for Environment<K,V> 
+where K: PartialEq + Eq + Hash + Clone + std::fmt::Debug,
+      V: PartialEq + Clone + std::fmt::Debug {
+    type Item = (K, V);
+    type IntoIter = std::collections::hash_map::IntoIter<K, V>;
+
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.values.into_iter()
+    }
 }

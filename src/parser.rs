@@ -19,14 +19,14 @@ impl Parser {
             current: 0,
         }
     }
-    pub fn parse(&mut self) -> Stmt {
+    pub fn parse(&mut self) -> Vec<Stmt> {
         let mut stmts = Vec::new();
 
         while !self.is_at_end()  {
             stmts.push(self.parse_statement());
             
         }
-        Stmt::Block { body: stmts }
+        stmts
     }
     fn parse_statement(&mut self) -> Stmt {
         let statement = match self.clone().peek().token_type {

@@ -339,9 +339,20 @@ macro_rules! error {
     ($msg:expr, $line:expr, $pos:expr) => {
         panic!("[line {}, pos {}] {}", $line, $pos, $msg)
     };
-
-    ($msg: expr) => {
+    ($msg:expr, $line:expr, $pos:expr, $x:expr) => {
+        panic!("[line {}, pos {}] {}", $line, $pos, format!($msg, $x))
+    };
+    ($msg:expr, $line:expr, $pos:expr, $($x:expr), *) => {
+        panic!("[line {}, pos {}] {}", $line, $pos, format!($msg, $( $x )*))
+    };
+    ($msg:expr) => {
         panic!($msg)
+    };
+    ($msg:expr, $x:expr ) => {
+        panic!($msg, $x)
+    };
+    ($msg:expr, $($x:expr), * ) => {
+        panic!($msg, format!($msg, $( $x )*))
     };
 
 }
