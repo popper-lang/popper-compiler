@@ -1,18 +1,19 @@
 pub mod ast;
-pub mod builtin_function;
+//pub mod builtin_function;
 pub mod errors;
-pub mod interpreter;
+//pub mod interpreter;
 pub mod lexer;
 pub mod parser;
-pub mod value;
+//pub mod value;
+pub mod bytecodes;
 
-
+/*
 use crate::ast::stmt::Stmt;
 use ast::stmt::StmtType;
 use interpreter::resolver::Resolver;
 use interpreter::Interpreter;
 use lexer::{Lexer, Token};
-use parser::Parser;
+use compiler::Parser;
 use std::fs;
 use std::rc::Rc;
 use value::Object;
@@ -64,3 +65,4 @@ pub fn execute_file(filename: &str) {
     let content = read_file(filename);
     execute(content.as_str());
 }
+*/

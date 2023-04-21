@@ -1,6 +1,6 @@
 pub mod environement;
 pub mod resolver;
-
+/*
 use std::collections::HashMap;
 use self::class::Class;
 use self::environement::Environment;
@@ -22,7 +22,7 @@ use std::path::PathBuf;
 use std::fs;
 use crate::value::Implementation::PartialEq;
 use crate::lexer::Lexer;
-use crate::parser::Parser;
+//use crate::compiler::Compiler;
 use crate::value::namespace::Namespace;
 use crate::value::struct_type::StructField;
 use crate::value::struct_type::StructType;
@@ -642,3 +642,4 @@ impl StmtVisitor for Interpreter {
 
     }
 }
+*/

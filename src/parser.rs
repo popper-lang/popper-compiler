@@ -307,7 +307,7 @@ impl Parser {
                     first_position..self.current_str,
                     self.clone().body,
                 )
-                .panic();
+                    .panic();
                 unreachable!()
             }
         }
@@ -657,7 +657,7 @@ impl Parser {
                 first_position..self.current_str,
                 self.clone().body,
             )
-            .panic();
+                .panic();
             unreachable!()
         }
     }

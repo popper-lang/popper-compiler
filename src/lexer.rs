@@ -4,7 +4,7 @@ macro_rules! token {
             line: $line,
             pos: $pos,
             token_type: TokenType::$type,
-            lexeme: $lexeme.to_string(),
+            lexeme: $lexeme.to_string()
         }
     };
 }
@@ -121,6 +121,7 @@ impl Lexer {
         l
     }
     pub fn read_char(&mut self) {
+
         if self.read_position >= self.input.len() {
             self.ch = '\0';
         } else {
@@ -138,7 +139,7 @@ impl Lexer {
         }
     }
     pub fn skip_whitespace(&mut self) {
-        while self.ch == '\r' || self.ch == ' ' || self.ch == '\t' {
+        while self.ch == '\r' || self.ch == ' ' || self.ch == '\t' || self.ch == '\n' {
             self.read_char();
         }
     }
@@ -170,7 +171,7 @@ impl Lexer {
     }
 
     pub fn read_token(&mut self) -> Token {
-        //self.skip_whitespace();
+        self.skip_whitespace();
         let token = match self.ch {
             '(' => {
                 self.read_char();
@@ -214,7 +215,7 @@ impl Lexer {
             }
             'a'..='z' | 'A'..='Z' | '_' => {
                 let s = self.read_identifier();
-                match s.as_str() {
+                match s.clone().as_str() {
                     "if" => token!(IF, "if", self.line, self.pos),
                     "else" => token!(ELSE, "else", self.line, self.pos),
                     "to" => token!(TO, "to", self.line, self.pos),
@@ -322,21 +323,12 @@ impl Lexer {
                     token!(COLON, ":", self.line, self.pos)
                 }
             }
-            '\n' => {
-                self.read_char();
-                token!(NEWLINE, "\n", self.line, self.pos)
-            }
-            ' ' => {
-                self.read_char();
-                token!(SPACE, " ", self.line, self.pos)
-            }
-            '\t' => {
-                self.read_char();
-                token!(TAB, " ", self.line, self.pos)
-            }
+
 
             '\0' => token!(EOF, "", self.line, self.pos),
+
             _ => {
+                dbg!(self.ch);
                 self.read_char();
                 token!(Illegal, "", self.line, self.pos)
             }

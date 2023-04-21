@@ -1,5 +1,9 @@
-use crate::lexer::Token;
+use crate::lexer::{Token, TokenType};
 use std::ops::Range;
+use crate::bytecodes::bytecode::Bytecode;
+use crate::bytecodes::bytecode::Opcode;
+use crate::bytecodes::bytecode::Operand;
+
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum ExprType {
@@ -38,6 +42,38 @@ impl Expr {
             body,
         }
     }
+
+    pub fn to_bytecode(&self) -> Bytecode {
+        let mut bytecode = Bytecode::new();
+        match &*self.expr_type {
+            ExprType::BinOp { left, op, right } => {
+                let left = left.to_bytecode();
+                let right = right.to_bytecode();
+                bytecode.instructions.extend(left.instructions);
+                bytecode.instructions.extend(right.instructions);
+                match op.token_type {
+                    TokenType::ADD => bytecode.add_instruction(Opcode::Add, None),
+                    TokenType::SUB => bytecode.add_instruction(Opcode::Subtract, None),
+                    TokenType::MUL => bytecode.add_instruction(Opcode::Multiply, None),
+                    TokenType::DIV => bytecode.add_instruction(Opcode::Divide, None),
+
+                    _ => todo!()
+                }
+
+            },
+            ExprType::Literal { literal } => {
+                match literal {
+                    LiteralType::Number(i) => bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Int(*i))),
+                    LiteralType::Bool(b) => bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Bool(*b))),
+                    _ => todo!()
+                }
+            },
+            _ => todo!()
+        }
+        bytecode
+    }
+
+
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
