@@ -10,7 +10,7 @@ fn main() {
     if false {
     2 + 3
     } else {
-    1 + 2 * 5 * 2 - 39
+    1 + true
     }
     "#.to_string();
     let mut lexer = Lexer::new(body.clone());

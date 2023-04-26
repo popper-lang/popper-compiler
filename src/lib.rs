@@ -6,6 +6,8 @@ pub mod lexer;
 pub mod parser;
 //pub mod value;
 pub mod bytecodes;
+pub mod compiler;
+mod compiler_arduino;
 
 /*
 use crate::ast::stmt::Stmt;

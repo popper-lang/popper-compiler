@@ -87,4 +87,8 @@ impl Bytecode {
     pub fn ip(&self) -> usize {
         self.instructions.len()
     }
+
+    pub fn extend(&mut self, bytecode: Self) {
+        self.instructions.extend(bytecode.instructions);
+    }
 }
