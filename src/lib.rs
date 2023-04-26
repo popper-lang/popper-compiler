@@ -5,6 +5,8 @@ pub mod interpreter;
 pub mod lexer;
 pub mod parser;
 pub mod value;
+mod compiler;
+//pub mod arduino_rs;
 
 
 use crate::ast::stmt::Stmt;

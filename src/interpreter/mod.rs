@@ -18,7 +18,7 @@ use crate::value::litteral::{boolean, none, number, string};
 use crate::value::list::list;
 use crate::get_impl_if_exist;
 use std::rc::Rc;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::fs;
 use crate::value::Implementation::PartialEq;
 use crate::lexer::Lexer;
@@ -27,6 +27,10 @@ use crate::value::namespace::Namespace;
 use crate::value::struct_type::StructField;
 use crate::value::struct_type::StructType;
 use crate::value::struct_type::struct_instance;
+use syn::parse_str;
+
+
+
 
 
 
@@ -41,6 +45,20 @@ macro_rules! import_builtin {
             },
         )
     };
+}
+
+macro_rules! import_rs_module {
+    ($module:ident, $name:ident) => {
+        use crate::$module::$name;
+    };
+}
+
+
+// import library from directory , it is std library
+fn import_library(interpreteur: &mut Interpreter, directory: String) {
+   
+
+    
 }
 
 #[derive(Debug, Clone)]
@@ -83,6 +101,14 @@ impl Interpreter {
         } else {
             self.env.fetch(name)
         }
+    }
+
+    fn add_module(&mut self, namespace: Namespace, name: String) {
+        self.env.define(name, Var {
+            value: namespace.create(),
+            type_: Type::Namespace,
+            mutable: false,
+        });
     }
 }
 
