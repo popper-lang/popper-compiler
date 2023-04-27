@@ -5,24 +5,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 
-[dependencies]
-ariadne = "0.2.0"
-syn = "2.0.15"
-panic-halt = "0.2.0"
-
-[dependencies.avr-device]
-version = "0.5.1"
-features = ["atmega328p"]
-
-[build]
-target = "avr"
 
 
 
 
-[dependencies.arduino-uno]
-git = "https://github.com/Rahix/avr-hal"
-rev = "536c5d"
+
+
+
+
 
 
 

@@ -27,7 +27,6 @@ use crate::value::namespace::Namespace;
 use crate::value::struct_type::StructField;
 use crate::value::struct_type::StructType;
 use crate::value::struct_type::struct_instance;
-use syn::parse_str;
 
 
 
@@ -412,6 +411,10 @@ impl ExprVisitor for Interpreter {
 
 
 
+    }
+
+    fn visit_asm(&mut self, asm: String) -> Self::Output {
+        todo!()
     }
 
     fn visit_eof(&mut self) -> Self::Output {

@@ -184,7 +184,7 @@ impl ExprVisitor for Resolver {
         todo!()
     }
 
-
+    fn visit_asm(&mut self, asm: String) -> Self::Output {}
 }
 
 impl StmtVisitor for Resolver {

@@ -1,27 +1,31 @@
 
+#[no_std]
 #[cfg(target_arch = "avr")]
 use core::arch::asm;
 
-
-
+#[cfg(target_arch = "avr")]
 #[no_mangle]
-pub extern "C" fn main() -> ! {
+pub fn initPin() {
     unsafe {
-        // Configure PB5 as an output pin
-        asm!("sbi 0x05, 5");
+        asm!("
+            ldi 0x04, 5
+        ");
+    }
+}
 
-        loop {
-            // Toggle PB5
-            asm!("sbi 0x05, 5");
-            asm!("nop");
-            asm!("nop");
-            asm!("nop");
-            asm!("nop");
-            asm!("cbi 0x05, 5");
-            asm!("nop");
-            asm!("nop");
-            asm!("nop");
-            asm!("nop");
+#[cfg(target_arch = "avr")]
+#[no_mangle]
+#[repr(C)]
+pub fn digitalWrite(status: cty::c_int) {
+    unsafe {
+        if status != 0 {
+            asm!("
+                ldi 0x05, 3
+            ");
+        } else {
+            asm("
+                cbi 0x05, 3
+            ")
         }
     }
 }

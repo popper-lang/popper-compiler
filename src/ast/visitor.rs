@@ -24,6 +24,7 @@ pub trait ExprVisitor {
     fn visit_cmp_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output;
     fn visit_ns_get(&mut self, name: Expr, attr: Expr) -> Self::Output;
     fn visit_init_struct(&mut self, name: Expr, fields: Vec<(Expr, Expr)>) -> Self::Output;
+    fn visit_asm(&mut self, asm: String) -> Self::Output;
     fn visit_eof(&mut self) -> Self::Output;
 }
 
@@ -72,6 +73,7 @@ impl Expr {
             ExprType::CmpOp { left, op, right } => visitor.visit_cmp_op(left, op, right),
             ExprType::NsGet { name, attr } => visitor.visit_ns_get(name, attr),
             ExprType::InitStruct { name, fields } => visitor.visit_init_struct(name, fields),
+            ExprType::Asm { asm } => visitor.visit_asm(asm),
             ExprType::Eof => visitor.visit_eof(),
         }
     }

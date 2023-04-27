@@ -20,6 +20,7 @@ pub enum ExprType {
     CmpOp { left: Expr, op: Token, right: Expr },
     NsGet { name: Expr, attr: Expr },
     InitStruct { name: Expr, fields: Vec<(Expr, Expr)> },
+    Asm { asm: String },
     Eof,
 }
 

@@ -1,11 +1,20 @@
-use popper::execute;
 
 fn main() {
-    execute(
-        r#"
+    let body = r#"
+    let a = 5
+    let b = 9
+    let c = a + b
 
-           println("HELLO")
+    fun d(e) {
+        let f = 5
+        let g = 9
+        let h = f + g
+        h
+    }
 
-    "#,
-    )
+
+    print(a)
+    "#;
+    dbg!("{}", body.chars().nth(168));
+    popper::execute(body);
 }

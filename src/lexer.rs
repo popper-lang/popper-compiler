@@ -75,6 +75,8 @@ pub enum TokenType {
     BOOL_TYPE,
     LIST_TYPE,
 
+    ASM,
+
     // bool token
     TRUE,
     FALSE,
@@ -237,6 +239,22 @@ impl Lexer {
                     "impl" => token!(IMPL, "impl", self.line, self.pos),
                     "struct" => token!(STRUCT, "struct", self.line, self.pos),
                     "init" => token!(INIT, "init", self.line, self.pos),
+                    "asm" => {
+                        let mut asm = String::new();
+                        if self.peek_char() == '{' {
+                            self.read_char();
+                        } else {
+                            panic!("expected {{ after asm")
+                        }
+                        self.read_char();
+                        while self.ch != '}' {
+                            asm.push(self.ch);
+                            self.read_char();
+
+                        }
+                        self.read_char();
+                        token!(ASM, asm.as_str(), self.line, self.pos)
+                    }
                     e => token!(IDENT, e, self.line, self.pos),
                 }
             }
