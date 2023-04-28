@@ -5,7 +5,7 @@ pub mod interpreter;
 pub mod lexer;
 pub mod parser;
 pub mod value;
-pub mod compiler;
+pub mod c_compiler;
 pub mod arduino_rs;
 
 

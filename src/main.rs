@@ -3,17 +3,15 @@ fn main() {
     let body = r#"
     let a = 5
     let b = 9
-    let c = a + b
+    a + b
 
-    fun d(e) {
-        let f = 5
-        let g = 9
-        let h = f + g
-        h
+    fun hello(a) {
+        let b = 5
+        a + b
     }
 
+    hello(5)
 
-    print(a)
     "#;
     dbg!("{}", body.chars().nth(168));
     popper::execute(body);

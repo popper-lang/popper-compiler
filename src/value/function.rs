@@ -33,8 +33,9 @@ impl Function {
 }
 
 impl Callable for Function {
-    fn call(&self, interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
         let mut env = Environment::new(None);
+        let mut new_interpreteur = Interpreter::new_with_env(env.clone());
         let mut i = 0;
         match &*self.declaration.stmt_type {
             StmtType::Function { args: params, name, body } => {
@@ -47,7 +48,8 @@ impl Callable for Function {
                     });
                     i += 1;
                 }
-                body.clone().accept(&mut Interpreter::new_with_env(env))
+                new_interpreteur.env = env;
+                body.clone().accept(&mut new_interpreteur)
             },
             _ => {
                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
