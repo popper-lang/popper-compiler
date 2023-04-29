@@ -240,8 +240,6 @@ impl ExprVisitor for Interpreter {
     }
 
     fn visit_range(&mut self, start: Expr, end: Expr) -> Self::Output {
-        dbg!(&start);
-        dbg!(&end);
         let start = start.accept(self);
         let end = end.accept(self);
         range(start, end)

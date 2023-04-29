@@ -36,7 +36,7 @@ fn main() {
     )
 
     io::println(
-        itertool::map(syracus, 1:10)
+        itertool::map(syracus, 1:10000000)
     )
 
     io::println(
