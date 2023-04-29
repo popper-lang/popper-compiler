@@ -1,5 +1,39 @@
-Popper Lang
+# Popper
+Welcome to the world of Popper!
 
-un autre langage ecrit en rust 
+Popper is an functional programming language designed to simplify the development process by providing a clear and concise syntax.
 
-**la doc a venir** 
+# Installation
+To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
+
+```bash
+git clone https://github.com/poplang/popper-lang.git
+cd popper-lang
+cargo build
+```
+# Syntax
+Here is an example Popper program that calculates the Fibonacci sequence:
+
+```
+fun fib(n) {
+    if n < 2 {
+        n
+    } else {
+        fib(n - 1) + fib(n - 2)
+    }
+}
+
+io::println(fib(10))
+io::println(itertool::map(fib, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+```
+This program defines a function called fib that takes a single argument n. The function uses recursion to calculate the nth Fibonacci number. It then prints out the 10th Fibonacci number and a list of the first 10 Fibonacci numbers using the itertool::map function.
+
+# Key Features
+* Simple and clear syntax
+* Object-oriented programming paradigm
+* Built-in support for modules and packages
+* Concurrency support with lightweight threads (also known as "green threads")
+* Fast and efficient interpreteur
+
+
+
