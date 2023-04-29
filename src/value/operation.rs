@@ -33,3 +33,7 @@ pub trait Div {
 pub trait Pow {
     fn pow(&self, other: Object) -> Object;
 }
+
+pub trait Mod {
+    fn modulo(&self, other: Object) -> Object;
+}

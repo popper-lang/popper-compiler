@@ -121,6 +121,27 @@ impl Parser {
         while self.check(TokenType::MUL) || self.check(TokenType::DIV) {
             op = self.peek();
             self.advance();
+            right = self.cmp_operator();
+            left = Expr {
+                expr_type: Box::new(ExprType::BinOp { op, left, right }),
+                extract: first_position..self.current_str,
+                body: self.clone().body,
+                file: self.clone().file
+            };
+        }
+
+        left
+    }
+
+    pub fn modulo(&mut self) -> Expr {
+        self.skip_whitespace();
+        let mut left = self.unary();
+        let mut op;
+        let mut right;
+        let first_position = self.current_str;
+        while self.check(TokenType::MOD) {
+            op = self.peek();
+            self.advance();
             right = self.unary();
             left = Expr {
                 expr_type: Box::new(ExprType::BinOp { op, left, right }),
@@ -135,7 +156,7 @@ impl Parser {
 
     pub fn cmp_operator(&mut self) -> Expr {
         self.skip_whitespace();
-        let mut left = self.unary();
+        let mut left = self.modulo();
         let mut op;
         let mut right;
         let first_position = self.current_str;
@@ -143,7 +164,7 @@ impl Parser {
             || self.check(TokenType::GT)
             || self.check(TokenType::LTE)
             || self.check(TokenType::GTE)
-            || self.check(TokenType::EQUAL)
+            || self.check(TokenType::EQ)
         {
             op = self.peek();
             self.advance();
@@ -162,8 +183,9 @@ impl Parser {
     pub fn unary(&mut self) -> Expr {
         self.skip_whitespace();
         let first_position = self.current_str;
-        if self.match_token(TokenType::NOT) || self.match_token(TokenType::SUB) {
-            let op = self.previous();
+        if self.check(TokenType::NOT) || self.check(TokenType::SUB) {
+            let op = self.peek();
+            self.advance();
             let operand = self.unary();
             return Expr {
                 expr_type: Box::new(ExprType::UnaryOp { op, operand }),

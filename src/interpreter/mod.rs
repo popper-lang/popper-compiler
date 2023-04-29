@@ -161,6 +161,16 @@ impl ExprVisitor for Interpreter {
                     unreachable!()
                 }
             },
+            "%" => {
+                let impl_left = get_impl_if_exist!(Mod, left);
+                let impl_right = get_impl_if_exist!(Mod, right);
+                if impl_left.is_some() && impl_right.is_some() {
+                    impl_left.unwrap().modulo(right)
+                } else {
+                    error!(ErrorType::TypeError, "can't modulo", 0..1, op.lexeme);
+                    unreachable!()
+                }
+            },
             _ => unreachable!(),
         };
         res

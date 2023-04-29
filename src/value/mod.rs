@@ -36,6 +36,7 @@ pub enum Implementation {
     Mul(Rc<dyn operation::Mul>),
     Div(Rc<dyn operation::Div>),
     Pow(Rc<dyn operation::Pow>),
+    Mod(Rc<dyn operation::Mod>),
     PartialEq(Rc<dyn operation::PartialEq>),
     PartialOrd(Rc<dyn operation::PartialOrd>),
     Get(Rc<dyn get::Getter>),

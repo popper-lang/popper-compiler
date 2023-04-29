@@ -289,8 +289,14 @@ impl Lexer {
                 token!(MOD, "%", self.line, self.pos)
             }
             '=' => {
-                self.read_char();
-                token!(ASSIGN, "=", self.line, self.pos)
+
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    self.read_char();
+                    token!(EQ, "==", self.line, self.pos)
+                } else {
+                    token!(ASSIGN, "=", self.line, self.pos)
+                }
             }
             '!' => {
                 self.read_char();

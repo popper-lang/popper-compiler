@@ -1,10 +1,11 @@
 
 fn main() {
     let body = r#"
-    use "io.pop" as io
-    io::println("Hello world")
-
+    if 1 == 1 {
+        1
+    } else {
+        2
+    }
     "#;
-    dbg!("{}", body.chars().nth(168));
     popper::execute(body, None);
 }

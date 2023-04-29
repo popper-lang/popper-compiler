@@ -1,7 +1,8 @@
 use super::{Object, Type, Implementation};
 use std::rc::Rc;
-use crate::value::operation::{Add, Sub, Mul, Div, Pow, PartialEq, PartialOrd};
+use crate::value::operation::{Add, Sub, Mul, Div, Pow, Mod, PartialEq, PartialOrd};
 use crate::value::RustValue;
+
 
 pub fn number(n: i32) -> Object {
     Object {
@@ -12,6 +13,7 @@ pub fn number(n: i32) -> Object {
             Implementation::Mul(Rc::new(n)),
             Implementation::Div(Rc::new(n)),
             Implementation::Pow(Rc::new(n)),
+            Implementation::Mod(Rc::new(n)),
             Implementation::PartialEq(Rc::new(n)),
             Implementation::PartialOrd(Rc::new(n)),
         ],
@@ -73,6 +75,16 @@ impl Pow for i32 {
     }
 }
 
+impl Mod for i32 {
+    fn modulo(&self, other: Object) -> Object {
+        if let RustValue::Int(n) = other.value {
+            number(self % n)
+        } else {
+            panic!("Cannot modulo {} to {}", self, other)
+        }
+    }
+}
+
 impl PartialEq for i32 {
     fn eq(&self, other: Object) -> bool {
         if let RustValue::Int(n) = other.value {
@@ -98,6 +110,7 @@ impl PartialOrd for i32 {
         }
     }
 }
+
 
 
 pub fn string(s: &str) -> Object {

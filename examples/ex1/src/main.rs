@@ -6,6 +6,16 @@ fn main() {
     use "io.pop" as io
     use "itertool.pop" as itertool
 
+    fun syracus(n) {
+        if n == 1 {
+            n
+        } else if n % 2 == 0 {
+                syracus(n / 2)
+        } else {
+            syracus(3 * n + 1)
+        }
+
+    }
 
     fun fib(n) {
         if n < 2 {
@@ -17,6 +27,9 @@ fn main() {
 
     io::println(
         fib(10)
+    )
+    io::println(
+        syracus(10)
     )
     io::println(
         itertool::map(fib, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])

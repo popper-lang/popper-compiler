@@ -220,15 +220,19 @@ impl Parser {
         let first_position = self.current_str;
         self.advance();
         let condition = self.term();
-        println!("{:?}", condition);
         let then_branch = self.parse_block_statement();
-
         if self.match_token(TokenType::ELSE) {
+            let mut else_ = if self.check(TokenType::IF) {
+                self.parse_if_statement()
+            } else {
+                self.parse_block_statement()
+            };
+
             Stmt::new(
                 StmtType::IfElse {
                     cond: condition,
                     then: then_branch,
-                    else_: self.parse_block_statement(),
+                    else_,
                 },
                 first_position..self.current_str,
                 self.clone().body,
