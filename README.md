@@ -1,7 +1,7 @@
 # Popper
 Welcome to the world of Popper!
 
-Popper is an functional programming language designed to simplify the development process by providing a clear and concise syntax.
+Popper is an functional programming language designed to simplify the development process by providing a clear and concise syntax written in Rust
 
 # Installation
 To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
