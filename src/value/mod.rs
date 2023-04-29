@@ -8,6 +8,7 @@ pub mod callable;
 pub mod operation;
 pub mod namespace;
 pub mod struct_type;
+pub mod range;
 
 use crate::interpreter::Interpreter;
 use crate::{

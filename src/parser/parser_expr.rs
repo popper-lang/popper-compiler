@@ -240,7 +240,7 @@ impl Parser {
                 if !self.check(TokenType::RPAREN) {
                     args.push(self.term());
                     while self.match_token(TokenType::COMMA) {
-                        args.push(self.primary())
+                        args.push(self.ns_get())
                     }
                 }
                 self.expect_token(TokenType::RPAREN);
@@ -280,7 +280,7 @@ impl Parser {
     pub fn get(&mut self) -> Expr {
         self.skip_whitespace();
         let first_position = self.current_str;
-        let mut name = self.primary();
+        let mut name = self.range();
         if self.match_token(TokenType::DOT) {
             let attr = self.term();
             name = Expr {
@@ -293,6 +293,23 @@ impl Parser {
         }
 
         name
+    }
+
+    pub fn range(&mut self) -> Expr {
+        self.skip_whitespace();
+        let first_position = self.current_str;
+        let start = self.primary();
+        if self.match_token(TokenType::COLON) {
+            let end = self.primary();
+            return Expr {
+                expr_type: Box::new(ExprType::Range { start, end }),
+                extract: first_position..self.current_str,
+                body: self.clone().body,
+                file: self.clone().file
+            };
+        }
+
+        start
     }
 
     pub fn primary(&mut self) -> Expr {

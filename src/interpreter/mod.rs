@@ -16,6 +16,7 @@ use crate::value::get::Getter;
 use crate::value::{Object, Type, Var, Implementation};
 use crate::value::litteral::{boolean, none, number, string};
 use crate::value::list::list;
+use crate::value::range::range;
 use crate::get_impl_if_exist;
 use std::rc::Rc;
 use std::path::{PathBuf, Path};
@@ -56,7 +57,7 @@ macro_rules! import_rs_module {
 // import library from directory , it is std library
 fn import_library(interpreteur: &mut Interpreter, directory: String) {
    
-
+    todo!()
     
 }
 
@@ -238,8 +239,13 @@ impl ExprVisitor for Interpreter {
         }
     }
 
-    fn visit_range(&mut self, _start: Expr, _end: Expr) -> Self::Output {
-        todo!()
+    fn visit_range(&mut self, start: Expr, end: Expr) -> Self::Output {
+        dbg!(&start);
+        dbg!(&end);
+        let start = start.accept(self);
+        let end = end.accept(self);
+        range(start, end)
+
     }
 
     fn visit_assign(&mut self, name: Token, value: Expr) -> Self::Output {
