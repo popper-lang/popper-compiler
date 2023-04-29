@@ -1,7 +1,7 @@
 use crate::interpreter::Interpreter;
 use crate::value::{Implementation, Object, RustValue, Type};
 use std::rc::Rc;
-use crate::error;
+
 use crate::value::callable::Callable;
 use crate::value::litteral::boolean;
 use crate::get_impl_if_exist;

@@ -107,7 +107,7 @@ impl Compiler {
     fn compile_expr(&mut self, expr: &Expr) -> String {
         match *expr.expr_type.clone() {
             ExprType::Literal {literal} => self.compile_literal(literal),
-            ExprType::Type { type_ } => panic!("Error: type alone dont work"),
+            ExprType::Type { type_: _ } => panic!("Error: type alone dont work"),
             ExprType::Call { ref name, args } => {
                 let args = args.iter().map(|e| self.compile_expr(e)).collect::<Vec<String>>();
                 let name = self.compile_expr(name);
@@ -176,7 +176,7 @@ impl Compiler {
                 c_repr::c_to(type_, value)
             },
 
-            ExprType::UnaryOp { operand, op } => {todo!()}
+            ExprType::UnaryOp { operand: _, op: _ } => {todo!()}
             ExprType::InitStruct { .. } => {todo!()}
             ExprType::Eof => {todo!()}
         }

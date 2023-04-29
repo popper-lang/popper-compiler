@@ -411,7 +411,7 @@ pub(crate) fn tokens_to_string(tokens: Vec<Token>) -> String {
 }*/
 
 mod tests {
-    use super::*;
+    
     #[test]
     fn test_ident() {
         let input = "foobar";

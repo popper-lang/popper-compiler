@@ -47,7 +47,7 @@ impl PartialEq for List {
 impl Getter for List {
     fn fetch(&self, _interpreteur: &mut Interpreter, key: Expr) -> Option<Object> {
         match *key.expr_type {
-            ExprType::Call { name, args } => {
+            ExprType::Call { name, args: _ } => {
                 if let ExprType::Ident { ident } = *name.expr_type {
                     if ident.lexeme == "len" {
                         Some(number(self.len() as i32))

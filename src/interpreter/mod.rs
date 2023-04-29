@@ -9,7 +9,7 @@ use crate::ast::stmt::{Stmt, StmtType};
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::builtin_function::{io, cmp, list_util};
 use crate::errors::{error, Error, ErrorType};
-use crate::lexer::{Token, TokenType};
+use crate::lexer::{Token};
 use crate::value::{class, RustValue};
 use crate::value::function::Function;
 use crate::value::get::Getter;
@@ -18,10 +18,10 @@ use crate::value::litteral::{boolean, none, number, string};
 use crate::value::list::list;
 use crate::value::range::range;
 use crate::get_impl_if_exist;
-use std::rc::Rc;
+
 use std::path::{PathBuf, Path};
 use std::fs;
-use crate::value::Implementation::PartialEq;
+
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::value::namespace::Namespace;
@@ -55,7 +55,7 @@ macro_rules! import_rs_module {
 
 
 // import library from directory , it is std library
-fn import_library(interpreteur: &mut Interpreter, directory: String) {
+fn import_library(_interpreteur: &mut Interpreter, _directory: String) {
    
     todo!()
     
@@ -197,7 +197,7 @@ impl ExprVisitor for Interpreter {
 
         let name = name_.clone().accept(self);
         let impl_get = get_impl_if_exist!(Get, name);
-        if let Some(mut e) = impl_get {
+        if let Some(e) = impl_get {
 
             e.fetch(self, attr).unwrap()
         } else {
@@ -428,7 +428,7 @@ impl ExprVisitor for Interpreter {
 
     }
 
-    fn visit_asm(&mut self, asm: String) -> Self::Output {
+    fn visit_asm(&mut self, _asm: String) -> Self::Output {
         todo!()
     }
 
@@ -676,11 +676,11 @@ impl StmtVisitor for Interpreter {
 
     }
 
-    fn visit_import(&mut self, name: String, imports: Vec<String>) -> Self::Output {
+    fn visit_import(&mut self, _name: String, _imports: Vec<String>) -> Self::Output {
         todo!()
     }
 
-    fn visit_impl(&mut self, struct_name: String, methods: Vec<Stmt>) -> Self::Output {
+    fn visit_impl(&mut self, _struct_name: String, _methods: Vec<Stmt>) -> Self::Output {
         todo!()
     }
     fn visit_struct(&mut self, name: String, fields: Vec<(String, Expr)>) -> Self::Output {

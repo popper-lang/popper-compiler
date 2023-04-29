@@ -1,8 +1,8 @@
 use crate::parser::Parser;
 use crate::ast::stmt::{Stmt, StmtType};
-use crate::ast::expr::{Expr, ExprType, LiteralType};
+use crate::ast::expr::{ExprType, LiteralType};
 use crate::lexer::{Token, TokenType};
-use crate::errors::{error, ErrorType, Error};
+
 
 impl Parser {
     pub fn parse_statement(&mut self) -> Stmt {
@@ -222,7 +222,7 @@ impl Parser {
         let condition = self.term();
         let then_branch = self.parse_block_statement();
         if self.match_token(TokenType::ELSE) {
-            let mut else_ = if self.check(TokenType::IF) {
+            let else_ = if self.check(TokenType::IF) {
                 self.parse_if_statement()
             } else {
                 self.parse_block_statement()

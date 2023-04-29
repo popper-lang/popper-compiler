@@ -1,4 +1,4 @@
-use std::hash::Hash;
+
 use crate::interpreter::environement::Environment;
 use crate::value::{Implementation, Object, Var, Type, RustValue};
 use crate::value::get;

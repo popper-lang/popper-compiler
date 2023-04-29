@@ -30,7 +30,7 @@ where
     }
 
     pub fn fetch(&self, key: K) -> Option<V> {
-        if let Some(mut e) = *self.enclosing.clone() {
+        if let Some(e) = *self.enclosing.clone() {
             e.fetch(key)
         } else {
             self.values.get(&key).map(|e| e.clone())
@@ -68,7 +68,7 @@ where
     }
 
     pub fn get_at(&mut self, distance: i32, key: K) -> Option<V> {
-        if let Some(mut e) = self.ancestore(distance) {
+        if let Some(e) = self.ancestore(distance) {
             e.fetch(key)
         } else {
             None

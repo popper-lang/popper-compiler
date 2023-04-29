@@ -3,14 +3,14 @@ use crate::interpreter::Interpreter;
 use crate::value::Object;
 
 pub trait Getter {
-    fn fetch(&self, interpreteur: &mut Interpreter, _key: Expr) -> Option<Object> {
+    fn fetch(&self, _interpreteur: &mut Interpreter, _key: Expr) -> Option<Object> {
         None
     }
 }
 
 // Same thing for the trait Getter but for the namespace( `::` ) operator
 pub trait NsGetter {
-    fn fetch(&self,interpreteur: &mut Interpreter, _key: Expr) -> Option<Object> {
+    fn fetch(&self,_interpreteur: &mut Interpreter, _key: Expr) -> Option<Object> {
         None
     }
 }

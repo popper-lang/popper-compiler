@@ -10,13 +10,13 @@ pub mod arduino_rs;
 
 
 use crate::ast::stmt::Stmt;
-use ast::stmt::StmtType;
+
 use interpreter::resolver::Resolver;
 use interpreter::Interpreter;
 use lexer::{Lexer, Token};
 use parser::Parser;
 use std::fs;
-use std::rc::Rc;
+
 use value::Object;
 use crate::value::litteral::none;
 

@@ -1,8 +1,8 @@
 pub mod parser_expr;
 pub mod parser_stmt;
 use std::fmt::Debug;
-use crate::ast::expr::{Expr, ExprType, LiteralType};
-use crate::ast::stmt::{Stmt, StmtType};
+
+use crate::ast::stmt::{Stmt};
 use crate::lexer::{Token, TokenType};
 
 #[derive(Debug, Clone)]

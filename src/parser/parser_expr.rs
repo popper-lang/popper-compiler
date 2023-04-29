@@ -1,6 +1,6 @@
 use crate::ast::expr::{Expr, ExprType, LiteralType};
 use crate::parser::Parser;
-use crate::lexer::{Token, TokenType};
+use crate::lexer::{TokenType};
 use crate::errors::{error, Error, ErrorType};
 
 impl Parser {

@@ -1,7 +1,7 @@
 use crate::interpreter::environement::Environment;
-use crate::value::{get, Implementation, Object, RustValue, Type, Var};
-use crate::value::get::NsGetter;
-use std::rc::Rc;
+use crate::value::{Object, RustValue, Type, Var};
+
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Class {

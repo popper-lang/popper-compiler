@@ -1,6 +1,6 @@
 
-use crate::ast::expr::{Expr, ExprType, LiteralType};
-use crate::ast::stmt::{Stmt, StmtType};
+use crate::ast::expr::{LiteralType};
+
 use crate::value::Type;
 
 

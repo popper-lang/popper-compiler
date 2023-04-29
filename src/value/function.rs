@@ -2,13 +2,13 @@ use std::rc::Rc;
 
 use super::{Object, Type};
 use crate::ast::stmt::{Stmt, StmtType};
-use crate::ast::expr::{Expr};
+
 use crate::errors::{error, Error, ErrorType};
 use crate::interpreter::environement::Environment;
 use crate::interpreter::Interpreter;
 use crate::value::callable::Callable;
 use crate::value::{Implementation, RustValue, Var};
-use crate::value::litteral::none;
+
 
 
 #[derive(Clone, Debug, PartialEq)]

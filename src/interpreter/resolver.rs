@@ -1,5 +1,5 @@
 use crate::ast::expr::{Expr, ExprType, LiteralType};
-use crate::ast::stmt::{Stmt, StmtType};
+use crate::ast::stmt::{Stmt};
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::error;
 use crate::errors::{Error, ErrorType};
@@ -168,7 +168,7 @@ impl ExprVisitor for Resolver {
 
     fn visit_type(&mut self, _type: Token) -> Self::Output {}
 
-    fn visit_cmp_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output {
+    fn visit_cmp_op(&mut self, left: Expr, _op: Token, right: Expr) -> Self::Output {
         self.resolve_expression(left);
         self.resolve_expression(right);
     }
@@ -176,15 +176,15 @@ impl ExprVisitor for Resolver {
     fn visit_eof(&mut self) -> Self::Output {}
     // Nothing because its eof
 
-    fn visit_ns_get(&mut self, name: Expr, attr: Expr) -> Self::Output {
+    fn visit_ns_get(&mut self, _name: Expr, _attr: Expr) -> Self::Output {
         todo!()
     }
 
-    fn visit_init_struct(&mut self, name: Expr, fields: Vec<(Expr, Expr)>) -> Self::Output {
+    fn visit_init_struct(&mut self, _name: Expr, _fields: Vec<(Expr, Expr)>) -> Self::Output {
         todo!()
     }
 
-    fn visit_asm(&mut self, asm: String) -> Self::Output {}
+    fn visit_asm(&mut self, _asm: String) -> Self::Output {}
 }
 
 impl StmtVisitor for Resolver {
@@ -250,16 +250,16 @@ impl StmtVisitor for Resolver {
     }
 
     fn visit_class(&mut self, _name: String, _methods: Vec<Stmt>) -> Self::Output {}
-    fn visit_use(&mut self, path: String, as_: String) -> Self::Output {
+    fn visit_use(&mut self, _path: String, _as_: String) -> Self::Output {
         todo!()
     }
-    fn visit_import(&mut self, name: String, imports: Vec<String>) -> Self::Output {
+    fn visit_import(&mut self, _name: String, _imports: Vec<String>) -> Self::Output {
         todo!()
     }
-    fn visit_impl(&mut self, name: String, methods: Vec<Stmt>) -> Self::Output {
+    fn visit_impl(&mut self, _name: String, _methods: Vec<Stmt>) -> Self::Output {
         todo!()
     }
-    fn visit_struct(&mut self, name: String, fields: Vec<(String, Expr)>) -> Self::Output {
+    fn visit_struct(&mut self, _name: String, _fields: Vec<(String, Expr)>) -> Self::Output {
         todo!()
     }
 }
