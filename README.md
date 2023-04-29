@@ -15,6 +15,9 @@ cargo build
 Here is an example Popper program that calculates the Fibonacci sequence:
 
 ```
+use "io.pop" as io
+use "itertool.pop" as itertool
+
 fun fib(n) {
     if n < 2 {
         n
@@ -29,11 +32,12 @@ io::println(itertool::map(fib, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
 This program defines a function called fib that takes a single argument n. The function uses recursion to calculate the nth Fibonacci number. It then prints out the 10th Fibonacci number and a list of the first 10 Fibonacci numbers using the itertool::map function.
 
 # Key Features
-* Simple and clear syntax
-* Object-oriented programming paradigm
-* Built-in support for modules and packages
-* Concurrency support with lightweight threads (also known as "green threads")
-* Fast and efficient interpreteur
+my langage is **SFBCF**: 
+* **S**imple and clear syntax
+* **F**unctional programming paradigm
+* **B**uilt-in support for modules and packages
+* **C**oncurrency support with lightweight threads (also known as "green threads")
+* **F**ast and efficient interpreteur
 
 
 
