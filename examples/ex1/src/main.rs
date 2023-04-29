@@ -3,17 +3,25 @@ use popper::execute;
 
 fn main() {
     println!("{:?}", execute(r#"
-    struct A {
-        b: int,
-        c: bool
+    use "io.pop" as io
+    use "itertool.pop" as itertool
+
+
+    fun fib(n) {
+        if n < 2 {
+            n
+        } else {
+            fib(n - 1) + fib(n - 2)
+        }
     }
 
-    let d = init A {
-        b: 4,
-        c: true
-    }
+    io::println(
+        fib(10)
+    )
+    io::println(
+        itertool::map(fib, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    )
 
-    println(d.b)
 
-    "#))
+    "#, None));
 }

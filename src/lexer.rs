@@ -271,8 +271,18 @@ impl Lexer {
                 token!(MUL, "*", self.line, self.pos)
             }
             '/' => {
-                self.read_char();
-                token!(DIV, "/", self.line, self.pos)
+                if self.peek_char() == '/' {
+                    self.read_char();
+                    self.read_char();
+                    while self.ch != '\n' {
+                        self.read_char();
+                    }
+                    self.read_char();
+                    return self.read_token();
+                } else {
+                    self.read_char();
+                    token!(DIV, "/", self.line, self.pos)
+                }
             }
             '%' => {
                 self.read_char();

@@ -29,14 +29,16 @@ pub struct Expr {
     pub(crate) expr_type: Box<ExprType>,
     pub(crate) extract: Range<usize>,
     pub(crate) body: String,
+    pub(crate) file: String,
 }
 
 impl Expr {
-    pub fn new(expr_type: Box<ExprType>, extract: Range<usize>, body: String) -> Expr {
+    pub fn new(expr_type: Box<ExprType>, extract: Range<usize>, body: String, file: String) -> Expr {
         Expr {
             expr_type,
             extract,
             body,
+            file
         }
     }
 }

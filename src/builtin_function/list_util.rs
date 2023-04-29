@@ -2,9 +2,8 @@ use crate::interpreter::Interpreter;
 use crate::value::{Implementation, Object, RustValue, Type};
 use crate::value::callable::Callable;
 use crate::value::list::list;
-use crate::get_impl_if_exist;
 use std::rc::Rc;
-use crate::value::litteral::none;
+use super::panic_if_is_outside_std;
 
 
 
@@ -22,25 +21,31 @@ impl Map {
 }
 
 impl Callable for Map {
-    fn call(&self, interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
-        let mut func = args.first().unwrap();
-        let mut new_func = func.implementations.iter().find_map(|e| {
+    fn call(&self, interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        panic_if_is_outside_std(file, "_map");
+        let func = args.first().unwrap();
+        let new_func = func.implementations.iter().find_map(|e| {
             if let Implementation::Call(e) = e {
                 Some(e.clone())
             } else {
                 None
             }
         }).unwrap();
-        let mut obj = args.last().unwrap();
+        let obj = args.last().unwrap();
         let mut list_obj: &Vec<Object> = &Vec::new();
         if let RustValue::List(e) = &obj.value {
             list_obj = e;
         }
         let mut new_list = Vec::new();
+
         for item in list_obj.iter() {
-            new_list.push(dbg!(new_func.call(interpreter, vec![item.clone()])));
+            new_list.push(new_func.call(interpreter, vec![item.clone()], file));
         }
 
         list(new_list)
+
+
+
+
     }
 }

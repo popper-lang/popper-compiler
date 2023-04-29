@@ -11,17 +11,19 @@ pub struct Parser {
     current: i32,
     current_str: usize,
     is_at_end: bool,
-    body: String
+    body: String,
+    file: String
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>, body: String) -> Parser {
+    pub fn new(tokens: Vec<Token>, body: String, file: String) -> Parser {
         Parser {
             tokens,
             current: 0,
             is_at_end: false,
             current_str: 0,
-            body: body.clone()
+            body: body.clone(),
+            file
         }
     }
 

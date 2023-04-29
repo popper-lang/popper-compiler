@@ -31,7 +31,7 @@ use crate::value::struct_type::struct_instance;
 
 
 
-
+pub static STD_LIB_PATH: &str = "/Users/antoine/Documents/popper-lang/std/";
 
 macro_rules! import_builtin {
     ($env:expr, $name:expr, $module:path) => {
@@ -64,6 +64,7 @@ fn import_library(interpreteur: &mut Interpreter, directory: String) {
 pub struct Interpreter {
     pub env: Environment<String, Var>,
     locals: Environment<ExprType, i32>,
+    std_lib_path: String,
 }
 
 impl Interpreter {
@@ -71,12 +72,13 @@ impl Interpreter {
         let mut inter = Interpreter {
             env: Environment::new(None),
             locals: Environment::new(None),
+            std_lib_path: STD_LIB_PATH.to_string(),
         };
-        import_builtin!(inter.env, "print", io::Print::create);
-        import_builtin!(inter.env, "println", io::Println::create);
-        import_builtin!(inter.env, "is_equal", cmp::IsEqual::create);
-        import_builtin!(inter.env, "is_not_equal", cmp::IsNotEqual::create);
-        import_builtin!(inter.env, "map", list_util::Map::create);
+        import_builtin!(inter.env, "_print", io::Print::create);
+        import_builtin!(inter.env, "_println", io::Println::create);
+        import_builtin!(inter.env, "_is_equal", cmp::IsEqual::create);
+        import_builtin!(inter.env, "_is_not_equal", cmp::IsNotEqual::create);
+        import_builtin!(inter.env, "_map", list_util::Map::create);
 
 
         inter
@@ -86,6 +88,7 @@ impl Interpreter {
         Interpreter {
             env,
             locals: Environment::new(None),
+            std_lib_path: STD_LIB_PATH.to_string(),
         }
     }
 
@@ -172,7 +175,7 @@ impl ExprVisitor for Interpreter {
 
         let impl_call = get_impl_if_exist!(Call, resolved_name);
         if let Some(func) = impl_call {
-            func.call(self, arguments)
+            func.call(self, arguments, name.file.as_str())
         } else {
             error!(ErrorType::TypeError, "can't call", name.clone().extract, name.body);
             unreachable!()
@@ -267,7 +270,6 @@ impl ExprVisitor for Interpreter {
 
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
-
 
 
         match self.env.fetch(id.clone()) {
@@ -379,8 +381,7 @@ impl ExprVisitor for Interpreter {
     fn visit_ns_get(&mut self, name: Expr, attr: Expr) -> Self::Output {
         let name = name.clone().accept(self);
         let impl_get = get_impl_if_exist!(NsGet, name);
-        if let Some(mut e) = impl_get {
-
+        if let Some(e) = impl_get {
             e.fetch(self, attr).unwrap()
         } else {
             error!(
@@ -540,9 +541,12 @@ impl StmtVisitor for Interpreter {
                 name: name.clone(),
                 args: args.clone(),
                 body: body.clone(),
+
             },
             0..0,
             "".to_string(),
+            body.clone().file,
+
         );
         let n = name.lexeme.to_string();
 
@@ -604,7 +608,32 @@ impl StmtVisitor for Interpreter {
     }
 
     fn visit_use(&mut self, path: String, as_: String) -> Self::Output {
+        let filename = Path::new(path.as_str()).file_name().unwrap().to_str().unwrap();
+        if Path::new(self.std_lib_path.as_str()).join(filename).exists() {
+            let mut absolute_path = PathBuf::from(self.std_lib_path.as_str());
+            absolute_path.push(filename);
+            let content = fs::read_to_string(absolute_path).unwrap();
 
+            let mut lexer = Lexer::new(content.clone());
+            let mut parser = Parser::new(lexer.scan_token(), content.clone(), self.std_lib_path.clone());
+            let mut interpreter = Interpreter::new();
+            let mut res = none();
+            for stmt in parser.parse() {
+                res = stmt.accept(&mut interpreter);
+            }
+
+            let ns = Namespace::new(interpreter.env.clone());
+            self.env.define(
+                as_,
+                Var {
+                    value: ns.create(),
+                    mutable: false,
+                    type_: Type::Namespace,
+                },
+            );
+
+            return none();
+        }
         let relative_path = PathBuf::from(path);
         let mut absolute_path = std::env::current_dir().unwrap();
         absolute_path.push("src");
@@ -612,7 +641,7 @@ impl StmtVisitor for Interpreter {
         let content = fs::read_to_string(dbg!(absolute_path)).unwrap();
 
         let mut lexer = Lexer::new(content.clone());
-        let mut parser = Parser::new(lexer.scan_token(), content.clone());
+        let mut parser = Parser::new(lexer.scan_token(), content.clone(), self.std_lib_path.clone());
         let mut interpreter = Interpreter::new();
         let mut res = none();
         for stmt in parser.parse() {

@@ -1,3 +1,4 @@
+use std::hash::Hash;
 use crate::interpreter::environement::Environment;
 use crate::value::{Implementation, Object, Var, Type, RustValue};
 use crate::value::get;
@@ -32,6 +33,7 @@ impl Namespace {
 
 impl get::NsGetter for Namespace {
     fn fetch(&self, interpreteur: &mut Interpreter, name: Expr) -> Option<Object> {
+
         match *name.expr_type {
             ExprType::Ident { ident } => {
                 match self.value.fetch(ident.lexeme) {
@@ -39,15 +41,15 @@ impl get::NsGetter for Namespace {
                     None => None
                 }
             },
-            ExprType::Call { name, args: old_args }  => {
+            ExprType::Call { ref name, args: old_args }  => {
                 let mut args = vec![];
                 for arg in old_args {
                     args.push(arg.accept(interpreteur));
                 }
-                match self.fetch(&mut interpreteur.clone(), name) {
+                match self.fetch(&mut interpreteur.clone(), name.clone()) {
                     Some(obj) => {
                         match get_impl_if_exist!(Call, obj) {
-                            Some(call) => Some(call.call(interpreteur, args)),
+                            Some(call) => Some(call.call(interpreteur, args, name.file.as_str())),
                             None => {
                                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
                                 unreachable!()

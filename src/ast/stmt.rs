@@ -70,14 +70,17 @@ pub struct Stmt {
     pub(crate) stmt_type: Box<StmtType>,
     pub(crate) extract: Range<usize>,
     pub(crate) body: String,
+    pub(crate) file: String
 }
 
 impl Stmt {
-    pub fn new(stmt_type: StmtType, extract: Range<usize>, body: String) -> Stmt {
+    pub fn new(stmt_type: StmtType, extract: Range<usize>, body: String, file: String) -> Stmt {
         Stmt {
             stmt_type: Box::new(stmt_type),
             extract,
             body,
+            file
+            
         }
     }
 }

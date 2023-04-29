@@ -3,6 +3,9 @@ use crate::value::{Implementation, Object, RustValue, Type};
 use crate::value::callable::Callable;
 use std::rc::Rc;
 use crate::value::litteral::none;
+use crate::interpreter::STD_LIB_PATH;
+use std::path::Path;
+use super::panic_if_is_outside_std;
 
 #[derive(Clone, Debug)]
 pub struct Print;
@@ -33,7 +36,8 @@ impl Println {
 impl Callable for Print {
 
 
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        panic_if_is_outside_std(file, "_print");
         for arg in args {
             print!("{}", arg);
         }
@@ -44,7 +48,8 @@ impl Callable for Print {
 impl Callable for Println {
 
 
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        panic_if_is_outside_std(file, "_println");
         for arg in args {
             print!("{}", arg);
         }

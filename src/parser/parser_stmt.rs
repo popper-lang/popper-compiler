@@ -28,7 +28,7 @@ impl Parser {
     fn parse_expression_statement(&mut self) -> Stmt {
         let expr = self.term();
         let ex = expr.clone().extract;
-        Stmt::new(StmtType::Expression { expr }, ex, self.clone().body)
+        Stmt::new(StmtType::Expression { expr }, ex, self.clone().body, self.clone().file)
     }
 
     fn parse_class_statement(&mut self) -> Stmt {
@@ -55,6 +55,7 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -93,6 +94,7 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         );
 
     }
@@ -108,7 +110,6 @@ impl Parser {
         } else {
             type_ = None;
         }
-        println!("BREAKPOINT, : {:?}", name);
 
         let value = if self.match_token(TokenType::ASSIGN) {
             Some(self.term())
@@ -127,6 +128,8 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
+
         )
     }
 
@@ -143,6 +146,7 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -163,6 +167,7 @@ impl Parser {
                         },
                         first_position..self.current_str,
                         self.clone().body,
+                        self.clone().file
                     );
                 } else {
                     panic!("expected identifier")
@@ -205,6 +210,7 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -226,6 +232,7 @@ impl Parser {
                 },
                 first_position..self.current_str,
                 self.clone().body,
+                self.clone().file
             )
         } else {
             Stmt::new(
@@ -235,6 +242,7 @@ impl Parser {
                 },
                 first_position..self.current_str,
                 self.clone().body,
+                self.clone().file
             )
         }
     }
@@ -252,6 +260,7 @@ impl Parser {
             StmtType::Block { body: statements },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -286,6 +295,7 @@ impl Parser {
             },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -307,6 +317,7 @@ impl Parser {
             stmt_type: Box::new(StmtType::Impl { struct_name: name, methods }),
             extract: first_position..self.current_str,
             body: self.clone().body,
+            file: self.clone().file
         };
     }
 
@@ -349,6 +360,7 @@ impl Parser {
             StmtType::Function { name, args, body },
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 

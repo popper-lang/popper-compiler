@@ -11,7 +11,8 @@ impl Parser {
                 asm: self.peek().lexeme,
             }),
             self.current_str..self.current_str,
-            self.clone().body
+            self.clone().body,
+            self.clone().file
         )
     }
 
@@ -44,6 +45,7 @@ impl Parser {
             }),
             first_position..self.current_str,
             self.clone().body,
+            self.clone().file
         )
     }
 
@@ -61,6 +63,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::Type { type_ }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.clone().file
                 }
             },
             TokenType::IDENT => {
@@ -69,6 +72,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::Type { type_ }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.clone().file
                 }
             },
 
@@ -101,6 +105,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::BinOp { op, left, right }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
 
@@ -121,6 +126,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::BinOp { op, left, right }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
 
@@ -146,6 +152,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::CmpOp { op, left, right }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
 
@@ -162,6 +169,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::UnaryOp { op, operand }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
         self.assign()
@@ -190,6 +198,7 @@ impl Parser {
                 }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             }
         } else {
             name
@@ -217,6 +226,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::Call { name: callee, args }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.clone().file
                 };
             } else {
                 break callee;
@@ -236,6 +246,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::NsGet { name, attr }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
 
         }
@@ -254,6 +265,7 @@ impl Parser {
                 expr_type: Box::new(ExprType::Get { name, attr }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
 
         }
@@ -271,6 +283,7 @@ impl Parser {
                 }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
         if self.match_token(TokenType::TRUE) {
@@ -280,6 +293,7 @@ impl Parser {
                 }),
                 extract: first_position..self.current_str,
                 body: self.clone().body,
+                file: self.clone().file
             };
         }
 
@@ -291,6 +305,7 @@ impl Parser {
                 }),
                 extract: first_position..self.current_str + self.peek().lexeme.len(),
                 body: self.clone().body,
+                file: self.clone().file
             },
             TokenType::STRING => {
                 self.current_str += self.peek().lexeme.len();
@@ -300,12 +315,14 @@ impl Parser {
                     }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.file.clone()
                 }
             }
             TokenType::IDENT => Expr {
                 expr_type: Box::new(ExprType::Ident { ident: self.peek() }),
                 extract: first_position..self.current_str + self.peek().lexeme.len(),
                 body: self.clone().body,
+                file: self.clone().file
             },
             TokenType::ASM => self.parse_asm_expression(),
             TokenType::LPAREN => self.parse_grouped_expression(),
@@ -324,6 +341,8 @@ impl Parser {
                 expr_type: Box::new(ExprType::Ident { ident: self.peek() }),
                 extract: first_position..self.current_str + self.peek().lexeme.len(),
                 body: self.clone().body,
+                file: self.clone().file
+
             }
         } else {
             Error::new(
@@ -350,6 +369,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::List { elems: exp_elt }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.clone().file
                 };
             }
             exp_elt.push(self.primary());
@@ -359,6 +379,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::List { elems: exp_elt }),
                     extract: first_position..self.current_str,
                     body: self.clone().body,
+                    file: self.clone().file
                 };
             }
             self.expect_token(TokenType::COMMA);
@@ -391,6 +412,7 @@ impl Parser {
                     expr_type: Box::new(ExprType::Eof),
                     extract: 0..0,
                     body: self.clone().body,
+                    file: self.clone().file
                 }
             }
             _ => panic!("Unexpected token: {:?}", self.clone().peek()),
@@ -409,6 +431,7 @@ impl Parser {
             expr_type: Box::new(ExprType::Grouping { group: expression }),
             extract: first_position..self.current_str,
             body: self.body.clone(),
+            file: self.clone().file
         }
     }
 
@@ -423,6 +446,7 @@ impl Parser {
             expr_type: Box::new(ExprType::To { value: elt, type_ }),
             extract: first_position..self.current_str,
             body: self.clone().body,
+            file: self.clone().file
         }
     }
 

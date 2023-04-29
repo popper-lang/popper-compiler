@@ -25,7 +25,7 @@ impl IsEqual {
 impl Callable for IsEqual {
 
     // TODO: This is a temporary implementation.
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, _file: &str) -> Object {
         if args.len() != 2 {
             panic!("Expected 2 arguments, got {}", args.len());
         }
@@ -59,7 +59,7 @@ impl IsNotEqual {
 
 impl Callable for IsNotEqual {
 
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, _file: &str) -> Object {
         if args.len() != 2 {
             panic!("Expected 2 arguments, got {}", args.len());
         }

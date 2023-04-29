@@ -1,0 +1,9 @@
+
+
+fun println(s) {
+    _println(s)
+}
+
+fun print(s) {
+    _print(s)
+}

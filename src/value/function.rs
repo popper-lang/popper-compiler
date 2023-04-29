@@ -33,12 +33,25 @@ impl Function {
 }
 
 impl Callable for Function {
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, _file: &str) -> Object {
         let mut env = Environment::new(None);
-        let mut new_interpreteur = Interpreter::new_with_env(env.clone());
+        let mut new_interpreter = Interpreter::new();
+        env = new_interpreter.env.clone();
+
         let mut i = 0;
         match &*self.declaration.stmt_type {
             StmtType::Function { args: params, name, body } => {
+                env.define(name.lexeme.to_string(), Var {
+                    value: Object {
+                        type_: Type::Function,
+                        implementations: vec![
+                            Implementation::Call(Rc::new(Function::new(self.declaration.clone())))
+                        ],
+                        value: RustValue::Function
+                    },
+                    mutable: false,
+                    type_: Type::Function
+                });
                 for arg in params {
                     env.define(arg.clone(), Var {
                         value: args[i].clone(),
@@ -48,8 +61,8 @@ impl Callable for Function {
                     });
                     i += 1;
                 }
-                new_interpreteur.env = env;
-                body.clone().accept(&mut new_interpreteur)
+                new_interpreter.env = env;
+                body.clone().accept(&mut new_interpreter)
             },
             _ => {
                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
