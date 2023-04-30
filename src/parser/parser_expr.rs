@@ -364,11 +364,15 @@ impl Parser {
                 file: self.clone().file
             },
             TokenType::ASM => self.parse_asm_expression(),
-            TokenType::LPAREN => self.parse_grouped_expression(),
+            TokenType::LPAREN => {
+                return self.lambda();
+            },
             TokenType::LBRACKET => self.list(),
             _ => self.expression(),
         };
-        self.advance();
+        if ! self.if_is_at_end() {
+            self.advance();
+        }
         res
     }
 
@@ -483,6 +487,38 @@ impl Parser {
         let type_ = self.parse_type_expression();
         Expr {
             expr_type: Box::new(ExprType::To { value: elt, type_ }),
+            extract: first_position..self.current_str,
+            body: self.clone().body,
+            file: self.clone().file
+        }
+    }
+
+
+    // lambda -> '(' [ident (',' ident)*] ')' '{' expression '}'
+    pub fn lambda(&mut self) -> Expr {
+        self.skip_whitespace();
+        let first_position = self.current_str;
+        self.expect_token(TokenType::LPAREN);
+        let mut params = Vec::new();
+        if self.peek().token_type != TokenType::RPAREN {
+            loop {
+                params.push(match *self.identifier().expr_type {
+                    ExprType::Ident { ident } => ident.lexeme,
+                    _ => unreachable!()
+                });
+                self.advance();
+                if self.peek().token_type == TokenType::RPAREN {
+                    break;
+                }
+                self.expect_token(TokenType::COMMA);
+            }
+        }
+        self.expect_token(TokenType::RPAREN);
+        self.expect_token(TokenType::LBRACE);
+        let body = self.term();
+        self.expect_token(TokenType::RBRACE);
+        Expr {
+            expr_type: Box::new(ExprType::Lambda { args: params, body }),
             extract: first_position..self.current_str,
             body: self.clone().body,
             file: self.clone().file

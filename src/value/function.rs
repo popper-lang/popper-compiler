@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use crate::ast::expr::{Expr, ExprType};
 
 use super::{Object, Type};
 use crate::ast::stmt::{Stmt, StmtType};
@@ -64,11 +65,42 @@ impl Callable for Function {
                 new_interpreter.env = env;
                 body.clone().accept(&mut new_interpreter)
             },
+            StmtType::Expression { expr } => {
+                if let ExprType::Lambda { args: params, body } = &*expr.expr_type {
+                    for arg in params {
+                        env.define(arg.clone(), Var {
+                            value: args[i].clone(),
+                            mutable: false,
+                            type_: args[i].type_.clone()
+                        });
+                        env.define("self".to_string(), Var {
+                            value: Object {
+                                type_: Type::Function,
+                                implementations: vec![
+                                    Implementation::Call(Rc::new(Function::new(self.declaration.clone())))
+                                ],
+                                value: RustValue::Function
+                            },
+                            mutable: false,
+                            type_: Type::Function
+                        }); // for recursive calls to the function, in a lambda , we need to define self, so that we can call the function recursively
+                        i += 1;
+                    }
+                    new_interpreter.env = env;
+                    body.clone().accept(&mut new_interpreter)
+                } else {
+                    error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
+                    unreachable!()
+                }
+            },
             _ => {
                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
                 unreachable!()
             }
+
         }
+
+
     }
 }
 

@@ -432,6 +432,32 @@ impl ExprVisitor for Interpreter {
         todo!()
     }
 
+    fn visit_lambda(&mut self, args: Vec<String>, body: Expr) -> Self::Output {
+        let e = Expr::new(
+            Box::new(ExprType::Lambda {
+                args: args.clone(),
+                body: body.clone(),
+            }),
+            0..0,
+            body.body.clone(),
+            body.file.clone()
+        );
+
+        let s = Stmt::new(
+            StmtType::Expression {
+                    expr: e.clone()
+                },
+            0..0,
+            body.body.clone(),
+            body.file.clone()
+
+
+            );
+
+
+        Function::create_function(s)
+    }
+
     fn visit_eof(&mut self) -> Self::Output {
         none()
     }

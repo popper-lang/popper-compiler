@@ -21,6 +21,7 @@ pub enum ExprType {
     NsGet { name: Expr, attr: Expr },
     InitStruct { name: Expr, fields: Vec<(Expr, Expr)> },
     Asm { asm: String },
+    Lambda { args: Vec<String>, body: Expr },
     Eof,
 }
 
