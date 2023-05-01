@@ -2,11 +2,11 @@ use std::fmt::Display;
 use super::{Object, Type, Implementation};
 use std::rc::Rc;
 use crate::value::RustValue;
-use std::ops::{Add, Sub, Mul, Div};
-use crate::value::operation::{Pow, Mod};
-use std::cmp::{PartialEq, PartialOrd};
+use crate::value::operation::{Add, Sub, Mul, Div, Mod, PartialOrd, PartialEq};
+use crate::value::list::PopperList;
 
-#[derive(Clone, Debug, PartialEq, Ord, PartialOrd, Eq)]
+
+#[derive(Clone, Debug, PartialEq, Ord, PartialOrd, Eq, Copy)]
 pub struct PopperInt {
     value: i32
 }
@@ -40,7 +40,6 @@ pub fn number(n: PopperInt) -> Object {
             Implementation::Sub(Rc::new(n)),
             Implementation::Mul(Rc::new(n)),
             Implementation::Div(Rc::new(n)),
-            Implementation::Pow(Rc::new(n)),
             Implementation::Mod(Rc::new(n)),
             Implementation::PartialEq(Rc::new(n)),
             Implementation::PartialOrd(Rc::new(n)),
@@ -52,7 +51,7 @@ pub fn number(n: PopperInt) -> Object {
 impl Add for PopperInt {
     fn add(&self, other: Object) -> Object {
         if let RustValue::Int(ref n) = other.value {
-            number(self.value + n.value)
+            number((self.value + n.value).into())
         } else {
             panic!("Cannot add {} to {}", self, other)
         }
@@ -62,7 +61,7 @@ impl Add for PopperInt {
 impl Sub for PopperInt {
     fn sub(&self, other: Object) -> Object {
         if let RustValue::Int(n) = other.value {
-            number(self.value - n.value)
+            number((self.value - n.value).into())
         } else {
             panic!("Cannot substract {} to {}", self, other)
         }
@@ -71,8 +70,12 @@ impl Sub for PopperInt {
 
 impl Mul for PopperInt {
     fn mul(&self, other: Object) -> Object {
+        println!("BREAK 13");
         if let RustValue::Int(n) = other.value {
-            number(self.value * n.value)
+            println!("BREAK 14");
+            let k = number((self.value * n.value).into());
+            println!("BREAK 15");
+            k
         } else {
             panic!("Cannot multiply {} to {}", self, other)
         }
@@ -82,7 +85,7 @@ impl Mul for PopperInt {
 impl Div for PopperInt {
     fn div(&self, other: Object) -> Object {
         if let RustValue::Int(n) = other.value {
-            number(self.value / n.value)
+            number((self.value / n.value).into())
         } else {
             panic!("Cannot divide {} to {}", self, other)
         }
@@ -92,66 +95,35 @@ impl Div for PopperInt {
 
 
 impl Mod for PopperInt {
-    fn modulo(&self, other: Object) -> Object {
-        if let RustValue::Int(n) = other.value {
-            number(self % n)
+    fn modulo(&self, rhs: Object) -> Object {
+        if let RustValue::Int(n) = rhs.value {
+            number((self.value % n.value).into())
         } else {
-            panic!("Cannot modulo {} to {}", self, other)
+            panic!("Cannot modulo {} to {}", self, rhs)
         }
     }
 }
 
-
-
-
-
-
-
-pub fn string(s: &str) -> Object {
-    Object {
-        type_: Type::String,
-        implementations: vec![
-            Implementation::Add(Rc::new(s.to_string())),
-            Implementation::PartialEq(Rc::new(s.to_string())),
-        ],
-        value: RustValue::String(s.to_string())
-    }
-}
-
-impl Add for String {
-    fn add(&self, other: Object) -> Object {
-        if let RustValue::String(s) = other.value {
-            string((self.as_str().to_owned() + s.as_str()).as_str())
-        } else {
-            panic!("Cannot add {} to {}", self, other)
-        }
-    }
-}
-
-impl PartialEq for String {
+impl PartialEq for PopperInt {
     fn eq(&self, other: Object) -> bool {
-        if let RustValue::String(s) = other.value {
-            self == &s
+        if let RustValue::Int(ref n) = other.value {
+            self == n
         } else {
             panic!("Cannot compare {} to {}", self, other)
         }
     }
 }
 
-pub fn boolean(b: bool) -> Object {
-    Object {
-        type_: Type::Bool,
-        implementations: vec![
-            Implementation::PartialEq(Rc::new(b)),
-        ],
-        value: RustValue::Bool(b)
-    }
-}
-
-impl PartialEq for bool {
-    fn eq(&self, other: Object) -> bool {
-        if let RustValue::Bool(b) = other.value {
-            self == &b
+impl PartialOrd for PopperInt {
+    fn partial_cmp(&self, other: Object) -> Option<std::cmp::Ordering> {
+        if let RustValue::Int(ref n) = other.value {
+            if self.value < n.value {
+                Some(std::cmp::Ordering::Less)
+            } else if self.value > n.value {
+                Some(std::cmp::Ordering::Greater)
+            } else {
+                Some(std::cmp::Ordering::Equal)
+            }
         } else {
             panic!("Cannot compare {} to {}", self, other)
         }

@@ -3,7 +3,7 @@ use crate::value::{Implementation, Object, RustValue, Type};
 use std::rc::Rc;
 
 use crate::value::callable::Callable;
-use crate::value::litteral::boolean;
+use crate::value::boolean::boolean;
 use crate::get_impl_if_exist;
 
 #[derive(Clone, Debug)]
@@ -34,10 +34,10 @@ impl Callable for IsEqual {
         let right: Object = args[1].clone();
 
         if left.type_ != right.type_ {
-            return boolean(false);
+            return boolean(false.into());
         }
 
-        return boolean(left.value == right.value);
+        return boolean((left.value == right.value).into());
     }
 }
 
@@ -70,9 +70,9 @@ impl Callable for IsNotEqual {
         let impl_left = get_impl_if_exist!(PartialEq, left);
 
         if let Some(impl_left) = impl_left {
-            return boolean(impl_left.ne(right));
+            return boolean(impl_left.ne(right).into());
         } else {
-            boolean(true)
+            boolean(true.into())
         }
     }
 }

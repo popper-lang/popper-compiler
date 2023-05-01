@@ -3,12 +3,14 @@ pub mod function;
 pub mod get;
 pub mod instance;
 pub mod list;
-pub mod litteral;
+pub mod int;
 pub mod callable;
 pub mod operation;
 pub mod namespace;
 pub mod struct_type;
 pub mod range;
+pub mod boolean;
+pub mod string;
 
 
 
@@ -19,8 +21,14 @@ use std::{
 };
 use std::borrow::Cow;
 use std::fmt::Write;
+use crate::value::int::PopperInt;
+use crate::value::boolean::PopperBoolean;
+use crate::value::string::PopperString;
+use crate::value::list::PopperList;
 
 static BUILTIN_TYPE: &[Type; 4] = &[Type::Int, Type::Bool, Type::String, Type::List];
+
+
 
 // a trait Object that represents a object in popper
 
@@ -33,7 +41,6 @@ pub enum Implementation {
     Sub(Rc<dyn operation::Sub>),
     Mul(Rc<dyn operation::Mul>),
     Div(Rc<dyn operation::Div>),
-    Pow(Rc<dyn operation::Pow>),
     Mod(Rc<dyn operation::Mod>),
     PartialEq(Rc<dyn operation::PartialEq>),
     PartialOrd(Rc<dyn operation::PartialOrd>),
@@ -62,10 +69,10 @@ impl PartialEq for Object {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum RustValue {
-    Int(i32),
-    String(String),
-    Bool(bool),
-    List(Vec<Object>),
+    Int(PopperInt),
+    String(PopperString),
+    Bool(PopperBoolean),
+    List(PopperList),
     None,
     Function,
     Instance(instance::Instance),
@@ -114,13 +121,14 @@ impl Display for RustValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&*match self {
             RustValue::Int(e) => Cow::Owned(e.to_string()),
-            RustValue::String(e) => Cow::Borrowed(e.as_str()),
+            RustValue::String(e) => Cow::Borrowed(e.value.as_str()),
             RustValue::Bool(e) => Cow::Owned(e.to_string()),
             RustValue::List(e) => {
                 let mut s = String::new();
                 s.push('[');
-                for i in e {
-                    s.push_str(i.to_string().as_str());
+                for i in e.clone().into_iter() {
+
+                    s.push_str(i.to_string().as_ref());
                     s.push_str(", ");
                 }
                 s.push(']');
@@ -180,4 +188,3 @@ macro_rules! get_impl_if_exist {
         })
     };
 }
-

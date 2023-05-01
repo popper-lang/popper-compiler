@@ -2,7 +2,7 @@ use crate::interpreter::Interpreter;
 use crate::value::{Implementation, Object, RustValue, Type};
 use crate::value::callable::Callable;
 use std::rc::Rc;
-use crate::value::litteral::none;
+use crate::value::int::none;
 
 
 use super::panic_if_is_outside_std;

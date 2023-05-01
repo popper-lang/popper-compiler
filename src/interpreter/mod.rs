@@ -14,7 +14,9 @@ use crate::value::{class, RustValue};
 use crate::value::function::Function;
 use crate::value::get::Getter;
 use crate::value::{Object, Type, Var, Implementation};
-use crate::value::litteral::{boolean, none, number, string};
+use crate::value::int::{none, number};
+use crate::value::string::string;
+use crate::value::boolean::{boolean, PopperBoolean};
 use crate::value::list::list;
 use crate::value::range::range;
 use crate::get_impl_if_exist;
@@ -146,7 +148,9 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(Mul, left);
                 let impl_right = get_impl_if_exist!(Mul, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    impl_left.unwrap().mul(right)
+                    let k = impl_left.unwrap().mul(right);
+                    println!("BREAK 16");
+                    k
                 } else {
                     error!(ErrorType::TypeError, "can't mul", 0..1, op.lexeme);
                     unreachable!()
@@ -178,14 +182,20 @@ impl ExprVisitor for Interpreter {
     }
 
     fn visit_call(&mut self, name: Expr, args: Vec<Expr>) -> Self::Output {
+        println!("BREAK 1");
         let resolved_name = name.clone().accept(self);
+        println!("BREAK 2");
         let mut arguments = Vec::new();
         for arg in args {
+            println!("BREAK 3");
             arguments.push(arg.accept(self));
         }
+        println!("BREAK 4");
 
         let impl_call = get_impl_if_exist!(Call, resolved_name);
+        println!("BREAK 5");
         if let Some(func) = impl_call {
+            println!("BREAK 6");
             func.call(self, arguments, name.file.as_str())
         } else {
             error!(ErrorType::TypeError, "can't call", name.clone().extract, name.body);
@@ -227,15 +237,15 @@ impl ExprVisitor for Interpreter {
             list_object.push(elem.accept(self));
         }
 
-        list(list_object)
+        list(list_object.into())
 
     }
 
     fn visit_literal(&mut self, literal: LiteralType) -> Self::Output {
         match literal {
-            LiteralType::Number(n) => number(n),
-            LiteralType::Bool(b) => boolean(b),
-            LiteralType::String(s) => string(s.as_str()),
+            LiteralType::Number(n) => number(n.into()),
+            LiteralType::Bool(b) => boolean(b.into()),
+            LiteralType::String(s) => string(s.into()),
         }
     }
 
@@ -342,7 +352,7 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(PartialOrd, left);
                 let impl_right = get_impl_if_exist!(PartialOrd, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    boolean(impl_left.unwrap().lt(right))
+                    boolean(impl_left.unwrap().lt(right).into())
                 } else {
                     //error!(ErrorType::TypeError, "can't lt", op.extract, op.body);
                     unreachable!()
@@ -352,7 +362,7 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(PartialOrd, left);
                 let impl_right = get_impl_if_exist!(PartialOrd, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    boolean(impl_left.unwrap().gt(right))
+                    boolean(impl_left.unwrap().gt(right).into())
                 } else {
 
                     unreachable!()
@@ -362,7 +372,7 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(PartialEq, left);
                 let impl_right = get_impl_if_exist!(PartialEq, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    boolean(impl_left.unwrap().eq(right))
+                    boolean(impl_left.unwrap().eq(right).into())
                 } else {
                     //error!(ErrorType::TypeError, "can't eq", op.extract, op.body);
                     unreachable!()
@@ -372,7 +382,7 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(PartialOrd, left);
                 let impl_right = get_impl_if_exist!(PartialOrd, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    boolean(impl_left.unwrap().le(right))
+                    boolean(impl_left.unwrap().le(right).into())
                 } else {
                     //error!(ErrorType::TypeError, "can't lte", op.extract, op.body);
                     unreachable!()
@@ -382,7 +392,7 @@ impl ExprVisitor for Interpreter {
                 let impl_left = get_impl_if_exist!(PartialOrd, left);
                 let impl_right = get_impl_if_exist!(PartialOrd, right);
                 if impl_left.is_some() && impl_right.is_some() {
-                    boolean(impl_left.unwrap().ge(right))
+                    boolean(impl_left.unwrap().ge(right).into())
                 } else {
                     //error!(ErrorType::TypeError, "can't gte", op.extract, op.body);
                     unreachable!()
@@ -512,8 +522,12 @@ impl StmtVisitor for Interpreter {
     fn visit_if(&mut self, cond: Expr, then: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if let RustValue::Bool(true) = cond.value {
-            then.accept(self)
+        if let RustValue::Bool(n) = cond.value {
+            if n.into() {
+                then.accept(self)
+            } else {
+                none()
+            }
         } else {
             none()
         }
@@ -522,7 +536,7 @@ impl StmtVisitor for Interpreter {
     fn visit_if_else(&mut self, cond_: Expr, then: Stmt, else_: Stmt) -> Self::Output {
         let cond = cond_.clone().accept(self);
         if let RustValue::Bool(e) = cond.value {
-            if e {
+            if e.into() {
                 then.accept(self)
             } else {
                 else_.accept(self)
@@ -565,7 +579,7 @@ impl StmtVisitor for Interpreter {
 
     fn visit_while(&mut self, cond: Expr, body: Stmt) -> Self::Output {
 
-        while let RustValue::Bool(true) = cond.clone().accept(self).value {
+        while let RustValue::Bool(PopperBoolean { value: true }) = cond.clone().accept(self).value {
             body.clone().accept(self);
         }
         return none();
@@ -678,7 +692,7 @@ impl StmtVisitor for Interpreter {
         let mut absolute_path = std::env::current_dir().unwrap();
         absolute_path.push("src");
         absolute_path.push(relative_path);
-        let content = fs::read_to_string(dbg!(absolute_path)).unwrap();
+        let content = fs::read_to_string(absolute_path).unwrap();
 
         let mut lexer = Lexer::new(content.clone());
         let mut parser = Parser::new(lexer.scan_token(), content.clone(), self.std_lib_path.clone());
