@@ -199,7 +199,7 @@ impl ExprVisitor for Interpreter {
         let impl_get = get_impl_if_exist!(Get, name);
         if let Some(e) = impl_get {
 
-            e.fetch(self, attr).unwrap()
+            e.fetch(self, name, attr).unwrap()
         } else {
             error!(
                 ErrorType::AttributeError,

@@ -26,7 +26,6 @@ fn read_file(filename: &str) -> String {
 }
 
 pub fn tokenize(string: String) -> Vec<Token> {
-    println!("BREAK 1");
     let mut lexer = Lexer::new(string);
     dbg!(lexer.scan_token())
 }

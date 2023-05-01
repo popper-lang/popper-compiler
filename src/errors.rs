@@ -51,7 +51,7 @@ impl Error {
             self.msg,
             self.ext.start,
             self.ext.end,
-            &self.body[self.ext.clone()]
+            &self.body
         )
     }
 

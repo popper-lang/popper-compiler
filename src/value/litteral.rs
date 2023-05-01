@@ -2,7 +2,15 @@ use super::{Object, Type, Implementation};
 use std::rc::Rc;
 use crate::value::operation::{Add, Sub, Mul, Div, Pow, Mod, PartialEq, PartialOrd};
 use crate::value::RustValue;
-
+use crate::value::stdlib::{StdLibString, StdLibInt};
+use crate::register_stdlib;
+use crate::error;
+use crate::get_impl_if_exist;
+use crate::ast::expr::{Expr, ExprType};
+use crate::interpreter::Interpreter;
+use crate::errors::{Error, ErrorType};
+use crate::value::get::Getter;
+use crate::value::function::BuiltinFunction;
 
 pub fn number(n: i32) -> Object {
     Object {
@@ -16,6 +24,7 @@ pub fn number(n: i32) -> Object {
             Implementation::Mod(Rc::new(n)),
             Implementation::PartialEq(Rc::new(n)),
             Implementation::PartialOrd(Rc::new(n)),
+            Implementation::Get(Rc::new(n))
         ],
         value: RustValue::Int(n)
     }
@@ -50,6 +59,8 @@ impl Mul for i32 {
         }
     }
 }
+
+
 
 impl Div for i32 {
     fn div(&self, other: Object) -> Object {
@@ -111,6 +122,22 @@ impl PartialOrd for i32 {
     }
 }
 
+impl StdLibInt for i32 {
+    fn sqrt(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        if args.len() != 1 {
+            panic!("expected 1, got {} argument", args.len())
+        }
+
+        let first_element = args.last().unwrap();
+        if let RustValue::Int(i) = first_element.value {
+            return number(f64::sqrt(i as f64) as i32);
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+register_stdlib!(i32, StdLibInt, "sqrt" => sqrt);
 
 
 pub fn string(s: &str) -> Object {

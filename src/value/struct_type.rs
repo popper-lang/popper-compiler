@@ -54,7 +54,7 @@ impl StructType {
 }
 
 impl crate::value::get::Getter for StructInstance {
-    fn fetch(&self, _interpreteur: &mut Interpreter, name: Expr) -> Option<Object> {
+    fn fetch(&self, _interpreteur: &mut Interpreter, _obj: Object, name: Expr) -> Option<Object> {
         match *name.expr_type {
             ExprType::Ident { ident } => {
                 let name = ident.lexeme;

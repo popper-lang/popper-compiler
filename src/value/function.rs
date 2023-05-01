@@ -1,3 +1,4 @@
+use std::fmt::{Debug, Formatter};
 use std::rc::Rc;
 
 use super::{Object, Type};
@@ -11,10 +12,49 @@ use crate::value::callable::Callable;
 use crate::value::{Implementation, RustValue, Var};
 
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub declaration: Stmt,
+}
+
+#[derive(Clone)]
+pub struct BuiltinFunction{
+    pub func: Rc<dyn Fn(&mut Interpreter, Vec<Object>, &str) -> Object>,
+    pub id: i32
+}
+
+impl Debug for BuiltinFunction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("<builtin-function>").fmt(f)
+    }
+}
+
+impl PartialEq for BuiltinFunction {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl BuiltinFunction {
+    pub fn new(func: Rc<dyn Fn(&mut Interpreter, Vec<Object>, &str) -> Object>, id: i32) -> Self {
+        Self { func, id }
+    }
+
+    pub fn create_object(&self) -> Object {
+        Object {
+            type_: Type::Function,
+            implementations: vec![
+                Implementation::Call(Rc::new(self.clone()))
+            ],
+            value: RustValue::Function
+        }
+    }
+}
+
+impl Callable for BuiltinFunction {
+    fn call(&self, interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        (self.func)(interpreter, args, file)
+    }
 }
 
 impl Function {

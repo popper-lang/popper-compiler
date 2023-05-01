@@ -33,7 +33,6 @@ impl Namespace {
 
 impl get::NsGetter for Namespace {
     fn fetch(&self, interpreteur: &mut Interpreter, name: Expr) -> Option<Object> {
-        println!("BREAK 2");
         match *name.expr_type {
             ExprType::Ident { ident } => {
                 match self.value.fetch(ident.lexeme) {
