@@ -18,7 +18,7 @@ use parser::Parser;
 use std::fs;
 
 use value::Object;
-use crate::value::litteral::none;
+use crate::value::int::none;
 
 fn read_file(filename: &str) -> String {
     let content = fs::read_to_string(filename).expect("file not found");

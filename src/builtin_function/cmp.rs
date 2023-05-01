@@ -3,7 +3,7 @@ use crate::value::{Implementation, Object, RustValue, Type};
 use std::rc::Rc;
 
 use crate::value::callable::Callable;
-use crate::value::litteral::boolean;
+use crate::value::boolean::boolean;
 use crate::get_impl_if_exist;
 
 #[derive(Clone, Debug)]

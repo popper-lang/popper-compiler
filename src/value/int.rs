@@ -137,60 +137,6 @@ impl StdLibInt for i32 {
     }
 }
 
-register_stdlib!(i32, StdLibInt, "sqrt" => sqrt);
-
-
-pub fn string(s: &str) -> Object {
-    Object {
-        type_: Type::String,
-        implementations: vec![
-            Implementation::Add(Rc::new(s.to_string())),
-            Implementation::PartialEq(Rc::new(s.to_string())),
-        ],
-        value: RustValue::String(s.to_string())
-    }
-}
-
-impl Add for String {
-    fn add(&self, other: Object) -> Object {
-        if let RustValue::String(s) = other.value {
-            string((self.as_str().to_owned() + s.as_str()).as_str())
-        } else {
-            panic!("Cannot add {} to {}", self, other)
-        }
-    }
-}
-
-impl PartialEq for String {
-    fn eq(&self, other: Object) -> bool {
-        if let RustValue::String(s) = other.value {
-            self == &s
-        } else {
-            panic!("Cannot compare {} to {}", self, other)
-        }
-    }
-}
-
-pub fn boolean(b: bool) -> Object {
-    Object {
-        type_: Type::Bool,
-        implementations: vec![
-            Implementation::PartialEq(Rc::new(b)),
-        ],
-        value: RustValue::Bool(b)
-    }
-}
-
-impl PartialEq for bool {
-    fn eq(&self, other: Object) -> bool {
-        if let RustValue::Bool(b) = other.value {
-            self == &b
-        } else {
-            panic!("Cannot compare {} to {}", self, other)
-        }
-    }
-}
-
 pub fn none() -> Object {
     Object {
         type_: Type::None,
@@ -198,3 +144,5 @@ pub fn none() -> Object {
         value: RustValue::None
     }
 }
+
+register_stdlib!(i32, StdLibInt, "sqrt" => sqrt);

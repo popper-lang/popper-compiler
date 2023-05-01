@@ -1,7 +1,7 @@
 use super::Object;
 use crate::value::RustValue;
 use crate::value::list::list;
-use crate::value::litteral::number;
+use crate::value::int::number;
 
 pub fn range(start: Object, end: Object) -> Object {
     let mut v = vec![];

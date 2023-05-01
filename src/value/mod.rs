@@ -3,13 +3,15 @@ pub mod function;
 pub mod get;
 pub mod instance;
 pub mod list;
-pub mod litteral;
+pub mod int;
 pub mod callable;
 pub mod operation;
 pub mod namespace;
 pub mod struct_type;
 pub mod range;
 pub mod stdlib;
+pub mod string;
+pub mod boolean;
 
 
 

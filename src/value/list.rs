@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::value::get::Getter;
 use crate::value::RustValue;
 use crate::value::operation::{PartialEq, Add};
-use crate::value::litteral::number;
+use crate::value::int::number;
 use super::{Object, Type, Implementation};
 use crate::ast::expr::{Expr, ExprType, LiteralType};
 use crate::interpreter::Interpreter;

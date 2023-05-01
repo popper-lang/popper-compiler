@@ -6,7 +6,7 @@ fn main() {
     use "io.pop" as io
     use "itertool.pop" as itertool
 
-    let b = 8.sqrt()
+    let b = "abc".len()
     io::println(b)
 
     "#, None));

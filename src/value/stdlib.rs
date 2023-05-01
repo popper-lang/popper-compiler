@@ -3,12 +3,20 @@ use crate::interpreter::Interpreter;
 
 
 pub trait StdLibString {
-    fn len(&self) -> Object;
+    fn len(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        todo!()
+    }
+
+    fn push(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+        todo!()
+    }
 }
 
 pub trait StdLibInt {
     fn sqrt(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object;
 }
+
+
 
 #[macro_export]
 macro_rules! register_stdlib {
