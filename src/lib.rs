@@ -18,7 +18,7 @@ use parser::Parser;
 use std::fs;
 
 use value::Object;
-use crate::value::int::none;
+use crate::value::litteral::none;
 
 fn read_file(filename: &str) -> String {
     let content = fs::read_to_string(filename).expect("file not found");
@@ -41,7 +41,7 @@ pub fn interpret(stmts: Vec<Stmt>) {
     //resolve(stmts.clone(), interpreter.clone());
     let mut value: Object = none();
     for stmt in stmts {
-        println!("{:?}", stmt.clone());
+        //println!("{:?}", stmt.clone());
         /*println!(
             "expr: {}",
             Box::new(stmt.clone().body[stmt.clone().extract].to_string())
