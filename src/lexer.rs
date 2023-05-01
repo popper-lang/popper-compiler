@@ -26,7 +26,6 @@ pub enum TokenType {
     SEMICOLON,
     COLON,
     DOUBLECOLON,
-    SIMPLEARROW,
 
     // literal token
     NUMBER,
@@ -264,15 +263,8 @@ impl Lexer {
                 token!(ADD, "+", self.line, self.pos)
             }
             '-' => {
-                if self.peek_char() == '>' {
-                    self.read_char();
-                    self.read_char();
-                    token!(SIMPLEARROW, "->", self.line, self.pos)
-                } else {
-                    self.read_char();
-                    token!(SUB, "-", self.line, self.pos)
-                }
-
+                self.read_char();
+                token!(SUB, "-", self.line, self.pos)
             }
             '*' => {
                 self.read_char();
@@ -303,7 +295,6 @@ impl Lexer {
                     self.read_char();
                     token!(EQ, "==", self.line, self.pos)
                 } else {
-                    self.read_char();
                     token!(ASSIGN, "=", self.line, self.pos)
                 }
             }
@@ -311,7 +302,7 @@ impl Lexer {
                 self.read_char();
                 if self.ch == '=' {
                     self.read_char();
-                    token!(NEQ, "!=", self.line, self.pos)
+                    token!(NEQ, "!", self.line, self.pos)
                 } else {
                     token!(NOT, "!", self.line, self.pos)
                 }
