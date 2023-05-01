@@ -6,11 +6,10 @@ fn main() {
     use "io.pop" as io
     use "itertool.pop" as itertool
 
-    let b = (a) { a + 1 }
-    let c = (a) { a + 2 }
-    io::println(b(5))
-    io::println(
-        itertool::map((a) { a * 2 }, [1, 2, 3, 4, 5])
-    )
+    fun v(s) {
+        s * 3
+    }
+    let d = itertool::map(v, [1, 2, 3])
+    io::println(d)
     "#, None));
 }
