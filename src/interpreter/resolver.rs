@@ -185,6 +185,7 @@ impl ExprVisitor for Resolver {
     }
 
     fn visit_asm(&mut self, _asm: String) -> Self::Output {}
+    fn visit_lambda(&mut self, args: Vec<Token>, body: Expr) -> Self::Output {}
 }
 
 impl StmtVisitor for Resolver {

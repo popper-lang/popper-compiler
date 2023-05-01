@@ -364,11 +364,14 @@ impl Parser {
                 file: self.clone().file
             },
             TokenType::ASM => self.parse_asm_expression(),
-            TokenType::LPAREN => self.parse_grouped_expression(),
+            TokenType::LPAREN => self.parse_lambda_expression(),
             TokenType::LBRACKET => self.list(),
             _ => self.expression(),
         };
-        self.advance();
+
+        if ! self.if_is_at_end() {
+            self.advance();
+        }
         res
     }
 
@@ -386,7 +389,7 @@ impl Parser {
         } else {
             Error::new(
                 ErrorType::SyntaxError,
-                "expected identifier",
+                format!("expected identifier got {:?}", self.peek()).as_str(),
                 first_position..self.current_str,
                 self.clone().body,
             )
@@ -487,6 +490,40 @@ impl Parser {
             body: self.clone().body,
             file: self.clone().file
         }
+    }
+
+    pub fn parse_lambda_expression(&mut self) -> Expr {
+        self.advance();
+        let mut args = Vec::new();
+        if ! self.check(TokenType::RPAREN) {
+            loop {
+                args.push(match *self.identifier().expr_type {
+                    ExprType::Ident { ident } => ident,
+                    _ => unreachable!()
+                });
+
+                self.advance();
+                if self.check(TokenType::RPAREN) {
+                    break;
+                }
+
+                self.expect_token(TokenType::COMMA);
+            }
+        }
+
+        self.expect_token(TokenType::RPAREN);
+        self.expect_token(TokenType::LBRACE);
+        let body = self.term();
+        self.expect_token(TokenType::RBRACE);
+        self.bake_up();
+        Expr::new(
+            Box::new(
+                ExprType::Lambda { args, body }
+            ),
+            0..0,
+            self.body.clone(),
+            self.file.clone()
+        )
     }
 
 }

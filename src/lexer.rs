@@ -295,6 +295,7 @@ impl Lexer {
                     self.read_char();
                     token!(EQ, "==", self.line, self.pos)
                 } else {
+                    self.read_char();
                     token!(ASSIGN, "=", self.line, self.pos)
                 }
             }
@@ -368,6 +369,7 @@ impl Lexer {
                 self.read_char();
                 token!(TAB, " ", self.line, self.pos)
             }
+
 
             '\0' => token!(EOF, "", self.line, self.pos),
             _ => {

@@ -175,7 +175,7 @@ impl Compiler {
                 };
                 c_repr::c_to(type_, value)
             },
-
+            ExprType::Lambda { .. } => panic!("Lambda not supporeted in C"),
             ExprType::UnaryOp { operand: _, op: _ } => {todo!()}
             ExprType::InitStruct { .. } => {todo!()}
             ExprType::Eof => {todo!()}

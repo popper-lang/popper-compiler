@@ -435,6 +435,25 @@ impl ExprVisitor for Interpreter {
     fn visit_eof(&mut self) -> Self::Output {
         none()
     }
+
+    fn visit_lambda(&mut self, args: Vec<Token>, body: Expr) -> Self::Output {
+        println!("BREAK 1");
+
+        let expr = Expr::new(
+            Box::new(ExprType::Lambda { args, body: body.clone() }),
+            0..0,
+            body.clone().body,
+            body.clone().file
+        );
+        let stmt = Stmt::new(
+            StmtType::Expression { expr },
+            0..0,
+            body.clone().body,
+            body.clone().file
+        );
+
+        return Function::create_function(stmt)
+    }
 }
 
 impl StmtVisitor for Interpreter {

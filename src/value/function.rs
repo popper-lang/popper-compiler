@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use super::{Object, Type};
 use crate::ast::stmt::{Stmt, StmtType};
+use crate::ast::expr::ExprType;
 
 use crate::errors::{error, Error, ErrorType};
 use crate::interpreter::environement::Environment;
@@ -67,8 +68,9 @@ impl Callable for Function {
             },
             StmtType::Expression { expr } => {
                 if let ExprType::Lambda { args: params, body } = &*expr.expr_type {
+
                     for arg in params {
-                        env.define(arg.clone(), Var {
+                        env.define(arg.lexeme.clone(), Var {
                             value: args[i].clone(),
                             mutable: false,
                             type_: args[i].type_.clone()
