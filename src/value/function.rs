@@ -63,8 +63,7 @@ impl Callable for Function {
                 }
                 new_interpreter.env = env;
                 body.clone().accept(&mut new_interpreter)
-<<<<<<< HEAD
-=======
+
             },
             StmtType::Expression { expr } => {
                 if let ExprType::Lambda { args: params, body } = &*expr.expr_type {
@@ -93,7 +92,6 @@ impl Callable for Function {
                     error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
                     unreachable!()
                 }
->>>>>>> parent of 8c003a2 (VERSION WITH BUGS, change system type)
             },
             _ => {
                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
