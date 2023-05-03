@@ -123,7 +123,7 @@ impl PartialOrd for i32 {
 }
 
 impl StdLibInt for i32 {
-    fn sqrt(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+    fn sqrt(interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
         if args.len() != 1 {
             panic!("expected 1, got {} argument", args.len())
         }
@@ -145,4 +145,6 @@ pub fn none() -> Object {
     }
 }
 
-register_stdlib!(i32, StdLibInt, "sqrt" => sqrt);
+register_stdlib!(i32, StdLibInt, {
+    "sqrt" => sqrt
+});

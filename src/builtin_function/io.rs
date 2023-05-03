@@ -36,7 +36,7 @@ impl Println {
 impl Callable for Print {
 
 
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
         panic_if_is_outside_std(file, "_print");
         for arg in args {
             print!("{}", arg);
@@ -48,7 +48,7 @@ impl Callable for Print {
 impl Callable for Println {
 
 
-    fn call(&self, _interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+    fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
         panic_if_is_outside_std(file, "_println");
         for arg in args {
             print!("{}", arg);

@@ -7,6 +7,7 @@ pub mod parser;
 pub mod value;
 pub mod c_compiler;
 pub mod arduino_rs;
+pub mod extern_popper;
 
 
 use crate::ast::stmt::Stmt;
@@ -27,7 +28,7 @@ fn read_file(filename: &str) -> String {
 
 pub fn tokenize(string: String) -> Vec<Token> {
     let mut lexer = Lexer::new(string);
-    dbg!(lexer.scan_token())
+    lexer.scan_token()
 }
 
 pub fn parse(tokens: Vec<Token>, extract: String, file: String) -> Vec<Stmt> {
@@ -40,6 +41,7 @@ pub fn interpret(stmts: Vec<Stmt>) {
     let mut interpreter = Interpreter::new();
     //resolve(stmts.clone(), interpreter.clone());
     let mut value: Object = none();
+
     for stmt in stmts {
         //println!("{:?}", stmt.clone());
         /*println!(

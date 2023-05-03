@@ -7,6 +7,7 @@ use crate::value::RustValue;
 use crate::ast::expr::Expr;
 use crate::ast::expr::ExprType;
 use std::rc::Rc;
+use crate::get_impl_if_exist;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StructType {
@@ -21,10 +22,15 @@ pub struct StructInstance {
 }
 
 pub fn struct_instance(struct_type: StructType, fields: HashMap<String, Object> ) -> Object {
-    let instance = StructInstance {
-        struct_type,
+    let mut instance = StructInstance {
+        struct_type: struct_type.clone(),
         fields
     };
+
+    for function in struct_type.functions {
+        println!("function: {:?}", function);
+        instance.fields.insert(function.name, Function::create_function(function.declaration));
+    }
     Object {
         type_: Type::InstanceStruct,
         implementations: vec![
@@ -54,8 +60,8 @@ impl StructType {
 }
 
 impl crate::value::get::Getter for StructInstance {
-    fn fetch(&self, _interpreteur: &mut Interpreter, _obj: Object, name: Expr) -> Option<Object> {
-        match *name.expr_type {
+    fn fetch(&self, interpreteur: &mut Interpreter, obj: &mut Object, name: Expr) -> Option<Object> {
+        match dbg!(*name.expr_type) {
             ExprType::Ident { ident } => {
                 let name = ident.lexeme;
                 if let Some(field) = self.fields.get(&name) {
@@ -65,6 +71,20 @@ impl crate::value::get::Getter for StructInstance {
                 }
 
             },
+            ExprType::Call { name: f_name, args} => {
+                let func = self.fetch(interpreteur, obj, f_name)?;
+                let callable = get_impl_if_exist!(Call, func);
+                if let Some(e) = callable {
+                    let mut new_args = vec![];
+                    for arg in args {
+                        new_args.push(arg.accept(interpreteur));
+                    }
+
+                    Some(e.method(interpreteur, obj, &mut new_args, name.file.as_str()))
+                } else {
+                    panic!("can't get")
+                }
+            }
             _ => None
 
         }

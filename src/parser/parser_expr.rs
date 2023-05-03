@@ -199,7 +199,7 @@ impl Parser {
 
     pub fn assign(&mut self) -> Expr {
         self.skip_whitespace();
-        let name = self.call();
+        let name = self.get();
         let first_position = self.current_str;
         if self.match_token(TokenType::ASSIGN) {
             Expr {
@@ -261,7 +261,7 @@ impl Parser {
     pub fn ns_get(&mut self) -> Expr {
         self.skip_whitespace();
         let first_position = self.current_str;
-        let mut name = self.get();
+        let mut name = self.range();
         if self.match_token(TokenType::DOUBLECOLON) {
             let attr = self.term();
             name = Expr {
@@ -280,9 +280,9 @@ impl Parser {
     pub fn get(&mut self) -> Expr {
         self.skip_whitespace();
         let first_position = self.current_str;
-        let mut name = self.range();
+        let mut name = self.call();
         if self.match_token(TokenType::DOT) {
-            let attr = self.term();
+            let attr = self.call();
             name = Expr {
                 expr_type: Box::new(ExprType::Get { name, attr }),
                 extract: first_position..self.current_str,

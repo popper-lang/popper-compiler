@@ -154,7 +154,7 @@ impl Lexer {
     }
     pub fn read_number(&mut self) -> i32 {
         let mut result = String::new();
-        while self.ch.is_digit(10) {
+        while self.ch.is_digit(32) {
             result.push(self.ch);
             self.read_char();
         }
@@ -413,7 +413,7 @@ pub(crate) fn tokens_to_string(tokens: Vec<Token>) -> String {
 }*/
 
 mod tests {
-    
+    use super::*;
     #[test]
     fn test_ident() {
         let input = "foobar";
@@ -455,7 +455,7 @@ mod tests {
         let input = "int";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token.token_type, TokenType::IntType);
+        assert_eq!(token.token_type, TokenType::INT_TYPE);
     }
 
     #[test]
@@ -479,6 +479,6 @@ mod tests {
         let input = ":";
         let mut l = Lexer::new(input.to_string());
         let token = l.read_token();
-        assert_eq!(token.token_type, TokenType::TWODOTS);
+        assert_eq!(token.token_type, TokenType::DOUBLECOLON);
     }
 }

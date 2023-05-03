@@ -1,4 +1,4 @@
-use crate::value::stdlib::{StdLibString, StdLibInt};
+use crate::value::stdlib::StdLibString;
 use crate::value::{Implementation, Object, RustValue, Type};
 use crate::register_stdlib;
 use crate::error;
@@ -46,13 +46,12 @@ impl PartialEq for String {
 }
 
 impl StdLibString for String {
-    fn len(interpreteur: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
-        if args.len() != 1 {
-            panic!("expected 1, got {} argument", args.len())
+    fn len(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
+        if args.len() != 0 {
+            panic!("expected 0, got {} argument", args.len())
         }
 
-        let first_element = args.last().unwrap().clone();
-        if let RustValue::String(s) = first_element.value {
+        if let RustValue::String(s) = dbg!(this.clone().value) {
             return number(s.len() as i32);
         } else {
             unreachable!()
@@ -60,4 +59,6 @@ impl StdLibString for String {
     }
 }
 
-register_stdlib!(String, StdLibString, "len" => len);
+register_stdlib!(String, StdLibString, {
+    "len" => len
+});

@@ -30,7 +30,7 @@ impl Instance {
 }
 
 impl Getter for Instance {
-    fn fetch(&self, _interpreteur: &mut Interpreter, _obj: Object,   name: Expr) -> Option<Object> {
+    fn fetch(&self, _interpreteur: &mut Interpreter, _obj: &mut Object,   name: Expr) -> Option<Object> {
         match *name.expr_type {
             ExprType::Ident { ident } => {
                 self.class.methods.fetch(ident.lexeme).map(|v| v.value.clone())

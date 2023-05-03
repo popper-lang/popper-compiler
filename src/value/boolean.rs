@@ -1,6 +1,7 @@
 use crate::value::{Object, RustValue, Type, Implementation};
 use crate::value::operation::PartialEq;
 use std::rc::Rc;
+use crate::register_stdlib;
 
 pub fn boolean(b: bool) -> Object {
     Object {
@@ -21,3 +22,4 @@ impl PartialEq for bool {
         }
     }
 }
+

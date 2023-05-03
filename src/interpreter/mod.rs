@@ -10,7 +10,7 @@ use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::builtin_function::{io, cmp, list_util};
 use crate::errors::{error, Error, ErrorType};
 use crate::lexer::{Token};
-use crate::value::{class, RustValue};
+use crate::value::{class, function, RustValue};
 use crate::value::function::Function;
 use crate::value::get::Getter;
 use crate::value::{Object, Type, Var, Implementation};
@@ -30,8 +30,6 @@ use crate::value::namespace::Namespace;
 use crate::value::struct_type::StructField;
 use crate::value::struct_type::StructType;
 use crate::value::struct_type::struct_instance;
-
-
 
 
 pub static STD_LIB_PATH: &str = "/Users/antoine/Documents/popper-lang/std/";
@@ -188,7 +186,7 @@ impl ExprVisitor for Interpreter {
 
         let impl_call = get_impl_if_exist!(Call, resolved_name);
         if let Some(func) = impl_call {
-            func.call(self, arguments, name.file.as_str())
+            func.call(self, &mut arguments, name.file.as_str())
         } else {
             error!(ErrorType::TypeError, "can't call", name.clone().extract, name.body);
             unreachable!()
@@ -196,12 +194,32 @@ impl ExprVisitor for Interpreter {
     }
 
     fn visit_get(&mut self, name_: Expr, attr: Expr) -> Self::Output {
-
-        let name = name_.clone().accept(self);
+        let mut name = name_.clone().accept(self);
+        dbg!(&name.value);
         let impl_get = get_impl_if_exist!(Get, name);
         if let Some(e) = impl_get {
+            let old_name = name.clone();
+            let k = e.fetch(self, &mut name, attr).unwrap();
 
-            e.fetch(self, name, attr).unwrap()
+            if old_name != name { // check if the value of name has been modified
+                if let ExprType::Ident { ident } = *name_.expr_type {
+                    let var = self.env.fetch(ident.lexeme.clone()).unwrap();
+                    if var.mutable {
+                        self.env.modify(ident.lexeme, Var {
+                            value: name.clone(),
+                            type_: name.type_.clone(),
+                            mutable: true,
+                        });
+                    } else {
+                        error!(
+                            ErrorType::AttributeError,
+                            "can't modify", 0..0, String::from("")
+                        );
+                        unreachable!()
+                    }
+                } else { /* nothing because it's a literal */ }
+            }
+            k
         } else {
             error!(
                 ErrorType::AttributeError,
@@ -287,13 +305,13 @@ impl ExprVisitor for Interpreter {
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
 
-
+        dbg!(&self.env);
         match self.env.fetch(id.clone()) {
             Some(v) => v.value,
             None => {
                 error!(
                     ErrorType::NameError,
-                    "ident not found",
+                    format!("ident not found: {}", ident.lexeme).as_str(),
                     0..0,
                     "".to_string()
                 );
@@ -420,11 +438,33 @@ impl ExprVisitor for Interpreter {
             .collect::<HashMap<_, _>>();
 
 
+        let name_checked: HashMap<String, Object> =  match name.clone() {
+            Object { type_: Type::Struct(_), value: RustValue::Struct(s), .. } => {
+                let mut fields_checked = HashMap::new();
+                for field in fields {
+                    if s.fields.contains(&StructField {
+                        name: field.0.clone(),
+                        type_: field.1.type_.clone()
+                    }) {
+                        fields_checked.insert(field.0, field.1);
+                    } else {
+                        error!(
+                            ErrorType::AttributeError,
+                            "field not found or bad type", 0..0, "".to_string()
+                        );
+                        unreachable!()
+                    }
+                }
+                fields_checked
+            },
+            _ => unreachable!()
+        };
+
 
         return struct_instance(match name {
-            Object { type_: Type::Struct(_), value: RustValue::Struct(s), .. } => s,
+            Object { type_: Type::Struct(_), value: RustValue::Struct(s), .. } => s.clone(),
             _ => unreachable!()
-        }, fields);
+        }, name_checked);
 
 
 
@@ -489,14 +529,11 @@ impl StmtVisitor for Interpreter {
     }
 
     fn visit_block(&mut self, stmts: Vec<Stmt>) -> Self::Output {
-        let previous = self.env.clone();
-        let env = Environment::new(Some(self.env.clone()));
+
         let mut res = none();
         for stmt in stmts {
-            self.env = env.clone();
             res = stmt.accept(self);
         }
-        self.env = previous;
         res
     }
 
@@ -673,7 +710,7 @@ impl StmtVisitor for Interpreter {
         let mut absolute_path = std::env::current_dir().unwrap();
         absolute_path.push("src");
         absolute_path.push(relative_path);
-        let content = fs::read_to_string(dbg!(absolute_path)).unwrap();
+        let content = fs::read_to_string(absolute_path).unwrap();
 
         let mut lexer = Lexer::new(content.clone());
         let mut parser = Parser::new(lexer.scan_token(), content.clone(), self.std_lib_path.clone());
@@ -701,8 +738,42 @@ impl StmtVisitor for Interpreter {
         todo!()
     }
 
-    fn visit_impl(&mut self, _struct_name: String, _methods: Vec<Stmt>) -> Self::Output {
-        todo!()
+    fn visit_impl(&mut self, struct_name: String, methods: Vec<Stmt>) -> Self::Output {
+        let mut struct_ = self.env.fetch(struct_name.clone());
+        if let Some(ref mut var) = struct_ {
+            if let RustValue::Struct(s) = var.value.value.clone() {
+                let mut functions = Vec::new();
+                let env = self.env.clone();
+
+                for method in methods {
+                    match *method.stmt_type.clone() {
+                        StmtType::Function { name, body, args } => {
+                            functions.push(Function::new(method.clone(), Some(name.lexeme)));
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+
+                functions.extend(s.functions);
+
+                let s = StructType {
+                    fields: s.fields,
+                    functions: functions,
+                };
+
+                var.value.value = RustValue::Struct(s);
+
+
+                self.env.modify(struct_name.clone(), var.clone());
+                dbg!(&self.env);
+
+                return none();
+            } else {
+                panic!("{} is not a struct", struct_name.clone())
+            }
+        } else {
+            panic!("{} is not defined", struct_name.clone())
+        }
     }
     fn visit_struct(&mut self, name: String, fields: Vec<(String, Expr)>) -> Self::Output {
         let mut fields_object = Vec::new();

@@ -48,7 +48,7 @@ impl get::NsGetter for Namespace {
                 match self.fetch(&mut interpreteur.clone(), name.clone()) {
                     Some(obj) => {
                         match get_impl_if_exist!(Call, obj) {
-                            Some(call) => Some(call.call(interpreteur, args, name.file.as_str())),
+                            Some(call) => Some(call.call(interpreteur, &mut args, name.file.as_str())),
                             None => {
                                 error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
                                 unreachable!()

@@ -3,7 +3,7 @@ use crate::interpreter::Interpreter;
 use crate::value::Object;
 
 pub trait Getter {
-    fn fetch(&self, _interpreteur: &mut Interpreter, name: Object, _key: Expr) -> Option<Object> {
+    fn fetch(&self, _interpreteur: &mut Interpreter, name: &mut Object, _key: Expr) -> Option<Object> {
         None
     }
 }

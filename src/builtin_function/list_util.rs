@@ -21,7 +21,7 @@ impl Map {
 }
 
 impl Callable for Map {
-    fn call(&self, interpreter: &mut Interpreter, args: Vec<Object>, file: &str) -> Object {
+    fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
         panic_if_is_outside_std(file, "_map");
         let func = args.first().unwrap();
         let new_func = func.implementations.iter().find_map(|e| {
@@ -39,7 +39,7 @@ impl Callable for Map {
         let mut new_list = Vec::new();
 
         for item in list_obj.iter() {
-            new_list.push(new_func.call(interpreter, vec![item.clone()], file));
+            new_list.push(new_func.call(interpreter, &mut vec![item.clone()], file));
         }
 
         list(new_list)
