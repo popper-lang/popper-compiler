@@ -1,5 +1,5 @@
 use crate::interpreter::environement::Environment;
-use crate::value::{Object, RustValue, Type, Var};
+use crate::value::{Object, Value, Type, Var};
 
 
 
@@ -21,7 +21,7 @@ impl Class {
         Object {
             type_: Type::Class(name.to_string()),
             implementations: vec![],
-            value: RustValue::Class(Class::new(name.to_string())),
+            value: Value::Class(Class::new(name.to_string())),
         }
     }
 }

@@ -9,7 +9,7 @@ use crate::errors::{error, Error, ErrorType};
 use crate::interpreter::environement::Environment;
 use crate::interpreter::Interpreter;
 use crate::value::callable::Callable;
-use crate::value::{Implementation, RustValue, Var};
+use crate::value::{Implementation, Value, Var};
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,7 +47,7 @@ impl BuiltinFunction {
             implementations: vec![
                 Implementation::Call(Rc::new(self.clone()))
             ],
-            value: RustValue::Function
+            value: Value::Function
         }
     }
 }
@@ -80,7 +80,7 @@ impl Function {
             implementations: vec![
                 Implementation::Call(Rc::new(Function::new(declaration, Some(name.lexeme))))
             ],
-            value: RustValue::Function
+            value: Value::Function
         }
     }
 }
@@ -101,7 +101,7 @@ macro_rules! function_call_or_this {
                             implementations: vec![
                                 Implementation::Call(Rc::new(Function::new(self.declaration.clone(), Some(name.lexeme.clone()))))
                             ],
-                            value: RustValue::Function
+                            value: Value::Function
                         },
                         mutable: false,
                         type_: Type::Function
@@ -134,7 +134,7 @@ macro_rules! function_call_or_this {
                                     implementations: vec![
                                         Implementation::Call(Rc::new(Function::new(self.declaration.clone(), None)))
                                     ],
-                                    value: RustValue::Function
+                                    value: Value::Function
                                 },
                                 mutable: false,
                                 type_: Type::Function
@@ -171,7 +171,7 @@ macro_rules! function_call_or_this {
                             implementations: vec![
                                 Implementation::Call(Rc::new(Function::new(self.declaration.clone(), Some(name.lexeme.clone()))))
                             ],
-                            value: RustValue::Function
+                            value: Value::Function
                         },
                         mutable: false,
                         type_: Type::Function
@@ -210,7 +210,7 @@ macro_rules! function_call_or_this {
                                     implementations: vec![
                                         Implementation::Call(Rc::new(Function::new(self.declaration.clone(), None)))
                                     ],
-                                    value: RustValue::Function
+                                    value: Value::Function
                                 },
                                 mutable: false,
                                 type_: Type::Function

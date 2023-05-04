@@ -7,7 +7,7 @@ pub mod parser;
 pub mod value;
 pub mod c_compiler;
 pub mod arduino_rs;
-pub mod extern_popper;
+//pub mod extern_popper;
 
 
 use crate::ast::stmt::Stmt;

@@ -1,5 +1,5 @@
 use crate::interpreter::Interpreter;
-use crate::value::{Implementation, Object, RustValue, Type};
+use crate::value::{Implementation, Object, Value, Type};
 use std::rc::Rc;
 
 use crate::value::callable::Callable;
@@ -17,7 +17,7 @@ impl IsEqual {
             implementations: vec![
                 Implementation::Call(Rc::new(Self))
             ],
-            value: RustValue::Function
+            value: Value::Function
         }
     }
 }
@@ -52,7 +52,7 @@ impl IsNotEqual {
             implementations: vec![
                 Implementation::Call(Rc::new(IsNotEqual))
             ],
-            value: RustValue::Function
+            value: Value::Function
         }
     }
 }

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use crate::value::get::Getter;
-use crate::value::RustValue;
+use crate::value::Value;
 use crate::value::operation::{PartialEq, Add};
 use crate::value::int::{none, number};
 use super::{Object, Type, Implementation};
@@ -25,13 +25,13 @@ pub fn list(l: Vec<Object>) -> Object {
             Implementation::PartialEq(p.clone()),
             Implementation::Get(p)
         ],
-        value: RustValue::List(l.clone())
+        value: Value::List(l.clone())
     }
 }
 
 impl Add for List {
     fn add(&self, other: Object) -> Object {
-        if let RustValue::List(l) = other.value {
+        if let Value::List(l) = other.value {
             let mut new = self.clone();
             new.extend(l);
             list(new)
@@ -43,7 +43,7 @@ impl Add for List {
 
 impl PartialEq for List {
     fn eq(&self, other: Object) -> bool {
-        if let RustValue::List(ref l) = other.value {
+        if let Value::List(ref l) = other.value {
             self == l
         } else {
             panic!("Cannot compare {:?} to {}", self, other)
@@ -60,9 +60,9 @@ impl StdLibList for List {
         }
 
         let elt = args.get(0).unwrap().clone();
-        if let RustValue::List(ref mut  l) = this.value {
+        if let Value::List(ref mut  l) = this.value {
             l.push(elt);
-            this.value = RustValue::List(l.clone());
+            this.value = Value::List(l.clone());
         } else {
             unreachable!()
         }
@@ -79,8 +79,8 @@ impl StdLibList for List {
 
         let mut elt = args.get(0).unwrap().clone();
 
-        if let RustValue::List(ref mut l) = this.value {
-            if let RustValue::List(ref mut l2) = elt.value {
+        if let Value::List(ref mut l) = this.value {
+            if let Value::List(ref mut l2) = elt.value {
                 l.append(l2);
             } else {
                 panic!("expected list, got {:?}", elt.type_)

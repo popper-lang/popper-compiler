@@ -1,6 +1,6 @@
 
 use crate::interpreter::environement::Environment;
-use crate::value::{Implementation, Object, Var, Type, RustValue};
+use crate::value::{Implementation, Object, Var, Type, Value};
 use crate::value::get;
 use crate::ast::expr::{Expr, ExprType};
 use crate::errors::{Error, ErrorType};
@@ -26,7 +26,7 @@ impl Namespace {
             implementations: vec![
                 Implementation::NsGet(Rc::new(self.clone())),
             ],
-            value: RustValue::Namespace(self.clone())
+            value: Value::Namespace(self.clone())
         }
     }
 }

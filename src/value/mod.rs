@@ -54,7 +54,7 @@ pub enum Implementation {
 pub struct Object {
     pub type_: Type,
     pub implementations: Vec<Implementation>,
-    pub value: RustValue
+    pub value: Value
 }
 
 impl PartialEq for Object {
@@ -64,7 +64,7 @@ impl PartialEq for Object {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum RustValue {
+pub enum Value {
     Int(i32),
     String(String),
     Bool(bool),
@@ -113,13 +113,13 @@ impl Display for Object  {
     }
 }
 
-impl Display for RustValue {
+impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&*match self {
-            RustValue::Int(e) => Cow::Owned(e.to_string()),
-            RustValue::String(e) => Cow::Borrowed(e.as_str()),
-            RustValue::Bool(e) => Cow::Owned(e.to_string()),
-            RustValue::List(e) => {
+            Value::Int(e) => Cow::Owned(e.to_string()),
+            Value::String(e) => Cow::Borrowed(e.as_str()),
+            Value::Bool(e) => Cow::Owned(e.to_string()),
+            Value::List(e) => {
                 let mut s = String::new();
                 s.push('[');
                 for i in e {
@@ -129,14 +129,14 @@ impl Display for RustValue {
                 s.push(']');
                 Cow::Owned(format!("{:?}", e))
             }
-            RustValue::None => Cow::Borrowed("None"),
-            RustValue::Function => Cow::Borrowed("<function>"),
-            RustValue::Instance(e) => Cow::Owned(format!("<instance of <class {}>>", e.name)),
-            RustValue::Class(e) => Cow::Owned(format!("<class {}>", e.name)),
-            RustValue::Namespace(_) => Cow::Borrowed("<namespace>"),
-            RustValue::Struct(_) => Cow::Borrowed("<struct>"),
-            RustValue::InstanceStruct(_) => Cow::Borrowed("<instance struct>"),
-            RustValue::Type(e) => Cow::Owned(format!("<type {}>", e)),
+            Value::None => Cow::Borrowed("None"),
+            Value::Function => Cow::Borrowed("<function>"),
+            Value::Instance(e) => Cow::Owned(format!("<instance of <class {}>>", e.name)),
+            Value::Class(e) => Cow::Owned(format!("<class {}>", e.name)),
+            Value::Namespace(_) => Cow::Borrowed("<namespace>"),
+            Value::Struct(_) => Cow::Borrowed("<struct>"),
+            Value::InstanceStruct(_) => Cow::Borrowed("<instance struct>"),
+            Value::Type(e) => Cow::Owned(format!("<type {}>", e)),
         })
     }
 }
@@ -169,6 +169,17 @@ impl Display for Type {
     }
 }
 
+impl PartialEq<Value> for Type {
+    fn eq(&self, other: &Value) -> bool {
+        match (self, other) {
+            (Type::Int, Value::Int(_)) => true,
+            (Type::Bool, Value::Bool(_)) => true,
+            (Type::String, Value::String(_)) => true,
+            (Type::None, Value::None) => true,
+            _ => false
+        }
+    }
+}
 
 
 #[macro_export]

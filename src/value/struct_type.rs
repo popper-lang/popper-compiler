@@ -3,7 +3,7 @@ use crate::interpreter::Interpreter;
 use crate::value::{Implementation, Type};
 use crate::value::function::Function;
 use crate::value::Object;
-use crate::value::RustValue;
+use crate::value::Value;
 use crate::ast::expr::Expr;
 use crate::ast::expr::ExprType;
 use std::rc::Rc;
@@ -37,7 +37,7 @@ pub fn struct_instance(struct_type: StructType, fields: HashMap<String, Object> 
             Implementation::Get(Rc::new(instance.clone()))
         ]
         ,
-        value: RustValue::InstanceStruct(instance)
+        value: Value::InstanceStruct(instance)
     }
 }
 

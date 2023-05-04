@@ -1,5 +1,5 @@
 use crate::interpreter::Interpreter;
-use crate::value::{Implementation, Object, RustValue, Type};
+use crate::value::{Implementation, Object, Value, Type};
 use crate::value::callable::Callable;
 use crate::value::list::list;
 use std::rc::Rc;
@@ -15,7 +15,7 @@ impl Map {
         Object {
             type_: Type::Function,
             implementations: vec![Implementation::Call(Rc::new(Map))],
-            value: RustValue::Function
+            value: Value::Function
         }
     }
 }
@@ -33,7 +33,7 @@ impl Callable for Map {
         }).unwrap();
         let obj = args.last().unwrap();
         let mut list_obj: &Vec<Object> = &Vec::new();
-        if let RustValue::List(e) = &obj.value {
+        if let Value::List(e) = &obj.value {
             list_obj = e;
         }
         let mut new_list = Vec::new();

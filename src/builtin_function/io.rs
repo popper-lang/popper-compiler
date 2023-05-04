@@ -1,8 +1,12 @@
 use crate::interpreter::Interpreter;
-use crate::value::{Implementation, Object, RustValue, Type};
+use crate::value::{Implementation, Object, Value, Type};
 use crate::value::callable::Callable;
 use std::rc::Rc;
-use crate::value::int::none;
+use crate::value::int::{none, number};
+use crate::value::string::string;
+use crate::value::boolean::boolean;
+use crate::{create, value_to_rs_value, rs_type_to_type, call_function_with_vec}; // File : src/builtin_function/mod.rs
+use crate::define_function;
 
 
 use super::panic_if_is_outside_std;
@@ -13,25 +17,17 @@ pub struct Print;
 #[derive(Clone, Debug)]
 pub struct Println;
 
-impl Print {
-    pub fn create() -> Object {
-        Object {
-            type_: Type::Function,
-            implementations: vec![Implementation::Call(Rc::new(Print))],
-            value: RustValue::Function
-        }
-    }
-}
 
-impl Println {
-    pub fn create() -> Object {
-        Object {
-            type_: Type::Function,
-            implementations: vec![Implementation::Call(Rc::new(Println))],
-            value: RustValue::Function
-        }
-    }
-}
+#[derive(Clone, Debug)]
+pub struct Input;
+
+
+
+create!(Print);
+create!(Println);
+create!(Input);
+
+
 
 impl Callable for Print {
 
@@ -57,3 +53,31 @@ impl Callable for Println {
         none()
     }
 }
+
+impl Callable for Input {
+    fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
+        panic_if_is_outside_std(file, "_input");
+        if args.len() != 1 {
+            panic!("expected 1 argument, found {}", args.len());
+        }
+        let prompt = args.remove(0);
+        if let Value::String(s) = prompt.value {
+            println!("{}", s);
+        } else {
+            panic!("expected string, found {}", prompt.type_);
+        }
+        let mut input = String::new();
+        std::io::stdin().read_line(&mut input).unwrap();
+        string(input.as_str())
+    }
+}
+
+define_function!(Test(x: i32, y: i32 ) {
+    number(x + y)
+});
+create!(Test);
+
+
+
+
+

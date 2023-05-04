@@ -1,17 +1,17 @@
 use super::Object;
-use crate::value::RustValue;
+use crate::value::Value;
 use crate::value::list::list;
 use crate::value::int::number;
 
 pub fn range(start: Object, end: Object) -> Object {
     let mut v = vec![];
-    let mut i = if let RustValue::Int(n) = start.value {
+    let mut i = if let Value::Int(n) = start.value {
         n
     } else {
         panic!("Cannot create range from {} to {}", start, end)
     };
 
-    let end = if let RustValue::Int(n) = end.value {
+    let end = if let Value::Int(n) = end.value {
         n
     } else {
         panic!("Cannot create range from {} to {}", start, end)

@@ -10,7 +10,7 @@ use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::builtin_function::{io, cmp, list_util};
 use crate::errors::{error, Error, ErrorType};
 use crate::lexer::{Token};
-use crate::value::{class, function, RustValue};
+use crate::value::{class, function, Value};
 use crate::value::function::Function;
 use crate::value::get::Getter;
 use crate::value::{Object, Type, Var, Implementation};
@@ -77,9 +77,12 @@ impl Interpreter {
         };
         import_builtin!(inter.env, "_print", io::Print::create);
         import_builtin!(inter.env, "_println", io::Println::create);
+        import_builtin!(inter.env, "_input", io::Input::create);
         import_builtin!(inter.env, "_is_equal", cmp::IsEqual::create);
         import_builtin!(inter.env, "_is_not_equal", cmp::IsNotEqual::create);
         import_builtin!(inter.env, "_map", list_util::Map::create);
+        import_builtin!(inter.env, "_test", io::Test::create);
+
 
 
         inter
@@ -305,7 +308,6 @@ impl ExprVisitor for Interpreter {
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
 
-        dbg!(&self.env);
         match self.env.fetch(id.clone()) {
             Some(v) => v.value,
             None => {
@@ -324,22 +326,22 @@ impl ExprVisitor for Interpreter {
         match _type_.lexeme.as_str() {
             "int" => Object {
                 type_: Type::Int,
-                value: RustValue::Type(Type::Int),
+                value: Value::Type(Type::Int),
                 implementations: vec![]
             },
             "bool" => Object {
                 type_: Type::Bool,
-                value: RustValue::Type(Type::Bool),
+                value: Value::Type(Type::Bool),
                 implementations: vec![]
             },
             "str" => Object {
                 type_: Type::String,
-                value: RustValue::Type(Type::String),
+                value: Value::Type(Type::String),
                 implementations: vec![]
             },
             "list" => Object {
                 type_: Type::List,
-                value: RustValue::Type(Type::List),
+                value: Value::Type(Type::List),
                 implementations: vec![]
             },
             _ => {
@@ -439,7 +441,7 @@ impl ExprVisitor for Interpreter {
 
 
         let name_checked: HashMap<String, Object> =  match name.clone() {
-            Object { type_: Type::Struct(_), value: RustValue::Struct(s), .. } => {
+            Object { type_: Type::Struct(_), value: Value::Struct(s), .. } => {
                 let mut fields_checked = HashMap::new();
                 for field in fields {
                     if s.fields.contains(&StructField {
@@ -462,7 +464,7 @@ impl ExprVisitor for Interpreter {
 
 
         return struct_instance(match name {
-            Object { type_: Type::Struct(_), value: RustValue::Struct(s), .. } => s.clone(),
+            Object { type_: Type::Struct(_), value: Value::Struct(s), .. } => s.clone(),
             _ => unreachable!()
         }, name_checked);
 
@@ -544,7 +546,7 @@ impl StmtVisitor for Interpreter {
     fn visit_if(&mut self, cond: Expr, then: Stmt) -> Self::Output {
         let cond = cond.accept(self);
 
-        if let RustValue::Bool(true) = cond.value {
+        if let Value::Bool(true) = cond.value {
             then.accept(self)
         } else {
             none()
@@ -553,7 +555,7 @@ impl StmtVisitor for Interpreter {
 
     fn visit_if_else(&mut self, cond_: Expr, then: Stmt, else_: Stmt) -> Self::Output {
         let cond = cond_.clone().accept(self);
-        if let RustValue::Bool(e) = cond.value {
+        if let Value::Bool(e) = cond.value {
             if e {
                 then.accept(self)
             } else {
@@ -570,7 +572,7 @@ impl StmtVisitor for Interpreter {
 
     fn visit_for(&mut self, name: Token, iter: Expr, body: Stmt) -> Self::Output {
         let it = iter.accept(self);
-        if let RustValue::List(v) = it.value {
+        if let Value::List(v) = it.value {
             for i in v {
                 self.env.define(
                     name.lexeme.clone(),
@@ -597,7 +599,7 @@ impl StmtVisitor for Interpreter {
 
     fn visit_while(&mut self, cond: Expr, body: Stmt) -> Self::Output {
 
-        while let RustValue::Bool(true) = cond.clone().accept(self).value {
+        while let Value::Bool(true) = cond.clone().accept(self).value {
             body.clone().accept(self);
         }
         return none();
@@ -741,7 +743,7 @@ impl StmtVisitor for Interpreter {
     fn visit_impl(&mut self, struct_name: String, methods: Vec<Stmt>) -> Self::Output {
         let mut struct_ = self.env.fetch(struct_name.clone());
         if let Some(ref mut var) = struct_ {
-            if let RustValue::Struct(s) = var.value.value.clone() {
+            if let Value::Struct(s) = var.value.value.clone() {
                 let mut functions = Vec::new();
                 let env = self.env.clone();
 
@@ -761,7 +763,7 @@ impl StmtVisitor for Interpreter {
                     functions: functions,
                 };
 
-                var.value.value = RustValue::Struct(s);
+                var.value.value = Value::Struct(s);
 
 
                 self.env.modify(struct_name.clone(), var.clone());
@@ -790,7 +792,7 @@ impl StmtVisitor for Interpreter {
             name.clone(),
             Var {
                 value: Object {
-                    value: RustValue::Struct(StructType {
+                    value: Value::Struct(StructType {
                             functions: Vec::new(),
                             fields: fields_object,
                     }),

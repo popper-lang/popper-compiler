@@ -20,6 +20,8 @@ impl Display for ErrorType {
     }
 }
 
+
+#[derive(Debug)]
 pub struct Error {
     error_type: ErrorType,
     msg: String,

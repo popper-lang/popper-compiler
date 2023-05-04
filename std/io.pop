@@ -7,3 +7,7 @@ fun println(s) {
 fun print(s) {
     _print(s)
 }
+
+fun input(s) {
+    _input(s)
+}

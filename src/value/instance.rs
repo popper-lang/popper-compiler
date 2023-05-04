@@ -2,7 +2,7 @@ use std::rc::Rc;
 use crate::value::get::{Getter, Setter};
 use crate::value::{Implementation, Var};
 use super::class::Class;
-use super::{Object, Type, RustValue};
+use super::{Object, Type, Value};
 use crate::ast::expr::{Expr, ExprType};
 use crate::interpreter::Interpreter;
 
@@ -24,7 +24,7 @@ impl Instance {
                 Implementation::Get(Rc::new(ins.clone())),
                 Implementation::Set(Rc::new(ins.clone())),
             ],
-            value: RustValue::Instance(ins)
+            value: Value::Instance(ins)
         }
     }
 }
