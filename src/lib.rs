@@ -1,3 +1,6 @@
+#![allow(non_snake_case)]
+#![allow(semicolon_in_expressions_from_macros)]
+
 pub mod ast;
 pub mod builtin_function;
 pub mod errors;
@@ -7,7 +10,7 @@ pub mod parser;
 pub mod value;
 pub mod c_compiler;
 pub mod arduino_rs;
-//pub mod extern_popper;
+
 
 
 use crate::ast::stmt::Stmt;

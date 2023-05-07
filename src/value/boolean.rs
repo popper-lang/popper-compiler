@@ -9,7 +9,8 @@ pub fn boolean(b: bool) -> Object {
         implementations: vec![
             Implementation::PartialEq(Rc::new(b)),
         ],
-        value: Value::Bool(b)
+        value: Value::Bool(b),
+        tags: std::default::Default::default()
     }
 }
 
@@ -25,13 +26,13 @@ impl PartialEq for bool {
 
 
 
-impl TryInto<bool> for Object {
+/*impl TryInto<bool> for Object {
     type Error = ();
 
     fn try_into(self) -> Result<bool, Self::Error> {
         self.value.try_into()
     }
-}
+}*/
 
 impl TryInto<bool> for Value {
     type Error = ();
@@ -41,6 +42,16 @@ impl TryInto<bool> for Value {
             Ok(n)
         } else {
             Err(())
+        }
+    }
+}
+
+impl Into<bool> for Object {
+    fn into(self) -> bool {
+        if let Ok(res) = self.value.clone().try_into() {
+            res
+        } else {
+            panic!("cant convert {:?} to i32", self.type_)
         }
     }
 }

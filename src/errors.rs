@@ -88,6 +88,10 @@ macro_rules! error {
     ($t:expr, $msg:expr, $x:expr ,$ext:expr, $body:expr) => {
         Error::new($t,  format!($msg, $x), $ext, $body).panic()
     };
+    
+    ($t:expr, $msg:expr) => {
+        Error::new($t, $msg, 0..0, "".to_string)
+    }
 
 }
 

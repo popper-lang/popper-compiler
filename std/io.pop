@@ -1,13 +1,13 @@
 
 
-fun println(s) {
-    _println(s)
+fun println(s: string) {
+    _println(s);
 }
 
-fun print(s) {
-    _print(s)
+fun print(s: string) {
+    _print(s);
 }
 
-fun input(s) {
-    _input(s)
+fun input(s: string) {
+    _input(s);
 }

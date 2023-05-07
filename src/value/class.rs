@@ -22,6 +22,7 @@ impl Class {
             type_: Type::Class(name.to_string()),
             implementations: vec![],
             value: Value::Class(Class::new(name.to_string())),
+            tags: std::default::Default::default()
         }
     }
 }

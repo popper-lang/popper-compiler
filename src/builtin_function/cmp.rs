@@ -3,76 +3,28 @@ use crate::value::{Implementation, Object, Value, Type};
 use std::rc::Rc;
 
 use crate::value::callable::Callable;
-use crate::value::boolean::boolean;
 use crate::get_impl_if_exist;
+use crate::value::int::{none, number};
+use crate::value::string::string;
+use crate::value::boolean::boolean;
+use crate::{create, call_function_with_vec}; // File : src/builtin_function/mod.rs
+use super::panic_if_is_outside_std;
+use crate::define_function;
 
-#[derive(Clone, Debug)]
-/// The `==` function.
-pub struct IsEqual;
 
-impl IsEqual {
-    pub fn create() -> Object {
-        Object {
-            type_: Type::Function,
-            implementations: vec![
-                Implementation::Call(Rc::new(Self))
-            ],
-            value: Value::Function
-        }
+define_function!(IsEqual(left: Object, right: Object) {
+    if left.type_ != right.type_ {
+        return boolean(false)
+    } else {
+        return boolean(left.value == right.value)
     }
-}
+}, function_name = "_is_equal");
 
-impl Callable for IsEqual {
-
-    // TODO: This is a temporary implementation.
-    fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, _file: &str) -> Object {
-        if args.len() != 2 {
-            panic!("Expected 2 arguments, got {}", args.len());
-        }
-
-        let left: Object = args[0].clone();
-        let right: Object = args[1].clone();
-
-        if left.type_ != right.type_ {
-            return boolean(false);
-        }
-
-        return boolean(left.value == right.value);
+define_function!(IsNotEqual(left: Object, right: Object) {
+    if left.type_ != right.type_ {
+        return boolean(true)
+    } else {
+        return boolean(left.value != right.value)
     }
-}
+}, function_name = "_is_not_equal");
 
-#[derive(Clone, Debug)]
-/// The `!=` function.
-pub struct IsNotEqual;
-
-impl IsNotEqual {
-    pub fn create() -> Object {
-        Object {
-            type_: Type::Function,
-            implementations: vec![
-                Implementation::Call(Rc::new(IsNotEqual))
-            ],
-            value: Value::Function
-        }
-    }
-}
-
-impl Callable for IsNotEqual {
-
-    fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, _file: &str) -> Object {
-        if args.len() != 2 {
-            panic!("Expected 2 arguments, got {}", args.len());
-        }
-
-        let left = args[0].clone();
-        let right = args[1].clone();
-
-        let impl_left = get_impl_if_exist!(PartialEq, left);
-
-        if let Some(impl_left) = impl_left {
-            return boolean(impl_left.ne(right));
-        } else {
-            boolean(true)
-        }
-    }
-}

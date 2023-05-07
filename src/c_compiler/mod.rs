@@ -78,10 +78,9 @@ impl Compiler {
             StmtType::Let { name, value , type_, mutable} => {
                 let type_ = if let Some(t) = type_ {
                     if let ExprType::Type { type_ } = &*t.expr_type {
-                        match type_.token_type {
-                            TokenType::INT_TYPE => "int",
-                            TokenType::STRING_TYPE => "char*",
-                            TokenType::BOOL_TYPE => "int",
+                        match type_ {
+                            Type::Int => "int",
+                            Type::String => "char*",
                             _ => panic!("Type not supported")
                         }.to_string()
                     } else {
@@ -163,17 +162,13 @@ impl Compiler {
             ExprType::Range { .. } => panic!("Range not supported in C language"),
             ExprType::To { type_, value } => {
                 let value = self.compile_expr(&value.clone());
-                let type_ = if let ExprType::Type { type_ } = &*type_.expr_type {
-                    match type_.token_type {
-                        TokenType::INT_TYPE => "int",
-                        TokenType::STRING_TYPE => "char*",
-                        TokenType::BOOL_TYPE => "int",
-                        _ => panic!("Type not supported")
-                    }.to_string()
-                } else {
-                    panic!("Type not supported")
+                let type_ = match type_ {
+                    Type::Int => "int",
+                    Type::String => "char*",
+                    Type::Bool => "int",
+                    _ => panic!("unexpected boolean")
                 };
-                c_repr::c_to(type_, value)
+                c_repr::c_to(type_.to_string(), value)
             },
             ExprType::Lambda { .. } => panic!("Lambda not supporeted in C"),
             ExprType::UnaryOp { operand: _, op: _ } => {todo!()}

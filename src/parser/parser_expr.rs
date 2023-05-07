@@ -2,6 +2,7 @@ use crate::ast::expr::{Expr, ExprType, LiteralType};
 use crate::parser::Parser;
 use crate::lexer::{TokenType};
 use crate::errors::{error, Error, ErrorType};
+use crate::value::Type;
 
 impl Parser {
     pub fn parse_asm_expression(&mut self) -> Expr {
@@ -51,29 +52,32 @@ impl Parser {
 
     pub fn parse_type_expression(&mut self) -> Expr {
         self.skip_whitespace();
-        let type_ = self.peek();
+        let type_token = self.peek();
         let first_position = self.current_str;
-        match type_.token_type {
-            TokenType::INT_TYPE
-            | TokenType::BOOL_TYPE
-            | TokenType::STRING_TYPE
-            | TokenType::LIST_TYPE => {
-                self.current_str += self.peek().lexeme.len();
-                Expr {
-                    expr_type: Box::new(ExprType::Type { type_ }),
-                    extract: first_position..self.current_str,
-                    body: self.clone().body,
-                    file: self.clone().file
-                }
+        let type_ = match type_token.token_type {
+            TokenType::INT_TYPE => {
+                Type::Int
             },
-            TokenType::IDENT => {
+            TokenType::BOOL_TYPE => {
+                Type::Bool
+            },
+            TokenType::STRING_TYPE => {
+                Type::String
+            },
+            TokenType::LIST_TYPE => {
+                Type::List
+            },
+            TokenType::TYPE => {
                 self.current_str += self.peek().lexeme.len();
-                Expr {
-                    expr_type: Box::new(ExprType::Type { type_ }),
-                    extract: first_position..self.current_str,
-                    body: self.clone().body,
-                    file: self.clone().file
-                }
+
+                let type_name = match *self.identifier().expr_type {
+                    ExprType::Ident { ident } => ident.lexeme,
+                    _ => unreachable!()
+                };
+
+                Type::Type(type_name)
+
+
             },
 
             _ => {
@@ -86,6 +90,13 @@ impl Parser {
                     .panic();
                 unreachable!()
             }
+        };
+
+        Expr {
+            expr_type: Box::new(ExprType::Type { type_: type_ }),
+            extract: first_position..self.current_str,
+            body: self.clone().body,
+            file: self.clone().file
         }
     }
 
@@ -209,7 +220,7 @@ impl Parser {
                         _ => {
                             error!(
                                 ErrorType::SyntaxError,
-                                "ident expected",
+                                format!("ident expected got {:?}", name).as_str(),
                                 first_position..self.current_str,
                                 self.body.clone()
                             );
@@ -281,7 +292,7 @@ impl Parser {
         self.skip_whitespace();
         let first_position = self.current_str;
         let mut name = self.call();
-        if self.match_token(TokenType::DOT) {
+        while self.match_token(TokenType::DOT) {
             let attr = self.call();
             name = Expr {
                 expr_type: Box::new(ExprType::Get { name, attr }),
@@ -289,7 +300,6 @@ impl Parser {
                 body: self.clone().body,
                 file: self.clone().file
             };
-
         }
 
         name
@@ -485,7 +495,10 @@ impl Parser {
         self.expect_token(TokenType::TO);
         let type_ = self.parse_type_expression();
         Expr {
-            expr_type: Box::new(ExprType::To { value: elt, type_ }),
+            expr_type: Box::new(ExprType::To { value: elt, type_: match *type_.expr_type {
+                ExprType::Type { type_ } => type_,
+                _ => unreachable!()
+            } }),
             extract: first_position..self.current_str,
             body: self.clone().body,
             file: self.clone().file

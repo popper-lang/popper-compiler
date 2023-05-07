@@ -26,7 +26,8 @@ impl Namespace {
             implementations: vec![
                 Implementation::NsGet(Rc::new(self.clone())),
             ],
-            value: Value::Namespace(self.clone())
+            value: Value::Namespace(self.clone()),
+            tags: std::default::Default::default()
         }
     }
 }

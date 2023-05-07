@@ -1,6 +1,7 @@
 use super::expr::Expr;
 use crate::lexer::Token;
 use std::ops::Range;
+use crate::value::Type;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum StmtType {
@@ -15,7 +16,7 @@ pub enum StmtType {
     },
     Function {
         name: Token,
-        args: Vec<String>,
+        args: ArgsTyped,
         body: Stmt,
     },
     If {
@@ -62,6 +63,9 @@ pub enum StmtType {
     Struct {
         name: String,
         fields: Vec<(String, Expr)>
+    },
+    Return {
+        value: Option<Expr>
     }
 }
 
@@ -82,5 +86,33 @@ impl Stmt {
             file
             
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArgsTyped(pub Vec<ArgTyped>);
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArgTyped {
+    pub name: String,
+    pub type_: Type
+}
+
+impl ArgsTyped {
+    fn get(self, name: String) -> Option<Type> {
+        for i in self.0 {
+            if i.name == name {
+                return Some(i.type_);
+            }
+        }
+        None
+    }
+}
+
+impl Iterator for ArgsTyped {
+    type Item = ArgTyped;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.clone().into_iter().next()
     }
 }

@@ -10,6 +10,10 @@ use crate::value::get::Getter;
 use crate::value::function::BuiltinFunction;
 use crate::value::operation::{Add, PartialEq};
 use crate::value::int::number;
+use crate::define_method;
+use crate::value::callable::Callable;
+use crate::create;
+use crate::impl_into;
 use std::rc::Rc;
 
 pub fn string(s: &str) -> Object {
@@ -20,7 +24,8 @@ pub fn string(s: &str) -> Object {
             Implementation::PartialEq(Rc::new(s.to_string())),
             Implementation::Get(Rc::new(s.to_string()))
         ],
-        value: Value::String(s.to_string())
+        value: Value::String(s.to_string()),
+        tags: std::default::Default::default()
     }
 }
 
@@ -59,17 +64,23 @@ impl StdLibString for String {
     }
 }
 
+
+
+impl_into!(String, String);
+
 register_stdlib!(String, StdLibString, {
-    "len" => len
+    "len" => len_i32(this: Object) {
+        number(0)
+    }
 });
 
-impl TryInto<String> for Object {
+/*impl TryInto<String> for Object {
     type Error = ();
 
     fn try_into(self) -> Result<String, Self::Error> {
         self.value.try_into()
     }
-}
+}*/
 
 impl TryInto<String> for Value {
     type Error = ();
@@ -82,3 +93,4 @@ impl TryInto<String> for Value {
         }
     }
 }
+

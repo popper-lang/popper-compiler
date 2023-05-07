@@ -23,8 +23,10 @@ impl Instance {
             implementations: vec![
                 Implementation::Get(Rc::new(ins.clone())),
                 Implementation::Set(Rc::new(ins.clone())),
+
             ],
-            value: Value::Instance(ins)
+            value: Value::Instance(ins),
+            tags: std::default::Default::default()
         }
     }
 }

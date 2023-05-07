@@ -1,6 +1,7 @@
 use crate::ast::expr::{Expr, ExprType};
-use crate::ast::stmt::{Stmt, StmtType};
+use crate::ast::stmt::{ArgsTyped, Stmt, StmtType};
 use crate::lexer::Token;
+use crate::value::Type;
 
 use super::expr::LiteralType;
 
@@ -17,10 +18,10 @@ pub trait ExprVisitor {
     fn visit_literal(&mut self, literal: LiteralType) -> Self::Output;
     fn visit_range(&mut self, start: Expr, end: Expr) -> Self::Output;
     fn visit_assign(&mut self, name: Token, value: Expr) -> Self::Output;
-    fn visit_to(&mut self, name: Expr, type_: Expr) -> Self::Output;
+    fn visit_to(&mut self, name: Expr, type_: Type) -> Self::Output;
     fn visit_unary_op(&mut self, op: Token, operand: Expr) -> Self::Output;
     fn visit_ident(&mut self, ident: Token) -> Self::Output;
-    fn visit_type(&mut self, type_: Token) -> Self::Output;
+    fn visit_type(&mut self, type_: Type) -> Self::Output;
     fn visit_cmp_op(&mut self, left: Expr, op: Token, right: Expr) -> Self::Output;
     fn visit_ns_get(&mut self, name: Expr, attr: Expr) -> Self::Output;
     fn visit_init_struct(&mut self, name: Expr, fields: Vec<(Expr, Expr)>) -> Self::Output;
@@ -46,12 +47,13 @@ pub trait StmtVisitor {
     fn visit_for(&mut self, name: Token, iter: Expr, body: Stmt) -> Self::Output;
     fn visit_while(&mut self, cond: Expr, body: Stmt) -> Self::Output;
     fn visit_match(&mut self, cond: Expr, cases: Vec<(Expr, Stmt)>) -> Self::Output;
-    fn visit_function(&mut self, name: Token, args: Vec<String>, body: Stmt) -> Self::Output;
+    fn visit_function(&mut self, name: Token, args: ArgsTyped, body: Stmt) -> Self::Output;
     fn visit_class(&mut self, name: String, methods: Vec<Stmt>) -> Self::Output;
     fn visit_use(&mut self, path: String, as_: String) -> Self::Output;
     fn visit_import(&mut self, name: String, imports: Vec<String>) -> Self::Output;
     fn visit_impl(&mut self, struct_name: String, methods: Vec<Stmt>) -> Self::Output;
     fn visit_struct(&mut self, name: String, fields: Vec<(String, Expr)>) -> Self::Output;
+    fn visit_return(&mut self, value: Option<Expr>) -> Self::Output;
 }
 
 impl Expr {
@@ -103,7 +105,7 @@ impl Stmt {
             StmtType::Import { name, imports } => visitor.visit_import(name, imports),
             StmtType::Impl { struct_name, methods } => visitor.visit_impl(struct_name, methods),
             StmtType::Struct { name, fields } => visitor.visit_struct(name, fields),
-
+            StmtType::Return { value } => visitor.visit_return(value),
         }
     }
 }

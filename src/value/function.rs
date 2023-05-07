@@ -8,8 +8,12 @@ use crate::ast::expr::ExprType;
 use crate::errors::{error, Error, ErrorType};
 use crate::interpreter::environement::Environment;
 use crate::interpreter::Interpreter;
+use crate::interpreter::Scope;
 use crate::value::callable::Callable;
 use crate::value::{Implementation, Value, Var};
+use crate::value::int::none;
+use crate::call_function_with_vec;
+
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -47,10 +51,12 @@ impl BuiltinFunction {
             implementations: vec![
                 Implementation::Call(Rc::new(self.clone()))
             ],
-            value: Value::Function
+            value: Value::Function,
+            tags: std::default::Default::default()
         }
     }
 }
+
 
 impl Callable for BuiltinFunction {
     fn call(&self, interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
@@ -80,7 +86,8 @@ impl Function {
             implementations: vec![
                 Implementation::Call(Rc::new(Function::new(declaration, Some(name.lexeme))))
             ],
-            value: Value::Function
+            value: Value::Function,
+            tags: std::default::Default::default()
         }
     }
 }
@@ -101,22 +108,40 @@ macro_rules! function_call_or_this {
                             implementations: vec![
                                 Implementation::Call(Rc::new(Function::new(self.declaration.clone(), Some(name.lexeme.clone()))))
                             ],
-                            value: Value::Function
+                            value: Value::Function,
+                            tags: std::default::Default::default()
                         },
                         mutable: false,
                         type_: Type::Function
                     });
-                    for arg in params {
-                        env.define(arg.clone(), Var {
+                    for arg in params.clone().0 {
+                        if arg.type_ != args[i].type_ {
+                            panic!("expected {:?} got {:?}", arg.type_, args[i].type_)
+                        }
+                        env.define(arg.clone().name, Var {
                             value: args[i].clone(),
                             mutable: false,
 
-                            type_: args[i].type_.clone()
+                            type_: arg.clone().type_
                         });
                         i += 1;
                     }
                     new_interpreter.env = env;
-                    body.clone().accept(&mut new_interpreter)
+                    new_interpreter.scope = Scope::Function;
+                    if let StmtType::Block { body: block_body } = &*body.stmt_type {
+                        for stmt in block_body {
+
+                            stmt.clone().accept(&mut new_interpreter);
+                            if let Some(val) = new_interpreter.return_value {
+                                return val;
+                            }
+                        }
+
+                        return none();
+                    } else {
+                        panic!("not a block")
+                    }
+
 
                 },
                 StmtType::Expression { expr } => {
@@ -134,7 +159,8 @@ macro_rules! function_call_or_this {
                                     implementations: vec![
                                         Implementation::Call(Rc::new(Function::new(self.declaration.clone(), None)))
                                     ],
-                                    value: Value::Function
+                                    value: Value::Function,
+                                    tags: std::default::Default::default()
                                 },
                                 mutable: false,
                                 type_: Type::Function
@@ -171,17 +197,18 @@ macro_rules! function_call_or_this {
                             implementations: vec![
                                 Implementation::Call(Rc::new(Function::new(self.declaration.clone(), Some(name.lexeme.clone()))))
                             ],
-                            value: Value::Function
+                            value: Value::Function,
+                            tags: std::default::Default::default()
                         },
                         mutable: false,
                         type_: Type::Function
                     });
-                    for arg in params {
-                        env.define(arg.clone(), Var {
+                    for arg in params.0.clone() {
+                        env.define(arg.clone().name, Var {
                             value: args[i].clone(),
                             mutable: false,
 
-                            type_: args[i].type_.clone()
+                            type_: arg.clone().type_
                         });
                         i += 1;
                     }
@@ -210,7 +237,8 @@ macro_rules! function_call_or_this {
                                     implementations: vec![
                                         Implementation::Call(Rc::new(Function::new(self.declaration.clone(), None)))
                                     ],
-                                    value: Value::Function
+                                    value: Value::Function,
+                                    tags: std::default::Default::default()
                                 },
                                 mutable: false,
                                 type_: Type::Function

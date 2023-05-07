@@ -26,6 +26,7 @@ pub enum TokenType {
     SEMICOLON,
     COLON,
     DOUBLECOLON,
+    DOUBLEARROW,
 
     // literal token
     NUMBER,
@@ -49,6 +50,7 @@ pub enum TokenType {
     IMPL,
     STRUCT,
     INIT,
+    RETURN,
 
     // operator token
     ADD,
@@ -74,7 +76,9 @@ pub enum TokenType {
     STRING_TYPE,
     BOOL_TYPE,
     LIST_TYPE,
+    TYPE,
 
+    // asm
     ASM,
 
     // bool token
@@ -239,6 +243,8 @@ impl Lexer {
                     "impl" => token!(IMPL, "impl", self.line, self.pos),
                     "struct" => token!(STRUCT, "struct", self.line, self.pos),
                     "init" => token!(INIT, "init", self.line, self.pos),
+                    "type" => token!(TYPE, "type", self.line, self.pos),
+                    "return" => token!(RETURN, "return", self.line, self.pos),
                     "asm" => {
                         let mut asm = String::new();
                         if self.peek_char() == '{' {
@@ -294,7 +300,12 @@ impl Lexer {
                     self.read_char();
                     self.read_char();
                     token!(EQ, "==", self.line, self.pos)
-                } else {
+                } else if self.peek_char() == '>' {
+                    self.read_char();
+                    self.read_char();
+                    token!(DOUBLEARROW, "=>", self.line, self.pos)
+                }
+                else {
                     self.read_char();
                     token!(ASSIGN, "=", self.line, self.pos)
                 }

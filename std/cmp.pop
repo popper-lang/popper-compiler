@@ -1,0 +1,7 @@
+fun eq(left, right) {
+    return _is_equal(left, right);
+}
+
+fun ne(left, right) {
+    return _is_not_equal(left, right);
+}

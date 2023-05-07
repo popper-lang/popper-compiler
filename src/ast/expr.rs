@@ -1,5 +1,6 @@
 use crate::lexer::Token;
 use std::ops::Range;
+use crate::value::Type;
 
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 pub enum ExprType {
@@ -13,10 +14,10 @@ pub enum ExprType {
     Literal { literal: LiteralType },
     Range { start: Expr, end: Expr },
     Assign { name: Token, value: Expr },
-    To { value: Expr, type_: Expr },
+    To { value: Expr, type_: Type },
     UnaryOp { op: Token, operand: Expr },
     Ident { ident: Token },
-    Type { type_: Token },
+    Type { type_: Type },
     CmpOp { left: Expr, op: Token, right: Expr },
     NsGet { name: Expr, attr: Expr },
     InitStruct { name: Expr, fields: Vec<(Expr, Expr)> },

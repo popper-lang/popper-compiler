@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use self::class::Class;
 use self::environement::Environment;
 use crate::ast::expr::{Expr, ExprType, LiteralType};
-use crate::ast::stmt::{Stmt, StmtType};
+use crate::ast::stmt::{ArgsTyped, Stmt, StmtType};
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::builtin_function::{io, cmp, list_util};
 use crate::errors::{error, Error, ErrorType};
@@ -61,11 +61,22 @@ fn import_library(_interpreteur: &mut Interpreter, _directory: String) {
     
 }
 
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum Scope {
+    Global,
+    Local,
+    Class,
+    Function,
+    Method,
+}
+
 #[derive(Debug, Clone)]
 pub struct Interpreter {
     pub env: Environment<String, Var>,
     locals: Environment<ExprType, i32>,
     std_lib_path: String,
+    pub scope: Scope,
+    pub return_value: Option<Object>,
 }
 
 impl Interpreter {
@@ -74,6 +85,8 @@ impl Interpreter {
             env: Environment::new(None),
             locals: Environment::new(None),
             std_lib_path: STD_LIB_PATH.to_string(),
+            scope: Scope::Global,
+            return_value: None
         };
         import_builtin!(inter.env, "_print", io::Print::create);
         import_builtin!(inter.env, "_println", io::Println::create);
@@ -81,7 +94,6 @@ impl Interpreter {
         import_builtin!(inter.env, "_is_equal", cmp::IsEqual::create);
         import_builtin!(inter.env, "_is_not_equal", cmp::IsNotEqual::create);
         import_builtin!(inter.env, "_map", list_util::Map::create);
-        import_builtin!(inter.env, "_test", io::Test::create);
 
 
 
@@ -93,6 +105,8 @@ impl Interpreter {
             env,
             locals: Environment::new(None),
             std_lib_path: STD_LIB_PATH.to_string(),
+            scope: Scope::Global,
+            return_value: None
         }
     }
 
@@ -198,7 +212,6 @@ impl ExprVisitor for Interpreter {
 
     fn visit_get(&mut self, name_: Expr, attr: Expr) -> Self::Output {
         let mut name = name_.clone().accept(self);
-        dbg!(&name.value);
         let impl_get = get_impl_if_exist!(Get, name);
         if let Some(e) = impl_get {
             let old_name = name.clone();
@@ -273,31 +286,24 @@ impl ExprVisitor for Interpreter {
         let name_string = name.lexeme.to_string();
 
         let value_evaluated = value.clone().accept(self);
-        let distance = self.locals.fetch(ExprType::Assign { name, value });
-        if let Some(d) = distance {
-            self.env.define_at(
-                d,
-                name_string,
-                Var {
-                    value: value_evaluated.clone(),
-                    type_: value_evaluated.clone().type_,
-                    mutable: true,
-                },
-            );
-        } else {
-            self.env.modify(
-                name_string.clone(),
-                Var {
-                    value: value_evaluated.clone(),
-                    type_: value_evaluated.clone().type_,
-                    mutable: true,
-                },
-            );
+        let name_fetch = self.env.fetch(name_string.clone());
+        if let Some(mut var) = name_fetch {
+            if var.type_ != value_evaluated.type_ {
+                panic!("Expected {:?}, got {:?}", var.type_, value_evaluated.type_)
+            }
+
+            if ! var.mutable {
+                panic!("variable '{}' is immutable", name_string)
+            }
+
+            var.value = value_evaluated.clone();
+
+            self.env.modify(name_string, var);
         }
         value_evaluated
     }
 
-    fn visit_to(&mut self, _name: Expr, _type_: Expr) -> Self::Output {
+    fn visit_to(&mut self, _name: Expr, _type_: Type) -> Self::Output {
         todo!()
     }
 
@@ -322,27 +328,31 @@ impl ExprVisitor for Interpreter {
         }
     }
 
-    fn visit_type(&mut self, _type_: Token) -> Self::Output {
-        match _type_.lexeme.as_str() {
-            "int" => Object {
+    fn visit_type(&mut self, _type_: Type) -> Self::Output {
+        match _type_ {
+            Type::Int => Object {
                 type_: Type::Int,
                 value: Value::Type(Type::Int),
-                implementations: vec![]
+                implementations: vec![],
+                tags: std::default::Default::default()
             },
-            "bool" => Object {
+            Type::Bool => Object {
                 type_: Type::Bool,
                 value: Value::Type(Type::Bool),
-                implementations: vec![]
+                implementations: vec![],
+                tags: std::default::Default::default()
             },
-            "str" => Object {
+            Type::String => Object {
                 type_: Type::String,
                 value: Value::Type(Type::String),
-                implementations: vec![]
+                implementations: vec![],
+                tags: std::default::Default::default()
             },
-            "list" => Object {
+            Type::List => Object {
                 type_: Type::List,
                 value: Value::Type(Type::List),
-                implementations: vec![]
+                implementations: vec![],
+                tags: std::default::Default::default()
             },
             _ => {
                 error!(
@@ -518,6 +528,10 @@ impl StmtVisitor for Interpreter {
             } else {
                 value.clone().type_
             };
+
+            if value.type_ != ty {
+                panic!("expected {:?}, got {:?}", ty, value.type_)
+            }
             self.env.define(
                 name,
                 Var {
@@ -609,7 +623,7 @@ impl StmtVisitor for Interpreter {
         todo!()
     }
 
-    fn visit_function(&mut self, name: Token, args: Vec<String>, body: Stmt) -> Self::Output {
+    fn visit_function(&mut self, name: Token, args: ArgsTyped, body: Stmt) -> Self::Output {
         let s = Stmt::new(
             StmtType::Function {
                 name: name.clone(),
@@ -623,6 +637,7 @@ impl StmtVisitor for Interpreter {
 
         );
         let n = name.lexeme.to_string();
+
 
         self.env.define(
             n,
@@ -798,6 +813,7 @@ impl StmtVisitor for Interpreter {
                     }),
                     type_: Type::Struct(name.clone()),
                     implementations: Vec::new(),
+                    tags: std::default::Default::default()
                 },
                 mutable: false,
                 type_: Type::Struct(name.clone()),
@@ -806,5 +822,20 @@ impl StmtVisitor for Interpreter {
 
         none()
 
+    }
+
+    fn visit_return(&mut self, value: Option<Expr>) -> Self::Output {
+
+        if self.scope != Scope::Function {
+            panic!("return can only be used in functions")
+        }
+
+        let value = match value {
+            Some(v) => v.accept(self),
+            None => none(),
+        };
+        self.return_value = Some(value);
+
+        none()
     }
 }

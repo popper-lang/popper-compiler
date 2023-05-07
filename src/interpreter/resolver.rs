@@ -1,10 +1,11 @@
 use crate::ast::expr::{Expr, ExprType, LiteralType};
-use crate::ast::stmt::{Stmt};
+use crate::ast::stmt::{ArgsTyped, Stmt};
 use crate::ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::error;
 use crate::errors::{Error, ErrorType};
 use crate::lexer::Token;
 use std::collections::HashMap;
+use crate::value::Type;
 
 use super::Interpreter;
 
@@ -138,9 +139,8 @@ impl ExprVisitor for Resolver {
         )
     }
 
-    fn visit_to(&mut self, name: Expr, type_: Expr) -> Self::Output {
+    fn visit_to(&mut self, name: Expr, type_: Type) -> Self::Output {
         self.resolve_expression(name);
-        self.resolve_expression(type_);
     }
 
     fn visit_unary_op(&mut self, _op: Token, operand: Expr) -> Self::Output {
@@ -166,7 +166,7 @@ impl ExprVisitor for Resolver {
         }
     }
 
-    fn visit_type(&mut self, _type: Token) -> Self::Output {}
+    fn visit_type(&mut self, _type: Type) -> Self::Output {}
 
     fn visit_cmp_op(&mut self, left: Expr, _op: Token, right: Expr) -> Self::Output {
         self.resolve_expression(left);
@@ -246,7 +246,7 @@ impl StmtVisitor for Resolver {
         }
     }
 
-    fn visit_function(&mut self, name: Token, _args: Vec<String>, _body: Stmt) -> Self::Output {
+    fn visit_function(&mut self, name: Token, _args: ArgsTyped, _body: Stmt) -> Self::Output {
         self.define(name.lexeme);
     }
 
@@ -262,5 +262,8 @@ impl StmtVisitor for Resolver {
     }
     fn visit_struct(&mut self, _name: String, _fields: Vec<(String, Expr)>) -> Self::Output {
         todo!()
+    }
+
+    fn visit_return(&mut self, value: Option<Expr>) -> Self::Output {
     }
 }

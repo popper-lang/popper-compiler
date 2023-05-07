@@ -6,6 +6,8 @@ edition = "2021"
 
 [dependencies]
 paste = "1.0.12"
+proc-macro2 = "1.0.56"
+quote = "1.0.26"
 
 
 

@@ -1,9 +1,10 @@
 use super::Object;
 use crate::interpreter::Interpreter;
 
+#[macro_export]
 macro_rules! function {
     ($name:ident) => {
-        fn $name(interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
+        fn $name(_interpreteur: &mut Interpreter, _this: &mut Object, _args: &mut Vec<Object>, _file: &str) -> Object {
             todo!()
         }
     };
@@ -16,6 +17,7 @@ pub trait StdLibString {
 
 pub trait StdLibInt {
     function!(sqrt);
+    function!(to_string);
 }
 
 pub trait StdLibList {
@@ -25,15 +27,20 @@ pub trait StdLibList {
 
 
 
+
 #[macro_export]
 macro_rules! register_stdlib {
-    ($type_:ty, $std_name:ident, { $($std_func_name:expr => $std_function:ident),* } ) => {
+    ($type_:ty, $std_name:ident, { $($std_func_name:expr => $name:ident($($arg:ident : $ty:ty),*) $body:block),* } ) => {
         impl Getter for $type_ {
             fn fetch(&self, interpreteur: &mut Interpreter, obj: &mut Object, name: Expr) -> Option<Object> {
                 match *name.expr_type {
                     ExprType::Ident { ident } => {
                         match ident.lexeme.as_str() {
-                            $($std_func_name => Some(BuiltinFunction::new(Rc::new(<$type_ as $std_name>::$std_function), 1).create_object())),*
+                            $($std_func_name => {
+                                define_method!($name(this: $type_, $($arg : $ty),*) $body, function_name = $std_func_name);
+                                Some($name::create())
+                                }
+                            ),*
                             ,
                             _ => None
                         }
@@ -45,21 +52,26 @@ macro_rules! register_stdlib {
                         }
 
                         match self.fetch(&mut interpreteur.clone(), &mut obj.clone(), name.clone()) {
-                            Some(mut object) => {
+                            Some(object) => {
                                 match get_impl_if_exist!(Call, object) {
-                                    Some(call) => Some(call.method(interpreteur, obj, &mut args,  name.file.as_str())),
+                                    Some(call) => {
+                                        args.push(obj.clone());
+                                        Some(call.method(interpreteur, obj, &mut args,  name.file.as_str()))
+                                    },
                                     None => {
                                         error!(ErrorType::TypeError, "Expected a function", 0..0, "".to_string());
                                         unreachable!()
                                     }
                                 }
                             },
-                            None => None
+                            None => {
+                                panic!("can't get")
+                            }
                         }
                     },
                     _ => None
                 }
             }
         }
-    };
+    }
 }

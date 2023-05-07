@@ -1,6 +1,6 @@
 
-fun map(f, l) {
-    _map(f, l) // internal function does the actual work
+fun map(f: int, l: array) {
+    return _map(f, l); // internal function does the actual work
               // and is not visible outside of this file
 }
 

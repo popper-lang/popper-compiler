@@ -4,6 +4,11 @@ use crate::value::callable::Callable;
 use crate::value::list::list;
 use std::rc::Rc;
 use super::panic_if_is_outside_std;
+use crate::value::int::{none, number};
+use crate::value::string::string;
+use crate::value::boolean::boolean;
+use crate::{create, call_function_with_vec}; // File : src/builtin_function/mod.rs
+use crate::define_function;
 
 
 
@@ -15,7 +20,8 @@ impl Map {
         Object {
             type_: Type::Function,
             implementations: vec![Implementation::Call(Rc::new(Map))],
-            value: Value::Function
+            value: Value::Function,
+            tags: std::default::Default::default()
         }
     }
 }
@@ -49,3 +55,4 @@ impl Callable for Map {
 
     }
 }
+

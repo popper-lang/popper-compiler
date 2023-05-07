@@ -16,21 +16,6 @@ pub fn panic_if_is_outside_std(path: &str, function_name: &str) {
 }
 
 #[macro_export]
-macro_rules! create {
-    ($funcname:ident) => {
-        impl $funcname {
-            pub fn create() -> Object {
-                 Object {
-                    type_: Type::Function,
-                    implementations: vec![Implementation::Call(Rc::new($funcname))],
-                    value: Value::Function
-                 }
-            }
-        }
-    };
-}
-
-#[macro_export]
 macro_rules! value_to_rs_value {
     ($value:ident) => {
         match $value.value {
@@ -56,19 +41,70 @@ macro_rules! rs_type_to_type {
     };
 }
 
+#[macro_export]
+macro_rules! type_to_rs_type {
+    ($type_:expr) => {
+        match $type_ {
+            Type::Int => i32,
+            Type::String => String,
+            Type::Bool => Bool,
+            Type::None => ()
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! create {
+    ($funcname:ident) => {
+        impl $funcname {
+            pub fn create() -> Object {
+                 Object {
+                    type_: Type::Function,
+                    implementations: vec![Implementation::Call(Rc::new($funcname))],
+                    value: Value::Function,
+                    tags: std::default::Default::default()
+                 }
+            }
+        }
+    };
+}
+
+
+#[macro_export]
+macro_rules! function_to_rs_fn {
+    ($func:expr) => {
+        match *$func.declaration.stmt_type {
+            $crate::ast::stmt::StmtType::Function { name, args, body } => {
+                let name = name.lexeme;
+
+            }
+        }
+    };
+}
+
 
 #[macro_export]
 macro_rules! call_function_with_vec {
-    ($func:expr, $($vec:expr),+) => {
-        $func($(
-            $vec.into()
-        ),+);
+    ($func:expr, $($vec:expr),* ) => {
+        $func(
+            $($vec.into()),*
+        );
+    };
+}
+
+#[macro_export]
+macro_rules! call_method_with_vec {
+    ($func:expr, $this:tt, $($vec:expr),* ) => {
+        $func(
+            $this.into_mut().unwrap(),
+            $($vec.into()),*
+        );
     };
 }
 
 #[macro_export]
 macro_rules! define_function {
-    ($name:ident($($arg:ident : $ty:ty),*) $body:block) => {
+    ($name:ident($($arg:ident : $ty:ty),*) $body:block, function_name = $function_name:expr) => {
         pub struct $name;
 
         impl $name {
@@ -76,7 +112,7 @@ macro_rules! define_function {
         }
 
         impl Callable for $name {
-            fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, file: &str) -> Object {
+            fn call(&self, _interpreter: &mut Interpreter, args: &mut Vec<Object>, _file: &str) -> Object {
                 let mut arg_iter = std::iter::repeat(()).zip(args.iter_mut());
                 let mut next_arg = arg_iter.next();
 
@@ -97,17 +133,59 @@ macro_rules! define_function {
                 }
 
                 // Call the function and convert the return value to an Object
-                let result = call_function_with_vec!($name::$name, $($arg),*);
-                match result.value {
-                    Value::Int(val) => number(val),
-                    Value::String(val) => string(val.as_str()),
-                    Value::Bool(val) => boolean(val),
-                    Value::None => none(),
-                    _ => panic!("Unexpected return type for function {}", stringify!($name)),
-                }
+                let result = call_function_with_vec!($name::$name , $($arg),*);
+                result
             }
+
+
+
         }
+        create!($name);
     };
 }
 
+#[macro_export]
+macro_rules! define_method {
+    ($name:ident(this:$this:ty, $($arg:ident : $ty:ty),*) $body:block, function_name = $function_name:expr) => {
+        pub struct $name;
+
+        impl $name {
+            pub fn $name (this: &mut $this, $($arg : $ty),*) -> Object $body
+        }
+
+        impl Callable for $name {
+            fn call(&self, _interpreter: &mut Interpreter, _args: &mut Vec<Object>, _file: &str) -> Object {
+                panic!("You can't call a method directly. Use the dot notation instead.");
+            }
+
+            fn method(&self, interpreter: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, _file: &str) -> Object {
+                let mut arg_iter = std::iter::repeat(()).zip(args.iter_mut());
+                let mut next_arg = arg_iter.next();
+
+                $(let $arg = loop {
+                    let arg = match next_arg {
+                        Some(((), arg)) => arg,
+                        None => panic!("Missing argument for function {}", stringify!($name)),
+                    };
+                    let arg_obj = arg.clone();
+                    next_arg = arg_iter.next();
+                    match arg_obj.into_mut() {
+                        Some(val) => break val,
+                        None => {},
+                    }
+                };)*
+                if let Some(((), _)) = next_arg {
+                    panic!("Too many arguments for function {}", stringify!($name));
+                }
+
+                // Call the function and convert the return value to an Object
+                let result = $crate::call_method_with_vec!($name::$name, this, $($arg),*);
+
+                result
+            }
+
+        }
+        create!($name);
+    };
+}
 

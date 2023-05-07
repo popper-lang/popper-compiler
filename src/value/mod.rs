@@ -21,7 +21,7 @@ use std::{
     rc::Rc,
 };
 use std::borrow::Cow;
-use std::fmt::Write;
+use crate::value::struct_type::BuiltinStruct;
 
 static BUILTIN_TYPE: &[Type; 4] = &[Type::Int, Type::Bool, Type::String, Type::List];
 
@@ -54,8 +54,21 @@ pub enum Implementation {
 pub struct Object {
     pub type_: Type,
     pub implementations: Vec<Implementation>,
-    pub value: Value
+    pub value: Value,
+    pub tags: Vec<Tag>,
 }
+
+#[derive(Clone, Default)]
+pub enum Tag {
+    Mutable,
+    Immutable,
+    #[default]
+    Public,
+    Private,
+    Return
+}
+
+
 
 impl PartialEq for Object {
     fn eq(&self, other: &Self) -> bool {
@@ -77,6 +90,7 @@ pub enum Value {
     Struct(struct_type::StructType),
     InstanceStruct(struct_type::StructInstance),
     Type(Type),
+    BuiltinStruct(BuiltinStruct),
 }
 
 
@@ -137,6 +151,7 @@ impl Display for Value {
             Value::Struct(_) => Cow::Borrowed("<struct>"),
             Value::InstanceStruct(_) => Cow::Borrowed("<instance struct>"),
             Value::Type(e) => Cow::Owned(format!("<type {}>", e)),
+            Value::BuiltinStruct(_) => Cow::Borrowed("<builtin struct>"),
         })
     }
 }
@@ -192,6 +207,32 @@ macro_rules! get_impl_if_exist {
                 None
             }
         })
+    };
+}
+
+
+#[macro_export]
+macro_rules! impl_into {
+    ($type_:ident, $valuename:ident) => {
+        impl Into<$type_> for Object {
+            fn into(self) -> $type_ {
+                if let Value::$valuename(n) = self.value {
+                    n
+                } else {
+                    panic!("Cannot convert {} to {}", self, stringify!($type_))
+                }
+            }
+        }
+
+        impl Into<$type_> for &mut Object {
+            fn into(self) -> $type_ {
+                if let Value::$valuename(n) = self.value.clone() {
+                    n
+                } else {
+                    panic!("Cannot convert {} to {}", self, stringify!($type_))
+                }
+            }
+        }
     };
 }
 

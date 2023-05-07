@@ -1,7 +1,8 @@
 use crate::parser::Parser;
-use crate::ast::stmt::{Stmt, StmtType};
-use crate::ast::expr::{ExprType, LiteralType};
+use crate::ast::stmt::{ArgsTyped, ArgTyped, Stmt, StmtType};
+use crate::ast::expr::{Expr, ExprType, LiteralType};
 use crate::lexer::{Token, TokenType};
+
 
 
 impl Parser {
@@ -19,6 +20,7 @@ impl Parser {
             TokenType::IN  => self.parse_import_statement(),
             TokenType::IMPL => self.parse_impl_statement(),
             TokenType::STRUCT => self.parse_struct_statement(),
+            TokenType::RETURN => self.parse_return_statement(),
             _ => self.parse_expression_statement(),
         };
 
@@ -26,8 +28,17 @@ impl Parser {
     }
 
     fn parse_expression_statement(&mut self) -> Stmt {
-        let expr = self.term();
+
+        let expr = if self.peek().token_type == TokenType::EOF {
+            self.is_at_end = true;
+            self.pop().unwrap();
+            self.bake_up();
+            Expr::new(Box::new( ExprType::Eof), 0..0, self.clone().body, self.clone().file)
+        } else {
+            self.term()
+        };
         let ex = expr.clone().extract;
+        self.expect_token(TokenType::SEMICOLON);
         Stmt::new(StmtType::Expression { expr }, ex, self.clone().body, self.clone().file)
     }
 
@@ -107,6 +118,7 @@ impl Parser {
         self.advance();
         if self.match_token(TokenType::COLON) {
             type_ = Some(self.parse_type_expression());
+            self.advance();
         } else {
             type_ = None;
         }
@@ -116,6 +128,7 @@ impl Parser {
         } else {
             None
         };
+        self.expect_token(TokenType::SEMICOLON);
         Stmt::new(
             StmtType::Let {
                 name: match *name.expr_type {
@@ -160,6 +173,7 @@ impl Parser {
                 self.expect_token(TokenType::AS);
                 if let ExprType::Ident { ident } = *self.identifier().expr_type {
                     self.advance();
+                    self.expect_token(TokenType::SEMICOLON);
                     return Stmt::new(
                         StmtType::Use {
                             path: value,
@@ -198,6 +212,7 @@ impl Parser {
         } else {
             None
         };
+        self.expect_token(TokenType::SEMICOLON);
         Stmt::new(
             StmtType::Let {
                 name: match *name.expr_type {
@@ -288,7 +303,7 @@ impl Parser {
             });
             self.advance();
         }
-
+        self.expect_token(TokenType::SEMICOLON);
         Stmt::new(
             StmtType::Import {
                 name: match *ident.expr_type {
@@ -337,31 +352,63 @@ impl Parser {
         self.expect_token(TokenType::LPAREN);
         let mut args = Vec::new();
         if !self.check(TokenType::RPAREN) {
-            args.push(match *self.identifier().expr_type {
-                ExprType::Ident {
-                    ident: Token { lexeme: e, .. },
-                } => e.to_string(),
-                _ => {
-                    unreachable!()
-                }
+            let ident = match *self.identifier().expr_type {
+                ExprType::Ident { ident } => ident.lexeme,
+                _ => unreachable!()
+            };
+            self.advance();
+            self.expect_token(TokenType::COLON);
+            let type_ = match *self.parse_type_expression().expr_type {
+                ExprType::Type { type_ } => type_,
+                _ => panic!("expected type")
+            };
+            args.push(ArgTyped {
+                name: ident,
+                type_
             });
             self.advance();
             while self.match_token(TokenType::COMMA) {
-                args.push(match *self.identifier().expr_type {
-                    ExprType::Ident {
-                        ident: Token { lexeme: e, .. },
-                    } => e.to_string(),
-                    _ => {
-                        unreachable!()
-                    }
+                let ident = match *self.identifier().expr_type {
+                    ExprType::Ident { ident } => ident.lexeme,
+                    _ => unreachable!()
+                };
+                self.advance();
+
+                self.expect_token(TokenType::COLON);
+                let type_ = match *self.parse_type_expression().expr_type {
+                    ExprType::Type { type_ } => type_,
+                    _ => panic!("expected type")
+                };
+                args.push(ArgTyped {
+                    name: ident,
+                    type_
                 });
                 self.advance();
+
             }
         }
         self.expect_token(TokenType::RPAREN);
         let body = self.parse_statement();
         Stmt::new(
-            StmtType::Function { name, args, body },
+            StmtType::Function { name, args: ArgsTyped(args), body },
+            first_position..self.current_str,
+            self.clone().body,
+            self.clone().file
+        )
+    }
+
+    fn parse_return_statement(&mut self) -> Stmt {
+        self.skip_whitespace();
+        let first_position = self.current_str;
+        self.advance();
+        let value = if !self.check(TokenType::SEMICOLON) {
+            Some(self.term())
+        } else {
+            None
+        };
+        self.expect_token(TokenType::SEMICOLON);
+        Stmt::new(
+            StmtType::Return { value },
             first_position..self.current_str,
             self.clone().body,
             self.clone().file
