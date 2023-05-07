@@ -12,6 +12,9 @@ use super::panic_if_is_outside_std;
 use crate::define_function;
 
 
+
+
+
 define_function!(IsEqual(left: Object, right: Object) {
     if left.type_ != right.type_ {
         return boolean(false)

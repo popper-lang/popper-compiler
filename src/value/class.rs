@@ -23,6 +23,7 @@ impl Class {
             implementations: vec![],
             value: Value::Class(Class::new(name.to_string())),
             tags: std::default::Default::default()
+
         }
     }
 }

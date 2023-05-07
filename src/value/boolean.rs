@@ -1,8 +1,8 @@
 use crate::value::{Object, Value, Type, Implementation};
 use crate::value::operation::PartialEq;
 use std::rc::Rc;
-use std::convert::TryInto;
-use crate::errors::Error;
+use crate::register_stdlib;
+
 pub fn boolean(b: bool) -> Object {
     Object {
         type_: Type::Bool,
@@ -11,6 +11,7 @@ pub fn boolean(b: bool) -> Object {
         ],
         value: Value::Bool(b),
         tags: std::default::Default::default()
+
     }
 }
 
@@ -55,3 +56,4 @@ impl Into<bool> for Object {
         }
     }
 }
+

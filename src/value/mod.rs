@@ -56,6 +56,7 @@ pub struct Object {
     pub implementations: Vec<Implementation>,
     pub value: Value,
     pub tags: Vec<Tag>,
+
 }
 
 #[derive(Clone, Default)]
@@ -184,17 +185,6 @@ impl Display for Type {
     }
 }
 
-impl PartialEq<Value> for Type {
-    fn eq(&self, other: &Value) -> bool {
-        match (self, other) {
-            (Type::Int, Value::Int(_)) => true,
-            (Type::Bool, Value::Bool(_)) => true,
-            (Type::String, Value::String(_)) => true,
-            (Type::None, Value::None) => true,
-            _ => false
-        }
-    }
-}
 
 
 #[macro_export]

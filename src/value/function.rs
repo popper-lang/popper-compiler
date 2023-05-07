@@ -24,7 +24,7 @@ pub struct Function {
 
 #[derive(Clone)]
 pub struct BuiltinFunction{
-    pub func: Rc<dyn Fn(&mut Interpreter, &mut Object, &mut Vec<Object>, &str) -> Object>,
+    pub func: Rc<dyn Fn(&mut Interpreter, &mut Object, &mut Vec<Object>) -> Object>,
     pub id: i32
 }
 
@@ -41,7 +41,7 @@ impl PartialEq for BuiltinFunction {
 }
 
 impl BuiltinFunction {
-    pub fn new(func: Rc<dyn Fn(&mut Interpreter, &mut Object, &mut Vec<Object>, &str) -> Object>, id: i32) -> Self {
+    pub fn new(func: Rc<dyn Fn(&mut Interpreter, &mut Object, &mut Vec<Object>) -> Object>, id: i32) -> Self {
         Self { func, id }
     }
 
@@ -63,8 +63,8 @@ impl Callable for BuiltinFunction {
         panic!("cant call on builtin stdlib function")
     }
 
-    fn method(&self, interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
-        (self.func)(interpreteur, this, args, file)
+    fn method(&self, interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, _file: &str) -> Object {
+        (self.func)(interpreteur, this, args)
     }
 }
 
@@ -199,6 +199,7 @@ macro_rules! function_call_or_this {
                             ],
                             value: Value::Function,
                             tags: std::default::Default::default()
+
                         },
                         mutable: false,
                         type_: Type::Function

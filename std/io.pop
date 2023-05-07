@@ -11,3 +11,4 @@ fun print(s: string) {
 fun input(s: string) {
     _input(s);
 }
+

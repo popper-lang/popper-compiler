@@ -144,48 +144,5 @@ macro_rules! define_function {
     };
 }
 
-#[macro_export]
-macro_rules! define_method {
-    ($name:ident(this:$this:ty, $($arg:ident : $ty:ty),*) $body:block, function_name = $function_name:expr) => {
-        pub struct $name;
 
-        impl $name {
-            pub fn $name (this: &mut $this, $($arg : $ty),*) -> Object $body
-        }
-
-        impl Callable for $name {
-            fn call(&self, _interpreter: &mut Interpreter, _args: &mut Vec<Object>, _file: &str) -> Object {
-                panic!("You can't call a method directly. Use the dot notation instead.");
-            }
-
-            fn method(&self, interpreter: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, _file: &str) -> Object {
-                let mut arg_iter = std::iter::repeat(()).zip(args.iter_mut());
-                let mut next_arg = arg_iter.next();
-
-                $(let $arg = loop {
-                    let arg = match next_arg {
-                        Some(((), arg)) => arg,
-                        None => panic!("Missing argument for function {}", stringify!($name)),
-                    };
-                    let arg_obj = arg.clone();
-                    next_arg = arg_iter.next();
-                    match arg_obj.into_mut() {
-                        Some(val) => break val,
-                        None => {},
-                    }
-                };)*
-                if let Some(((), _)) = next_arg {
-                    panic!("Too many arguments for function {}", stringify!($name));
-                }
-
-                // Call the function and convert the return value to an Object
-                let result = $crate::call_method_with_vec!($name::$name, this, $($arg),*);
-
-                result
-            }
-
-        }
-        create!($name);
-    };
-}
 

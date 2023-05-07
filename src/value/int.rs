@@ -2,9 +2,10 @@ use super::{Object, Type, Implementation};
 use std::rc::Rc;
 use std::string::ToString;
 use crate::value::operation::{Add, Sub, Mul, Div, Pow, Mod, PartialEq, PartialOrd};
+
 use crate::value::Value;
-use crate::value::stdlib::StdLibInt;
-use crate::{impl_into, register_stdlib};
+use crate::value::stdlib::{StdLibString, StdLibInt};
+use crate::register_stdlib;
 use crate::error;
 use crate::get_impl_if_exist;
 use crate::ast::expr::{Expr, ExprType};
@@ -13,7 +14,6 @@ use crate::errors::{Error, ErrorType};
 use crate::value::get::Getter;
 use crate::value::function::BuiltinFunction;
 use crate::value::string::string;
-use crate::define_method;
 use crate::create;
 use crate::call_function_with_vec;
 use crate::builtin_function::panic_if_is_outside_std;
@@ -35,6 +35,7 @@ pub fn number(n: i32) -> Object {
         ],
         value: Value::Int(n),
         tags: std::default::Default::default()
+
     }
 }
 
@@ -131,7 +132,7 @@ impl PartialOrd for i32 {
 }
 
 impl StdLibInt for i32 {
-    fn sqrt(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
+    fn sqrt(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
         if args.len() != 1 {
             panic!("expected 1, got {} argument", args.len())
         }
@@ -144,7 +145,7 @@ impl StdLibInt for i32 {
         }
     }
 
-    fn to_string(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
+    fn to_string(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
         if let Value::Int(n) = this.value {
             string(n.to_string().as_str())
         } else {
@@ -162,21 +163,12 @@ pub fn none() -> Object {
     }
 }
 
-impl_into!(i32, Int);
-impl From<&mut i32> for Object {
-    fn from(value: &mut i32) -> Self {
-        value.into()
-    }
-}
 
 register_stdlib!(i32, StdLibInt, {
-    "sqrt" => Sqrt(this: i32) {
-        none()
-    },
-    "to_string" => ToString(this: Object) {
-        none()
-    }
+    "sqrt" => sqrt,
+    "to_string" => to_string
 });
+
 
 
 /*impl TryInto<i32> for Object {
@@ -199,3 +191,12 @@ impl TryInto<i32> for Value {
     }
 }
 
+impl Into<i32> for Object {
+    fn into(self) -> i32 {
+        if let Value::Int(n) = self.value {
+            n
+        } else {
+            panic!("Cannot convert {:?} into i32", self)
+        }
+    }
+}

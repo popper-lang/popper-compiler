@@ -90,10 +90,10 @@ impl Interpreter {
         };
         import_builtin!(inter.env, "_print", io::Print::create);
         import_builtin!(inter.env, "_println", io::Println::create);
-        import_builtin!(inter.env, "_input", io::Input::create);
         import_builtin!(inter.env, "_is_equal", cmp::IsEqual::create);
         import_builtin!(inter.env, "_is_not_equal", cmp::IsNotEqual::create);
         import_builtin!(inter.env, "_map", list_util::Map::create);
+
 
 
 
@@ -314,6 +314,7 @@ impl ExprVisitor for Interpreter {
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
 
+        dbg!(&self.env);
         match self.env.fetch(id.clone()) {
             Some(v) => v.value,
             None => {
@@ -341,6 +342,7 @@ impl ExprVisitor for Interpreter {
                 value: Value::Type(Type::Bool),
                 implementations: vec![],
                 tags: std::default::Default::default()
+
             },
             Type::String => Object {
                 type_: Type::String,

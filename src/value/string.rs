@@ -1,20 +1,16 @@
 use crate::value::stdlib::StdLibString;
 use crate::value::{Implementation, Object, Value, Type};
-use crate::register_stdlib;
-use crate::error;
-use crate::get_impl_if_exist;
 use crate::ast::expr::{Expr, ExprType};
 use crate::interpreter::Interpreter;
 use crate::errors::{Error, ErrorType};
-use crate::value::get::Getter;
-use crate::value::function::BuiltinFunction;
 use crate::value::operation::{Add, PartialEq};
 use crate::value::int::number;
-use crate::define_method;
-use crate::value::callable::Callable;
-use crate::create;
-use crate::impl_into;
 use std::rc::Rc;
+use crate::register_stdlib;
+use crate::error;
+use crate::get_impl_if_exist;
+use crate::value::get::Getter;
+use crate::value::function::BuiltinFunction;
 
 pub fn string(s: &str) -> Object {
     Object {
@@ -51,7 +47,7 @@ impl PartialEq for String {
 }
 
 impl StdLibString for String {
-    fn len(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>, file: &str) -> Object {
+    fn len(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
         if args.len() != 0 {
             panic!("expected 0, got {} argument", args.len())
         }
@@ -66,13 +62,13 @@ impl StdLibString for String {
 
 
 
-impl_into!(String, String);
-
+/*
 register_stdlib!(String, StdLibString, {
+<<<<<<< HEAD
     "len" => len_i32(this: Object) {
         number(0)
     }
-});
+});*/
 
 /*impl TryInto<String> for Object {
     type Error = ();
@@ -93,4 +89,22 @@ impl TryInto<String> for Value {
         }
     }
 }
+
+impl Into<String> for Object {
+    fn into(self) -> String {
+        if let Value::String(s) = self.value {
+            s
+        } else {
+            panic!("Cannot convert {:?} into String", self)
+        }
+    }
+}
+
+
+register_stdlib!(String, StdLibString, {
+    "len" => len
+    }
+
+);
+
 
