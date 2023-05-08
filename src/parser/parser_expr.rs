@@ -61,7 +61,7 @@ impl Parser {
             TokenType::BOOL_TYPE => {
                 Type::Bool
             },
-            TokenType::STRING_TYPE => {
+            TokenType::STR_TYPE => {
                 Type::String
             },
             TokenType::LIST_TYPE => {
@@ -452,7 +452,7 @@ impl Parser {
         let expression = match self.clone().peek().token_type {
             TokenType::INT_TYPE
             | TokenType::BOOL_TYPE
-            | TokenType::STRING_TYPE
+            | TokenType::STR_TYPE
             | TokenType::LIST_TYPE => self.parse_type_expression(),
             TokenType::CAST => self.parse_cast_expression(),
             TokenType::INIT => self.parse_init_struct_expression(),

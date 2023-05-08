@@ -314,7 +314,6 @@ impl ExprVisitor for Interpreter {
     fn visit_ident(&mut self, ident: Token) -> Self::Output {
         let id = ident.lexeme.to_string();
 
-        dbg!(&self.env);
         match self.env.fetch(id.clone()) {
             Some(v) => v.value,
             None => {
@@ -589,15 +588,24 @@ impl StmtVisitor for Interpreter {
     fn visit_for(&mut self, name: Token, iter: Expr, body: Stmt) -> Self::Output {
         let it = iter.accept(self);
         if let Value::List(v) = it.value {
-            for i in v {
-                self.env.define(
-                    name.lexeme.clone(),
-                    Var {
+            for i in v.into_iter() {
+                if self.env.defined(name.lexeme.clone()) {
+                    self.env.modify(name.lexeme.clone(), Var {
                         value: i.clone(),
                         mutable: false,
-                        type_: i.type_,
-                    },
-                );
+                        type_: i.clone().type_,
+                    });
+                } else {
+                    self.env.define(
+                        name.lexeme.clone(),
+                        Var {
+                            value: i.clone(),
+                            mutable: false,
+                            type_: i.type_,
+                        },
+                    );
+                }
+
                 body.clone().accept(self);
             }
             return none();

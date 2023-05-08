@@ -7,16 +7,13 @@ use crate::value::int::{none, number};
 use super::{Object, Type, Implementation};
 use crate::ast::expr::{Expr, ExprType, LiteralType};
 use crate::interpreter::Interpreter;
-use crate::{impl_into, register_stdlib};
+use crate::register_stdlib;
 use crate::error;
 use crate::get_impl_if_exist;
 use crate::errors::{Error, ErrorType};
 use crate::value::function::BuiltinFunction;
 use crate::value::stdlib::StdLibList;
-use crate::call_function_with_vec;
-use crate::create;
-use crate::builtin_function::panic_if_is_outside_std;
-use crate::value::callable::Callable;
+use crate::value::string::string;
 
 type List = Vec<Object>;
 
@@ -57,8 +54,12 @@ impl PartialEq for List {
     }
 }
 
+
+
+
+
 impl StdLibList for List {
-    fn push(interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
+    fn push(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
         if args.len() != 1 {
             panic!("expected 1 argument, got {:?}", args);
         }
@@ -95,7 +96,34 @@ impl StdLibList for List {
         none()
     }
 
-    fn to_string()
+    fn to_string(_interpreteur: &mut Interpreter, this: &mut Object, _args: &mut Vec<Object>) -> Object {
+        string(format!("{:?}", this).as_str())
+    }
+
+    fn nth(_interpreteur: &mut Interpreter, this: &mut Object, args: &mut Vec<Object>) -> Object {
+        if args.len() != 1 {
+            panic!("expected 1 argument, got {:?}", args);
+        }
+
+        let index = args.get(0).unwrap().clone();
+
+        if let Value::List(ref mut l) = this.value {
+            if let Value::Int(n) = index.value {
+                let index = n.clone() as usize;
+                if index >= l.len() {
+                    panic!("index out of range")
+                }
+                l.get_mut(index).unwrap().clone()
+            } else {
+                panic!("expected number, got {:?}", index.type_)
+            }
+        } else {
+            unreachable!()
+        }
+    }
+
+
+
 }
 
 
@@ -104,6 +132,8 @@ impl StdLibList for List {
 
 register_stdlib!(List, StdLibList, {
     "push" => push,
-    "extend" => extend
+    "extend" => extend,
+    "to_string" => to_string,
+    "nth" => nth
     }
 );

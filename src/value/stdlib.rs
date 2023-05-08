@@ -24,6 +24,7 @@ pub trait StdLibList {
     function!(push);
     function!(extend);
     function!(to_string);
+    function!(nth);
 }
 
 

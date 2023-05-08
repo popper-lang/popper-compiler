@@ -11,87 +11,90 @@ macro_rules! token {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum TokenType {
-    /*
-     * The token type is represented by a single character.
-     */
+    ///
+    /// The token type is represented by a single character.
+    ///
     // symbol token
-    LPAREN,
-    RPAREN,
-    LBRACE,
-    RBRACE,
-    LBRACKET,
-    RBRACKET,
-    COMMA,
-    DOT,
-    SEMICOLON,
-    COLON,
-    DOUBLECOLON,
-    DOUBLEARROW,
+    LPAREN,     // (
+    RPAREN,     // )
+    LBRACE,     // {
+    RBRACE,     // }
+    LBRACKET,   // [
+    RBRACKET,   // ]
+    COMMA,      // ,
+    DOT,        // .
+    SEMICOLON,  // ;
+    COLON,      // :
+    DOUBLECOLON,// ::
+    DOUBLEARROW,// =>
 
     // literal token
-    NUMBER,
-    STRING,
-    IDENT,
+    NUMBER,     // 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
+    STRING,     // "string"
+    IDENT,      // ident
 
     // keyword token
-    IF,
-    ELSE,
-    WHILE,
-    CONST,
-    FUN,
-    LET,
-    TO,
-    CAST,
-    CLASS,
-    USE,
-    AS,
-    IN,
-    IMPORT,
-    IMPL,
-    STRUCT,
-    INIT,
-    RETURN,
+    IF,        // if
+    ELSE,      // else
+    WHILE,     // while
+    CONST,     // const
+    FUN,       // fun
+    LET,       // let
+    TO,        // to
+    CAST,      // cast
+    CLASS,     // class
+    USE,       // use
+    AS,        // as
+    IN,        // in
+    IMPORT,    // import
+    IMPL,      // impl
+    STRUCT,    // struct
+    INIT,      // init
+    RETURN,    // return
+    FOR,       // for
 
     // operator token
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD,
-    POW,
-    EQ,
-    NEQ,
-    LT,
-    GT,
-    LTE,
-    GTE,
-    EQUAL,
-    OR,
-    AND,
-    ASSIGN,
-    NOT,
+    ADD,       // +
+    SUB,       // -
+    MUL,       // *
+    DIV,       // /
+    MOD,       // %
+    POW,       // ^
+    EQ,        // ==
+    NEQ,       // !=
+    LT,        // <
+    GT,        // >
+    LTE,       // <=
+    GTE,       // >=
+    EQUAL,     // ==
+    OR,        // ||
+    AND,       // &&
+    ASSIGN,    // =
+    NOT,       // !
 
     // type token
-    INT_TYPE,
-    STRING_TYPE,
-    BOOL_TYPE,
-    LIST_TYPE,
-    TYPE,
+    INT_TYPE,  // int
+    STR_TYPE,  // str
+    BOOL_TYPE, // bool
+    LIST_TYPE, // list
+    TYPE,      // type
 
     // asm
-    ASM,
+    ASM,       // asm { <asm-code> }
 
-    // bool token
-    TRUE,
-    FALSE,
+    // boolean token
+    TRUE,      // true
+    FALSE,     // false
 
-    NEWLINE,
-    TAB,
-    SPACE,
-    Illegal,
-    EOF,
+    NEWLINE,   // \n
+    TAB,       // \t
+    SPACE,     // ' '
+    Illegal,   // illegal token
+    EOF,       // end of file
 }
 
+
+/// Token is a struct that represents a token.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Token {
     pub line: i32,
@@ -102,9 +105,7 @@ pub struct Token {
 
 #[derive(Debug, Clone)]
 pub struct Lexer {
-    /*
-     * The lexer is a stateful object that keeps track of the current position in the input string.
-     */
+     /// The lexer is a struct that contains the input string and the current position of the lexer.
     input: String,
     position: usize,
     read_position: usize,
@@ -230,7 +231,7 @@ impl Lexer {
                     "false" => token!(FALSE, "false", self.line, self.pos),
                     "let" => token!(LET, "let", self.line, self.pos),
                     "int" => token!(INT_TYPE, "int", self.line, self.pos),
-                    "string" => token!(STRING_TYPE, "string", self.line, self.pos),
+                    "string" => token!(STR_TYPE, "string", self.line, self.pos),
                     "bool" => token!(BOOL_TYPE, "bool", self.line, self.pos),
                     "array" => token!(LIST_TYPE, "array", self.line, self.pos),
                     "while" => token!(WHILE, "while", self.line, self.pos),
@@ -245,6 +246,7 @@ impl Lexer {
                     "init" => token!(INIT, "init", self.line, self.pos),
                     "type" => token!(TYPE, "type", self.line, self.pos),
                     "return" => token!(RETURN, "return", self.line, self.pos),
+                    "for" => token!(FOR, "for", self.line, self.pos),
                     "asm" => {
                         let mut asm = String::new();
                         if self.peek_char() == '{' {

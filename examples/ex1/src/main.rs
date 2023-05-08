@@ -5,10 +5,9 @@ fn main() {
     println!("{:?}", execute(r#"
     use "io.pop" as io;
     let e = 5;
-    let k = [93, 43, 21];
-    k.push(44);
-
-    io::print("hello world");
+    for i in [3, 4, 5] {
+        io::print(i.to_string());
+    }
 
     "#, None));
 }

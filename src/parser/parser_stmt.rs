@@ -21,6 +21,7 @@ impl Parser {
             TokenType::IMPL => self.parse_impl_statement(),
             TokenType::STRUCT => self.parse_struct_statement(),
             TokenType::RETURN => self.parse_return_statement(),
+            TokenType::FOR => self.parse_for_statement(),
             _ => self.parse_expression_statement(),
         };
 
@@ -414,5 +415,30 @@ impl Parser {
             self.clone().file
         )
     }
+
+    fn parse_for_statement(&mut self) -> Stmt {
+        self.skip_whitespace();
+        let first_position = self.current_str;
+        self.advance();
+        let name = match *self.identifier().expr_type {
+            ExprType::Ident { ident } => ident,
+            _ => panic!("expected identifier")
+        };
+
+        self.advance();
+        self.expect_token(TokenType::IN);
+        let iter = self.term();
+
+        let body = self.parse_block_statement();
+
+        Stmt::new(
+            StmtType::For { name, iter, body },
+            first_position..self.current_str,
+            self.clone().body,
+            self.clone().file
+        )
+
+    }
+
 
 }
