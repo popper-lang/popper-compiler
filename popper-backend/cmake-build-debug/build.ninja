@@ -41,7 +41,7 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = /Users/antoine/Documents/popper-lang/popper-backend/cmake-build-debug/
 # =============================================================================
-# Object build statements for EXECUTABLE target popper_backend
+# Object build statements for STATIC_LIBRARY target popper_backend
 
 
 #############################################
@@ -49,43 +49,34 @@ cmake_ninja_workdir = /Users/antoine/Documents/popper-lang/popper-backend/cmake-
 
 build cmake_object_order_depends_target_popper_backend: phony || CMakeFiles/popper_backend.dir
 
-build CMakeFiles/popper_backend.dir/src/main.cpp.o: CXX_COMPILER__popper_backend_Debug /Users/antoine/Documents/popper-lang/popper-backend/src/main.cpp || cmake_object_order_depends_target_popper_backend
-  DEP_FILE = CMakeFiles/popper_backend.dir/src/main.cpp.o.d
-  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -fcolor-diagnostics -m64 -DNDEBUG -O3 -fvisibility=hidden
-  INCLUDES = -I/Users/antoine/Documents/popper-lang/popper-backend/include
+build CMakeFiles/popper_backend.dir/src/library.c.o: C_COMPILER__popper_backend_Debug /Users/antoine/Documents/popper-lang/popper-backend/src/library.c || cmake_object_order_depends_target_popper_backend
+  DEP_FILE = CMakeFiles/popper_backend.dir/src/library.c.o.d
+  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -fcolor-diagnostics -std=gnu11
   OBJECT_DIR = CMakeFiles/popper_backend.dir
   OBJECT_FILE_DIR = CMakeFiles/popper_backend.dir/src
 
-build CMakeFiles/popper_backend.dir/src/Operand.cpp.o: CXX_COMPILER__popper_backend_Debug /Users/antoine/Documents/popper-lang/popper-backend/src/Operand.cpp || cmake_object_order_depends_target_popper_backend
-  DEP_FILE = CMakeFiles/popper_backend.dir/src/Operand.cpp.o.d
-  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -fcolor-diagnostics -m64 -DNDEBUG -O3 -fvisibility=hidden
-  INCLUDES = -I/Users/antoine/Documents/popper-lang/popper-backend/include
-  OBJECT_DIR = CMakeFiles/popper_backend.dir
-  OBJECT_FILE_DIR = CMakeFiles/popper_backend.dir/src
-
-build CMakeFiles/popper_backend.dir/src/Bytecode.cpp.o: CXX_COMPILER__popper_backend_Debug /Users/antoine/Documents/popper-lang/popper-backend/src/Bytecode.cpp || cmake_object_order_depends_target_popper_backend
-  DEP_FILE = CMakeFiles/popper_backend.dir/src/Bytecode.cpp.o.d
-  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -fcolor-diagnostics -m64 -DNDEBUG -O3 -fvisibility=hidden
-  INCLUDES = -I/Users/antoine/Documents/popper-lang/popper-backend/include
+build CMakeFiles/popper_backend.dir/src/main.c.o: C_COMPILER__popper_backend_Debug /Users/antoine/Documents/popper-lang/popper-backend/src/main.c || cmake_object_order_depends_target_popper_backend
+  DEP_FILE = CMakeFiles/popper_backend.dir/src/main.c.o.d
+  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -fcolor-diagnostics -std=gnu11
   OBJECT_DIR = CMakeFiles/popper_backend.dir
   OBJECT_FILE_DIR = CMakeFiles/popper_backend.dir/src
 
 
 # =============================================================================
-# Link build statements for EXECUTABLE target popper_backend
+# Link build statements for STATIC_LIBRARY target popper_backend
 
 
 #############################################
-# Link the executable /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend
+# Link the static library libpopper_backend.a
 
-build /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend: CXX_EXECUTABLE_LINKER__popper_backend_Debug CMakeFiles/popper_backend.dir/src/main.cpp.o CMakeFiles/popper_backend.dir/src/Operand.cpp.o CMakeFiles/popper_backend.dir/src/Bytecode.cpp.o
-  FLAGS = -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
-  LINK_FLAGS = -L/usr/local/opt/llvm@13/lib    -m64
+build libpopper_backend.a: C_STATIC_LIBRARY_LINKER__popper_backend_Debug CMakeFiles/popper_backend.dir/src/library.c.o CMakeFiles/popper_backend.dir/src/main.c.o
+  ARCH_FLAGS = -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk
+  LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles/popper_backend.dir
   POST_BUILD = :
   PRE_LINK = :
-  TARGET_FILE = /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend
-  TARGET_PDB = popper-backend.dbg
+  TARGET_FILE = libpopper_backend.a
+  TARGET_PDB = popper_backend.a.dbg
 
 
 #############################################
@@ -113,9 +104,7 @@ build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 # =============================================================================
 # Target aliases.
 
-build popper-backend: phony /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend
-
-build popper_backend: phony /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend
+build popper_backend: phony libpopper_backend.a
 
 # =============================================================================
 # Folder targets.
@@ -125,7 +114,7 @@ build popper_backend: phony /Users/antoine/Documents/popper-lang/popper-backend/
 #############################################
 # Folder: /Users/antoine/Documents/popper-lang/popper-backend/cmake-build-debug
 
-build all: phony /Users/antoine/Documents/popper-lang/popper-backend/build/macosx/x86_64/release/popper-backend
+build all: phony libpopper_backend.a
 
 # =============================================================================
 # Built-in targets
@@ -134,14 +123,14 @@ build all: phony /Users/antoine/Documents/popper-lang/popper-backend/build/macos
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/antoine/Documents/popper-lang/popper-backend/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/antoine/Documents/popper-lang/popper-backend/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCXXInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-CXX.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/antoine/Documents/popper-lang/popper-backend/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeCXXCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake: phony
+build /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeGenericSystem.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Compiler/GNU.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-AppleClang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang-C.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Apple-Clang.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin-Initialize.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/Darwin.cmake /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.25/Modules/Platform/UnixPaths.cmake /Users/antoine/Documents/popper-lang/popper-backend/CMakeLists.txt CMakeCache.txt CMakeFiles/3.25.2/CMakeCCompiler.cmake CMakeFiles/3.25.2/CMakeSystem.cmake: phony
 
 
 #############################################

@@ -117,65 +117,65 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named popper_backend
+# Target rules for targets named popper-backend
 
 # Build rule for target.
-popper_backend: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 popper_backend
-.PHONY : popper_backend
+popper-backend: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 popper-backend
+.PHONY : popper-backend
 
 # fast build rule for target.
-popper_backend/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/build
-.PHONY : popper_backend/fast
+popper-backend/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/build
+.PHONY : popper-backend/fast
 
-src/library.o: src/library.c.o
-.PHONY : src/library.o
+src/Bytecode.o: src/Bytecode.cpp.o
+.PHONY : src/Bytecode.o
 
 # target to build an object file
-src/library.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/library.c.o
-.PHONY : src/library.c.o
+src/Bytecode.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/Bytecode.cpp.o
+.PHONY : src/Bytecode.cpp.o
 
-src/library.i: src/library.c.i
-.PHONY : src/library.i
+src/Bytecode.i: src/Bytecode.cpp.i
+.PHONY : src/Bytecode.i
 
 # target to preprocess a source file
-src/library.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/library.c.i
-.PHONY : src/library.c.i
+src/Bytecode.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/Bytecode.cpp.i
+.PHONY : src/Bytecode.cpp.i
 
-src/library.s: src/library.c.s
-.PHONY : src/library.s
+src/Bytecode.s: src/Bytecode.cpp.s
+.PHONY : src/Bytecode.s
 
 # target to generate assembly for a file
-src/library.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/library.c.s
-.PHONY : src/library.c.s
+src/Bytecode.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/Bytecode.cpp.s
+.PHONY : src/Bytecode.cpp.s
 
-src/main.o: src/main.c.o
+src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
 # target to build an object file
-src/main.c.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/main.c.o
-.PHONY : src/main.c.o
+src/main.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/main.cpp.o
+.PHONY : src/main.cpp.o
 
-src/main.i: src/main.c.i
+src/main.i: src/main.cpp.i
 .PHONY : src/main.i
 
 # target to preprocess a source file
-src/main.c.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/main.c.i
-.PHONY : src/main.c.i
+src/main.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/main.cpp.i
+.PHONY : src/main.cpp.i
 
-src/main.s: src/main.c.s
+src/main.s: src/main.cpp.s
 .PHONY : src/main.s
 
 # target to generate assembly for a file
-src/main.c.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper_backend.dir/build.make CMakeFiles/popper_backend.dir/src/main.c.s
-.PHONY : src/main.c.s
+src/main.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/popper-backend.dir/build.make CMakeFiles/popper-backend.dir/src/main.cpp.s
+.PHONY : src/main.cpp.s
 
 # Help Target
 help:
@@ -185,10 +185,10 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... popper_backend"
-	@echo "... src/library.o"
-	@echo "... src/library.i"
-	@echo "... src/library.s"
+	@echo "... popper-backend"
+	@echo "... src/Bytecode.o"
+	@echo "... src/Bytecode.i"
+	@echo "... src/Bytecode.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
