@@ -13,7 +13,6 @@ use crate::{create, call_function_with_vec}; // File : src/builtin_function/mod.
 use super::panic_if_is_outside_std;
 use crate::define_function;
 
-static IO_PATH: &str = "/Users/antoine/Documents/popper-lang/std/io.pop";
 
 
 define_function!(Print(msg: String) {
