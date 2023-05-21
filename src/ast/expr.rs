@@ -1,6 +1,6 @@
 use crate::lexer::{Token, TokenType};
 use std::ops::Range;
-use crate::bytecodes::bytecode::Bytecode;
+use crate::bytecodes::bytecode::{Bytecode, StrPtr};
 use crate::bytecodes::bytecode::Opcode;
 use crate::bytecodes::bytecode::Operand;
 
@@ -65,9 +65,25 @@ impl Expr {
                 match literal {
                     LiteralType::Number(i) => bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Int(*i))),
                     LiteralType::Bool(b) => bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Bool(*b))),
+                    LiteralType::String(s) => {
+                        let str_ptr = StrPtr {
+                            ptr: s.as_ptr(),
+                            len: s.len(),
+                        };
+
+                        bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Str(str_ptr)))
+                    },
                     _ => todo!()
                 }
             },
+            ExprType::Ident { ident } => {
+                bytecode.add_instruction(Opcode::LoadVar, Some(Operand::Str(StrPtr {
+                    ptr: ident.lexeme.as_ptr(),
+                    len: ident.lexeme.len(),
+                })))
+            },
+            ExprType::Eof => bytecode.add_instruction(Opcode::EndOfProgram, None),
+
             _ => todo!()
         }
         bytecode

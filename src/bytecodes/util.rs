@@ -5,6 +5,7 @@ use crate::bytecodes::bytecode::Bytecode;
 use crate::bytecodes::bytecode::Instruction;
 use crate::bytecodes::bytecode::Opcode;
 use crate::bytecodes::bytecode::Operand;
+use crate::bytecodes::bytecode::StrPtr;
 
 
 pub fn write_bytecode_to_file(bytecode: &Bytecode, filename: &str) -> std::io::Result<()> {
@@ -44,7 +45,7 @@ pub fn read_bytecode_from_file(filename: &str) -> std::io::Result<Bytecode> {
             _ => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid opcode")),
         };
         let operand = match opcode {
-            Opcode::LoadConst => {
+            Opcode::LoadConst | Opcode::StoreFunc => {
                 let mut operand_bytes = [0u8; 4];
                 operand_bytes.copy_from_slice(&bytes[index+1..index+5]);
                 let int_operand = i32::from_le_bytes(operand_bytes);
@@ -54,6 +55,22 @@ pub fn read_bytecode_from_file(filename: &str) -> std::io::Result<Bytecode> {
             Opcode::Negate => None,
             Opcode::If => None,
             Opcode::Jump => None,
+            Opcode::EndOfProgram => None,
+            Opcode::Store    |
+            Opcode::Init     |
+            Opcode::InitMut  |
+            Opcode::StoreMut |
+            Opcode::LoadVar => {
+                // extract the length of the string
+                let str_len = bytes[index + 1];
+                // extract the string bytes
+                let str_bytes = &bytes[index + 2..index + 2 + str_len as usize];
+                // convert the string bytes into a String
+                let str = String::from_utf8(str_bytes.to_vec()).unwrap();
+                // create the operand
+                Some(Operand::Str(StrPtr { ptr: str.as_ptr(), len: str.len() }))
+            }
+
         };
         let instr = Instruction { opcode, operand };
         instructions.push(instr);
@@ -84,6 +101,47 @@ pub fn decompile(bytecode: &Bytecode) -> String {
             Opcode::Negate => output.push_str("- "),
             Opcode::If => output.push_str("if "),
             Opcode::Jump => output.push_str("jump "),
+            Opcode::Store => {
+                if let Some(Operand::Str(str_ptr)) = instr.operand {
+                    unsafe {
+                        output.push_str(&format!("store {} ", str_ptr.to_string()));
+                    }
+                }
+            }
+            Opcode::Init => {
+                if let Some(Operand::Str(str_ptr)) = instr.operand {
+                    unsafe {
+                        output.push_str(&format!("init {} ", str_ptr.to_string()));
+                    }
+                }
+            }
+            Opcode::InitMut => {
+                if let Some(Operand::Str(str_ptr)) = instr.operand {
+                    unsafe {
+                        output.push_str(&format!("init_mut {} ", str_ptr.to_string()));
+                    }
+                }
+            }
+            Opcode::StoreMut => {
+                if let Some(Operand::Str(str_ptr)) = instr.operand {
+                    unsafe {
+                        output.push_str(&format!("store_mut {} ", str_ptr.to_string()));
+                    }
+                }
+            }
+            Opcode::LoadVar => {
+                if let Some(Operand::Str(str_ptr)) = instr.operand {
+                    unsafe {
+                        output.push_str(&format!("load {} ", str_ptr.to_string()));
+                    }
+                }
+            }
+            Opcode::StoreFunc => {
+                if let Some(Operand::Int(value)) = instr.operand {
+                    output.push_str(&format!("store_func {} ", value));
+                }
+            }
+            Opcode::EndOfProgram => output.push_str("end "),
         }
     }
     output

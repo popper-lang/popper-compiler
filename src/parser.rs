@@ -41,6 +41,13 @@ impl Parser {
             stmts.push(self.parse_statement());
         }
 
+        stmts.push(
+            Stmt::new(
+                StmtType::Expression {
+                    expr: Expr::new(
+                        Box::new(ExprType::Eof), 0..0, self.clone().body) },
+                0..0, self.clone().body));
+
         stmts
     }
     fn parse_statement(&mut self) -> Stmt {

@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::io::Read;
 use crate::bytecodes::bytecode::Bytecode;
 use crate::bytecodes::bytecode::Opcode;
 use crate::bytecodes::bytecode::Operand;
@@ -21,6 +22,8 @@ pub struct Frame {
 pub enum Value {
     Number(f64),
     Boolean(bool),
+    String(String),
+    Function(i32, i32), // arity, address
     Nil
 }
 
@@ -43,7 +46,6 @@ impl Vm {
             slots: vec![],
         });
         loop {
-
             let frame = self.frames.last_mut().unwrap();
             if frame.ip >= bytecode.instructions.len() {
                 return Ok(());
@@ -59,13 +61,19 @@ impl Vm {
                         Value::Number(f as f64)
                     } else if let Some(Operand::Bool(b)) = instruction.operand {
                         Value::Boolean(b)
+                    } else if let Some(Operand::Str(str)) = instruction.operand {
+
+                        let string = unsafe {
+                            str.to_string()
+                        };
+
+                        Value::String(string)
                     }  else {
                         return Err("Invalid operand".to_string());
                     };
                     self.stack.push(constant);
                 }
                 Opcode::Add => {
-                    dbg!(&self.stack);
                     let b = self.stack.pop().unwrap();
                     let a = self.stack.pop().unwrap();
                     let result = match (a, b) {
@@ -130,7 +138,90 @@ impl Vm {
                     };
                     frame.ip = (offset - 1) as usize;
                 }
+                Opcode::Store => {
+                    let name = if let Some(Operand::Str(str)) = instruction.operand {
+                        unsafe {
+                            str.to_string()
+                        }
+                    } else {
+                        return Err("Invalid operand".to_string());
+                    };
+                    let value = self.stack.pop().unwrap();
+                    self.globals.insert(name, value);
+                }
+                Opcode::StoreMut => {
+                    let name = if let Some(Operand::Str(str)) = instruction.operand {
+                        unsafe {
+                            str.to_string()
+                        }
+                    } else {
+                        return Err("Invalid operand".to_string());
+                    };
+                    let value = self.stack.pop().unwrap();
+                    self.globals.insert(name, value);
+                }
+                Opcode::Init => {
+                    let name = if let Some(Operand::Str(str)) = instruction.operand {
+                        unsafe {
+                            str.to_string()
+                        }
+                    } else {
+                        return Err("Invalid operand".to_string());
+                    };
+                    let value = Value::Nil;
+                    self.globals.insert(name, value);
+                }
+                Opcode::InitMut => {
+                    let name = if let Some(Operand::Str(str)) = instruction.operand {
+                        unsafe {
+                            str.to_string()
+                        }
+                    } else {
+                        return Err("Invalid operand".to_string());
+                    };
+                    let value = Value::Nil;
+                    self.globals.insert(name, value);
+                }
+                Opcode::LoadVar => {
+                    let name = if let Some(Operand::Str(str)) = instruction.operand {
+                        unsafe {
+                            str.to_string()
+                        }
+                    } else {
+                        return Err("Invalid operand".to_string());
+                    };
+                    let value = self.globals.get(&name);
+                    if let Some(value) = value {
+                        self.stack.push(value.clone());
+                    } else {
+                        return Err("Variable not found".to_string());
+                    }
+
+                }
+                Opcode::StoreFunc => {
+                    let arity = match self.stack.pop().unwrap() {
+                        Value::Number(n) => n as i32,
+                        _ => return Err("Invalid operand".to_string()),
+                    };
+
+                    let name = match self.stack.pop().unwrap() {
+                        Value::String(s) => s,
+                        _ => return Err("Invalid operand".to_string()),
+                    };
+
+                    if let Some(e) = instruction.operand {
+                        if let Operand::Int(i) = e {
+                            self.globals.insert(name, Value::Function(arity, i));
+                        }
+                    }
+
+                }
+                Opcode::EndOfProgram => {
+                    return Ok(());
+                }
+                _ => return Err("Unimplemented opcode".to_string()),
             }
+
         }
     }
 

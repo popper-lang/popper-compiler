@@ -10,6 +10,13 @@ pub enum Opcode {
     Negate,
     If,
     Jump,
+    Store,
+    StoreMut,
+    Init,
+    InitMut,
+    LoadVar,
+    StoreFunc,
+    EndOfProgram,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -17,6 +24,20 @@ pub enum Operand {
     Int(i32),
     Float(f32),
     Bool(bool),
+    Str(StrPtr)
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct StrPtr {
+    pub ptr: *const u8,
+    pub len: usize,
+}
+
+impl StrPtr {
+    pub unsafe fn to_string(&self) -> String {
+        let bytes = std::slice::from_raw_parts(self.ptr, self.len);
+        String::from_utf8_lossy(bytes).to_string()
+    }
 }
 
 impl Opcode {
@@ -51,6 +72,12 @@ impl Instruction {
                 bytes.to_vec()
             }
             Some(Operand::Bool(b)) => vec![*b as u8],
+            Some(Operand::Str(str)) => {
+                let bytes = unsafe { std::slice::from_raw_parts(str.ptr, str.len) };
+                let mut vec = vec![str.len as u8];
+                vec.extend_from_slice(bytes);
+                vec
+            }
             None => vec![],
         };
         let mut bytes = vec![opcode_bytes];
@@ -63,6 +90,7 @@ impl Instruction {
             Some(Operand::Int(_)) => 4,
             Some(Operand::Float(f)) => 4,
             Some(Operand::Bool(_)) => 1,
+            Some(Operand::Str(str)) => str.len,
             None => 0,
         }) + 1
     }

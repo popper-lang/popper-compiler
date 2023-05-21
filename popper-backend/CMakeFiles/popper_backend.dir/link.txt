@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libpopper_backend.a CMakeFiles/popper_backend.dir/src/library.c.o CMakeFiles/popper_backend.dir/src/main.c.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libpopper_backend.a

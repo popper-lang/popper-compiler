@@ -7,11 +7,11 @@ use popper::lexer::Lexer;
 fn main() {
 
     let body = r#"
-    if false {
-    2 + 3
-    } else {
-    1 + 48
+    fun bar(a, b) {
+        a + b
     }
+
+
     "#.to_string();
     let mut lexer = Lexer::new(body.clone());
     let mut parser = Parser::new(lexer.scan_token(), body);
@@ -20,7 +20,7 @@ fn main() {
     for stmt in ast {
         let bytecode = stmt.to_bytecode();
         debug_bytecode(&bytecode);
-
+        println!("{}", decompile(&bytecode));
         dbg!(vm.run(&bytecode));
         println!("Result: {:?}", vm.stack);
     }
