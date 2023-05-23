@@ -1,0 +1,15 @@
+[package]
+name = "popper_macro"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.16" , features = ["parsing", "extra-traits", "visit-mut", "visit", "proc-macro", "derive", "fold", "quote", "clone-impls", "default", "full"]}
+proc-macro2 = "1.0.58"
+quote = "1.0.9"
+
+
+

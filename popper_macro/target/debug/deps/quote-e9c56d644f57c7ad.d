@@ -1,0 +1,11 @@
+/Users/antoine/Documents/popper-lang/popper_macro/target/debug/deps/quote-e9c56d644f57c7ad.rmeta: /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/lib.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ext.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/format.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ident_fragment.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/to_tokens.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/runtime.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/spanned.rs
+
+/Users/antoine/Documents/popper-lang/popper_macro/target/debug/deps/quote-e9c56d644f57c7ad.d: /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/lib.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ext.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/format.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ident_fragment.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/to_tokens.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/runtime.rs /Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/spanned.rs
+
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/lib.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ext.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/format.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/ident_fragment.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/to_tokens.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/runtime.rs:
+/Users/antoine/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quote-1.0.27/src/spanned.rs:

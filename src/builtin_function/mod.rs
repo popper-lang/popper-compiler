@@ -47,8 +47,9 @@ macro_rules! type_to_rs_type {
         match $type_ {
             Type::Int => i32,
             Type::String => String,
-            Type::Bool => Bool,
-            Type::None => ()
+            Type::Bool => bool,
+            Type::None => (),
+            _ => panic!("Not implemented yet"),
         }
     };
 }
@@ -82,7 +83,6 @@ macro_rules! function_to_rs_fn {
     };
 }
 
-
 #[macro_export]
 macro_rules! call_function_with_vec {
     ($func:expr, $($vec:expr),* ) => {
@@ -92,6 +92,14 @@ macro_rules! call_function_with_vec {
     };
 }
 
+#[macro_export]
+macro_rules! build_function {
+    ($name:ident, $($args_name:ident : $ty:expr),*) => {
+        fn $name($($args_name : $crate::type_to_rs_type!($ty)),*) {
+
+        }
+    }
+}
 #[macro_export]
 macro_rules! call_method_with_vec {
     ($func:expr, $this:tt, $($vec:expr),* ) => {

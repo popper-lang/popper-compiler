@@ -1,6 +1,5 @@
 use popper::execute;
 
-
 fn main() {
     println!("{:?}", execute(r#"
     use "io.pop" as io;

@@ -30,6 +30,7 @@ trait ResponseStdLib {
 
 trait ServerStdLib {
     function!(start);
+    function!(new);
 }
 
 
@@ -56,13 +57,9 @@ impl HttpServer {
     }
 }
 
-define_function!(new() {
-    let server = Server::new();
-    let http_server = HttpServer {
-        server
-    };
-    http_server.create_object()
-}, function_name = "new");
+
+
+
 
 impl Into<HttpRouter> for Object {
     fn into(self) -> HttpRouter {
