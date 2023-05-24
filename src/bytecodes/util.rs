@@ -45,7 +45,7 @@ pub fn read_bytecode_from_file(filename: &str) -> std::io::Result<Bytecode> {
             _ => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Invalid opcode")),
         };
         let operand = match opcode {
-            Opcode::LoadConst | Opcode::StoreFunc => {
+            Opcode::LoadConst | Opcode::StoreFunc | Opcode::Call => {
                 let mut operand_bytes = [0u8; 4];
                 operand_bytes.copy_from_slice(&bytes[index+1..index+5]);
                 let int_operand = i32::from_le_bytes(operand_bytes);
@@ -139,6 +139,11 @@ pub fn decompile(bytecode: &Bytecode) -> String {
             Opcode::StoreFunc => {
                 if let Some(Operand::Int(value)) = instr.operand {
                     output.push_str(&format!("store_func {} ", value));
+                }
+            }
+            Opcode::Call => {
+                if let Some(Operand::Int(value)) = instr.operand {
+                    output.push_str(&format!("call {} ", value));
                 }
             }
             Opcode::EndOfProgram => output.push_str("end "),

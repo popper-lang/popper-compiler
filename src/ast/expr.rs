@@ -82,6 +82,18 @@ impl Expr {
                     len: ident.lexeme.len(),
                 })))
             },
+            ExprType::Call { name, args} => {
+                let name = name.to_bytecode();
+
+                bytecode.instructions.extend(name.instructions);
+
+                for arg in args {
+                    let arg = arg.to_bytecode();
+                    bytecode.instructions.extend(arg.instructions);
+                }
+
+                bytecode.add_instruction(Opcode::Call, Some(Operand::Int(args.len() as i32)));
+            }
             ExprType::Eof => bytecode.add_instruction(Opcode::EndOfProgram, None),
 
             _ => todo!()

@@ -16,6 +16,7 @@ pub enum Opcode {
     InitMut,
     LoadVar,
     StoreFunc,
+    Call,
     EndOfProgram,
 }
 

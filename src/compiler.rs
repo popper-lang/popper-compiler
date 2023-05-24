@@ -71,6 +71,14 @@ impl Stmt {
                     len: name.lexeme.len()
                 };
 
+                for arg in args {
+                    let arg_ptr = StrPtr {
+                        ptr: arg.as_ptr(),
+                        len: arg.len()
+                    };
+                    bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Str(arg_ptr)));
+                }
+
                 bytecode.add_instruction(Opcode::LoadConst, Some(Operand::Str(name_ptr)));
                 bytecode.add_instruction(Opcode::LoadConst, Some(
                         Operand::Int(args.len() as i32)
@@ -81,7 +89,7 @@ impl Stmt {
                         (bytecode.instructions.len() + 3) as i32
                     )
                 ));
-                bytecode.add_instruction(Opcode::Jump, Some(Operand::Int((bytecode.instructions.len() + body.instructions.len() + 1) as i32)));
+                bytecode.add_instruction(Opcode::Jump, Some(Operand::Int((bytecode.instructions.len() + body.instructions.len() + 2) as i32)));
                 bytecode.extend(body);
 
 

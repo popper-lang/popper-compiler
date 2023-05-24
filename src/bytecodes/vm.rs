@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io::Read;
+use std::ops::Range;
 use crate::bytecodes::bytecode::Bytecode;
 use crate::bytecodes::bytecode::Opcode;
 use crate::bytecodes::bytecode::Operand;
@@ -16,6 +17,17 @@ pub struct Vm {
 pub struct Frame {
     pub ip: usize,
     pub slots: Vec<Value>,
+    pub locals: HashMap<String, Value>,
+}
+
+impl Frame {
+    pub fn new(ip: usize) -> Self {
+        Frame {
+            ip,
+            slots: vec![],
+            locals: HashMap::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -23,7 +35,7 @@ pub enum Value {
     Number(f64),
     Boolean(bool),
     String(String),
-    Function(i32, i32), // arity, address
+    Function(i32, i32, Vec<String>), // arity, address, args
     Nil
 }
 
@@ -44,6 +56,7 @@ impl Vm {
         self.frames.push(Frame {
             ip: 0,
             slots: vec![],
+            locals: HashMap::new(),
         });
         loop {
             let frame = self.frames.last_mut().unwrap();
@@ -199,6 +212,7 @@ impl Vm {
 
                 }
                 Opcode::StoreFunc => {
+
                     let arity = match self.stack.pop().unwrap() {
                         Value::Number(n) => n as i32,
                         _ => return Err("Invalid operand".to_string()),
@@ -208,13 +222,53 @@ impl Vm {
                         Value::String(s) => s,
                         _ => return Err("Invalid operand".to_string()),
                     };
+                    let mut args = Vec::new();
+                    for _ in 0..arity {
+                        let arg = match self.stack.pop() {
+                            Some(Value::String(s)) => s,
+                            _ => return Err("Invalid operand".to_string()),
+                        };
+
+                        args.push(arg);
+                    }
 
                     if let Some(e) = instruction.operand {
                         if let Operand::Int(i) = e {
-                            self.globals.insert(name, Value::Function(arity, i));
+                            self.globals.insert(name, Value::Function(arity, i, args));
                         }
                     }
 
+                }
+
+                Opcode::Call => {
+                    let arity = match instruction.operand {
+                        Some(Operand::Int(i)) => i,
+                        _ => return Err("Invalid operand".to_string()),
+                    };
+
+                    let mut args = Vec::new();
+                    for _ in 0..arity {
+                        let arg = self.stack.pop().unwrap();
+                        args.push(arg);
+                    }
+
+                    let name = self.stack.pop().unwrap();
+
+                    let function = match name {
+                        Value::Function(arity, ip, fn_args) => {
+                            if arity != args.len() as i32 {
+                                return Err("Invalid number of arguments".to_string());
+                            }
+                            self.frames.push(Frame::new(ip as usize));
+
+                            
+
+
+
+
+                        }
+                        _ => return Err("Invalid operand".to_string()),
+                    };
                 }
                 Opcode::EndOfProgram => {
                     return Ok(());
