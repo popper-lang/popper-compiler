@@ -35,7 +35,7 @@ pub enum Value {
     Number(f64),
     Boolean(bool),
     String(String),
-    Function(i32, i32, Vec<String>), // arity, address, args
+    Function(i32, i32, i32, Vec<String>), // arity, address, len, args
     Nil
 }
 
@@ -203,7 +203,7 @@ impl Vm {
                     } else {
                         return Err("Invalid operand".to_string());
                     };
-                    let value = self.globals.get(&name);
+                    let value = frame.locals.get(&name);
                     if let Some(value) = value {
                         self.stack.push(value.clone());
                     } else {
@@ -234,7 +234,7 @@ impl Vm {
 
                     if let Some(e) = instruction.operand {
                         if let Operand::Int(i) = e {
-                            self.globals.insert(name, Value::Function(arity, i, args));
+                            self.globals.insert(name, Value::Function(arity, i, args, ));
                         }
                     }
 
@@ -255,16 +255,20 @@ impl Vm {
                     let name = self.stack.pop().unwrap();
 
                     let function = match name {
-                        Value::Function(arity, ip, fn_args) => {
+                        Value::Function(arity, ip, len, fn_args) => {
                             if arity != args.len() as i32 {
                                 return Err("Invalid number of arguments".to_string());
                             }
-                            self.frames.push(Frame::new(ip as usize));
 
+                            let last_ip = frame.ip;
 
+                            let mut new_frame = Frame::new(ip as usize);
 
+                            for (i, arg) in args.iter().enumerate() {
+                                new_frame.locals.insert(fn_args[i].clone(), arg.clone());
+                            }
 
-
+                            self.frames.push(new_frame);
 
                         }
                         _ => return Err("Invalid operand".to_string()),

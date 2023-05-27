@@ -1,6 +1,6 @@
 use std::mem;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Opcode {
     LoadConst,
     Add,
@@ -17,6 +17,7 @@ pub enum Opcode {
     LoadVar,
     StoreFunc,
     Call,
+    Return,
     EndOfProgram,
 }
 
@@ -120,4 +121,25 @@ impl Bytecode {
     pub fn extend(&mut self, bytecode: Self) {
         self.instructions.extend(bytecode.instructions);
     }
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut bytes = vec![];
+        for instruction in self.instructions.iter() {
+            bytes.extend_from_slice(&instruction.to_bytes());
+        }
+        bytes
+    }
+
+    pub fn find(&self, opcode: Opcode) -> Option<usize> {
+        self.instructions.iter().position(|instruction| instruction.opcode == opcode)
+    }
+
+    pub fn last(&self) -> Option<&Instruction> {
+        self.instructions.last()
+    }
+
+    pub fn last_opcode(&self) -> Option<Opcode> {
+        self.instructions.last().map(|instruction| instruction.opcode)
+    }
+
+
 }

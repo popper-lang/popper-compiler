@@ -90,7 +90,12 @@ impl Stmt {
                     )
                 ));
                 bytecode.add_instruction(Opcode::Jump, Some(Operand::Int((bytecode.instructions.len() + body.instructions.len() + 2) as i32)));
+                if Opcode::Return != body.last_opcode().unwrap_or(Opcode::EndOfProgram) {
+                    body.add_instruction(Opcode::Return, None);
+                }
+
                 bytecode.extend(body);
+
 
 
             },
