@@ -14,6 +14,7 @@ pub struct Vm {
     pub frames: Vec<Frame>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Frame {
     pub ip: usize,
     pub slots: Vec<Value>,
@@ -35,7 +36,7 @@ pub enum Value {
     Number(f64),
     Boolean(bool),
     String(String),
-    Function(i32, i32, i32, Vec<String>), // arity, address, len, args
+    Function(i32, i32, Vec<String>), // arity, address, args
     Nil
 }
 
@@ -207,7 +208,7 @@ impl Vm {
                     if let Some(value) = value {
                         self.stack.push(value.clone());
                     } else {
-                        return Err("Variable not found".to_string());
+                        return Err(format!("Variable not found: {}", name));
                     }
 
                 }
@@ -234,8 +235,13 @@ impl Vm {
 
                     if let Some(e) = instruction.operand {
                         if let Operand::Int(i) = e {
-                            self.globals.insert(name, Value::Function(arity, i, args, ));
+                            frame.locals.insert(name, Value::Function(arity, i, args, ));
+                            dbg!(&frame.locals);
+                        } else {
+                            return Err("Invalid operand".to_string());
                         }
+                    } else {
+                        return Err("Invalid operand".to_string());
                     }
 
                 }
@@ -254,8 +260,8 @@ impl Vm {
 
                     let name = self.stack.pop().unwrap();
 
-                    let function = match name {
-                        Value::Function(arity, ip, len, fn_args) => {
+                    let _ = match name {
+                        Value::Function(arity, ip, fn_args) => {
                             if arity != args.len() as i32 {
                                 return Err("Invalid number of arguments".to_string());
                             }
@@ -270,9 +276,16 @@ impl Vm {
 
                             self.frames.push(new_frame);
 
+
                         }
                         _ => return Err("Invalid operand".to_string()),
                     };
+                }
+                Opcode::Return => {
+                    let value = self.stack.pop().unwrap();
+                    self.frames.pop();
+                    self.stack.push(value);
+
                 }
                 Opcode::EndOfProgram => {
                     return Ok(());

@@ -89,7 +89,8 @@ impl Stmt {
                         (bytecode.instructions.len() + 3) as i32
                     )
                 ));
-                bytecode.add_instruction(Opcode::Jump, Some(Operand::Int((bytecode.instructions.len() + body.instructions.len() + 2) as i32)));
+                bytecode.add_instruction(Opcode::Jump, Some(Operand::Int((bytecode.instructions.len() + body.instructions.len() + 3) as i32)));
+                let mut body = body.clone();
                 if Opcode::Return != body.last_opcode().unwrap_or(Opcode::EndOfProgram) {
                     body.add_instruction(Opcode::Return, None);
                 }

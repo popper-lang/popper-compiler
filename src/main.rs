@@ -11,6 +11,8 @@ fn main() {
         a + b
     }
 
+    bar(1, 2)
+
 
     "#.to_string();
     let mut lexer = Lexer::new(body.clone());

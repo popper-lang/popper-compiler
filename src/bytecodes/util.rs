@@ -56,6 +56,7 @@ pub fn read_bytecode_from_file(filename: &str) -> std::io::Result<Bytecode> {
             Opcode::If => None,
             Opcode::Jump => None,
             Opcode::EndOfProgram => None,
+            Opcode::Return => None,
             Opcode::Store    |
             Opcode::Init     |
             Opcode::InitMut  |
@@ -146,6 +147,7 @@ pub fn decompile(bytecode: &Bytecode) -> String {
                     output.push_str(&format!("call {} ", value));
                 }
             }
+            Opcode::Return => output.push_str("return "),
             Opcode::EndOfProgram => output.push_str("end "),
         }
     }
