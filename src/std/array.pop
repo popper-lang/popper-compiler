@@ -1,9 +1,0 @@
-
-struct Array {
-    array: list
-}
-
-impl Array fun new with l: list = Array {
-    array = l
-}
-

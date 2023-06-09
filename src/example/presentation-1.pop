@@ -1,4 +1,0 @@
-use "src/std/array.pop" as array
-
-let n = array.Array.new [9 9 2]
-println "hello"

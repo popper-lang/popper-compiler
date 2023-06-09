@@ -1,0 +1,33 @@
+add-spec
+
+3 + 4
+
+IR: 1th version : AST
+
+BinOp(
+	Int(3), ADD, Int(4)
+)
+
+IR: 2th version: Simple Bytecode
+
+LoadConst 3 
+LoadConst 4
+Add
+
+IR 3th version: Extended Bytecode
+
+LoadConst (EAX, 3)
+LoadConst (EBX, 4)
+Add 
+
+IR 4th version: PRE-ASM 
+
+MOV32(EAX, 3)
+MOV32(EBX, 4)
+ADD32(EAX, EBX)
+
+ASM
+
+movl $3, %eax
+movl $4, %ebx
+addl %ebx, %eax

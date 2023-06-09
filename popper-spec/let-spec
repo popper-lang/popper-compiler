@@ -1,0 +1,51 @@
+
+
+-- Let 
+
+let a = 7 
+a + 3
+
+IR: 1th version : AST
+
+Let(
+	Ident("a"), Int(7)
+)
+Add(Ident("a"), Int(3))
+ 
+IR: 2th version: Simple Bytecode
+
+
+LoadConst 7
+Let "a"
+Fetch "a"
+LoadConst 3
+Add
+
+IR 3th version: Extended Bytecode
+
+LOAD_CONST 7
+LET (-4, ESP)
+FETCH (-4, ESP)
+LOAD_CONST (EBX, 3)
+ADD
+
+IR 4th version: PRE-ASM 
+
+SUB64(RSP, 4)
+MOV32(Ind(-4, RSP), 7)
+MOV32(EAX, Ind(-4, RSP))
+MOV32(EBX, 3)
+ADD32(EAX, EBX)
+ADD64(RSP, 4)
+
+
+ASM
+
+subq $4, %rsp
+movl $7, -4(%rsp)
+movl -4(%rsp), %eax
+movl $3, %ebx
+addl %ebx, %eax
+addq $4, %rsp
+
+

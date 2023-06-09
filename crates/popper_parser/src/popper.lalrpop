@@ -1,0 +1,144 @@
+use std::str::FromStr;
+use ast::Expression;
+use ast::Statement;
+use ast::BinOp;
+use ast::BinOpKind;
+use ast::Span;
+use ast::Constant;
+use ast::Int;
+use ast::Block;
+use ast::While;
+use ast::ParenGroup;
+use ast::Ident;
+use ast::Bool;
+
+grammar<'a>;
+
+Num: i64 = {
+    r"[0-9]+" => i64::from_str(<>).unwrap(),
+};
+
+Chars: String = r"[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string();
+
+OpTerm: BinOpKind = {
+    "+" => BinOpKind::Add,
+    "-" => BinOpKind::Sub,
+}
+
+OpFactor: BinOpKind = {
+    "*" => BinOpKind::Mul,
+    "/" => BinOpKind::Div,
+}
+
+BinOp<Lhs, Op, Rhs>: Expression = {
+    <ll:@L> <l:Lhs> <op:Op> <r:Rhs> <lr:@R> => {
+        Expression::BinOp(BinOp::new(Span::new(ll, lr), op, l,  r))
+    }
+}
+
+Group<DelimS, T, DelimE>: (Span, T) = {
+    <ll:@L> <ds:DelimS> <t:T> <de:DelimE> <lr:@R> => (Span::new(ll, lr), t)
+}
+
+BlockStmt: Statement = {
+    <e:Group<"{", Statement*, "}">> => {
+        Statement::Block(
+            Block::new(
+                e.0,
+                e.1
+            )
+        )
+    }
+
+}
+
+WhileStmt: (Expression, Statement) = {
+    "while" <cond:Expr> <body:Statement>  => {
+        (cond, body)
+    }
+}
+
+While: Statement = {
+    <t:Span<WhileStmt>> => {
+        Statement::While(
+            While::new(
+                t.0,
+                t.1.0,
+                t.1.1
+            )
+        )
+    }
+}
+
+Expr: Expression = {
+    BinOp<Expr, OpTerm, Factor>,
+    Factor,
+};
+
+Factor: Expression = {
+    BinOp<Factor, OpFactor, Term>,
+    Term
+};
+
+ParenGroup: Expression = {
+    <g:Group<"(", Expr, ")">> => {
+        Expression::Group(
+            ParenGroup::new(
+                g.0,
+                g.1
+            )
+        )
+    }
+
+};
+
+Term: Expression = {
+    Int,
+    ParenGroup,
+    Ident,
+    Bool
+};
+
+
+Ident: Expression = {
+    <t:Span<Chars>> => {
+        Expression::Constant(
+            Constant::Ident(
+                Ident::new(
+                    t.0,
+                    t.1.to_string()
+                )
+            )
+        )
+    }
+}
+
+Int: Expression = {
+    <t:Span<Num>> => Expression::Constant(
+                                Constant::Int(
+                                    Int::new(
+                                        t.0,
+                                        t.1
+                                    )
+                                )
+                            )
+}
+
+Bool: Expression = {
+    Span<"true"> => Expression::Constant(Constant::Bool(Bool::new(<>.0, true))),
+    Span<"false"> => Expression::Constant(Constant::Bool(Bool::new(<>.0, false)))
+}
+
+Span<T>: (Span, T) = {
+    <ll:@L> <t:T> <lr:@R> => (Span::new(ll, lr), t)
+}
+
+Statement: Statement = {
+    BlockStmt,
+    While,
+    <e:Expr> ";" => { Statement::Expression(e) }
+}
+
+pub File: Vec<Statement> = {
+    <stmts:Statement*> => { stmts }
+}
