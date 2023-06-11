@@ -1,6 +1,13 @@
 /target
-
+target/
 .idea 
 Cargo.lock
 .DS_Store
 examples/ex1/target/
+.* 
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

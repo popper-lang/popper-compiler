@@ -1,0 +1,14 @@
+[package]
+name = "popper_semantic_analyzer"
+version = "0.1.0"
+edition = "2021"
+description = "A semantic analyzer for the Popper programming language."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ast = { path = "../popper_ast" }
+popper_common = { path = "../popper_common" }
+thiserror = "1.0.40"
+ariadne = "0.2.0"
+
