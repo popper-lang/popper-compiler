@@ -1,1 +1,0 @@
-window.ALL_CRATES = ["popper_macro","proc_macro2","quote","syn","unicode_ident"];

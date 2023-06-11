@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["string_to_ident"]};
