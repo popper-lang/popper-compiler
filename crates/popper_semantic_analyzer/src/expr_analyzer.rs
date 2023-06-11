@@ -1,7 +1,8 @@
 use ast::*;
-use crate::error::TypeMismatch;
+use crate::errors::TypeMismatch;
 use crate::symbol_table::{SymbolTable, SymbolFlags, Flag, ConstantType, Type};
 use crate::visitor::ExprVisitor;
+use popper_common::error::Error;
 
 struct ExprAnalyzer {
     symbol_table: SymbolTable,
@@ -16,42 +17,42 @@ impl ExprAnalyzer {
 
 impl ExprVisitor for ExprAnalyzer {
     type Output = SymbolFlags;
-    type Error = ();
+    type Error = Box<dyn Error>;
 
     fn visit_constant(&mut self, constant: Constant) -> Result<Self::Output, Self::Error> {
         match constant {
-            Constant::Int(_) => Ok(
-                SymbolFlags::new()
+            Constant::Int(int) => Ok(
+                SymbolFlags::new(int.span())
                     .set_integer()
                     .clone()
             ),
-            Constant::Float(_) => Ok(
-                SymbolFlags::new()
+            Constant::Float(float) => Ok(
+                SymbolFlags::new(float.span())
                     .set_float()
                     .clone()
             ),
-            Constant::StringLiteral(_) => Ok(
-                SymbolFlags::new()
+            Constant::StringLiteral(string) => Ok(
+                SymbolFlags::new(string.span())
                     .set_string()
                     .clone()
             ),
-            Constant::Bool(_) => Ok(
-                SymbolFlags::new()
+            Constant::Bool(bool) => Ok(
+                SymbolFlags::new(bool.span())
                     .set_boolean()
                     .clone()
             ),
             Constant::Ident(ident) => {
                 match self.symbol_table.get(&ident.name) {
                     Some(_) => Ok(
-                        SymbolFlags::new()
+                        SymbolFlags::new(ident.span)
                             .set_ident()
                             .clone()
                     ),
-                    None => Err(()),
+                    None => todo!("throw name not found error")
                 }
             },
-            Constant::Null(_) => Ok(
-                SymbolFlags::new()
+            Constant::Null(null) => Ok(
+                SymbolFlags::new(null.span())
                     .set_none()
                     .clone()
             ),
@@ -66,7 +67,14 @@ impl ExprVisitor for ExprAnalyzer {
         if flag_lhs.is_same_type(&flag_rhs) {
             Ok(flag_lhs)
         } else {
-            todo!("throw type mismatch error")
+            Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (flag_lhs.span(), flag_lhs.get_type().unwrap().to_string()),
+                        (flag_rhs.span(), flag_rhs.get_type().unwrap().to_string())
+                    )
+                )
+            )
         }
 
 

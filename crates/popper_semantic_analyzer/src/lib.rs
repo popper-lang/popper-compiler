@@ -3,8 +3,9 @@ extern crate core;
 mod visitor;
 mod symbol_table;
 mod expr_analyzer;
-mod error;
+mod errors;
 mod test;
+pub mod tool;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

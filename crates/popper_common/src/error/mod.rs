@@ -1,4 +1,4 @@
-use ariadne::{Color, Report, Source};
+use ariadne::{Color, Source};
 
 pub type ColorConfig = std::collections::HashMap<String, Color>;
 

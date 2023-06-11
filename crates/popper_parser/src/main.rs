@@ -1,7 +1,5 @@
 
 use lalrpop_util::lalrpop_mod;
-use ast::Statement;
-use ast::Expression;
 use error::generate_color;
 use popper_parser::error::ParserError;
 use popper_parser::error::ParserErrorType;

@@ -3,7 +3,6 @@ use crate::BinOp;
 use crate::UnaryOp;
 use crate::Span;
 use crate::ParenGroup;
-use crate::Ident;
 
 #[derive(Debug, Clone)]
 pub enum Expression {

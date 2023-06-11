@@ -2,7 +2,7 @@ use crate::span::Span;
 
 #[derive(Debug, Clone)]
 pub struct Ident {
-    span: Span,
+    pub span: Span,
     pub name: String,
 }
 
@@ -22,6 +22,9 @@ impl Int {
     pub fn new(span: Span, value: i64) -> Self {
         Self { span, value }
     }
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +36,9 @@ pub struct Float {
 impl Float {
     fn new(span: Span, value: f64) -> Self {
         Self { span, value }
+    }
+    pub fn span(&self) -> Span {
+        self.span
     }
 }
 
@@ -46,6 +52,9 @@ impl StringLiteral {
     fn new(span: Span, value: String) -> Self {
         Self { span, value }
     }
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -58,6 +67,9 @@ impl Bool {
     pub fn new(span: Span, value: bool) -> Self {
         Self { span, value }
     }
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -68,6 +80,9 @@ pub struct Null {
 impl Null {
     fn new(span: Span) -> Self {
         Self { span }
+    }
+    pub fn span(&self) -> Span {
+        self.span
     }
 }
 

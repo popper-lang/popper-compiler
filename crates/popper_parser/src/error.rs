@@ -1,7 +1,7 @@
 use lalrpop_util::lexer::Token;
 use lalrpop_util::ParseError;
 use popper_common::error::{ColorConfig, Error, source_to_string};
-use ariadne::{Color, Report, Source, ReportKind, Label};
+use ariadne::{Report, Source, ReportKind, Label};
 use ariadne::Fmt;
 
 
@@ -15,9 +15,9 @@ pub struct ParserError<'a> {
 }
 
 
-impl<'a> Into<ParserErrorType<'a>> for ParseError<usize, Token<'a>, &'static str> {
-    fn into(self) -> ParserErrorType<'a> {
-        ParserErrorType(self)
+impl<'a> From<ParseError<usize, Token<'a>, &'static str>> for ParserErrorType<'a> {
+    fn from(val: ParseError<usize, Token<'a>, &'static str>) -> Self {
+        ParserErrorType(val)
     }
 }
 
@@ -57,7 +57,7 @@ impl<'a> Error for ParserError<'a> {
         match self.clone().error.clone().0 {
             ParseError::InvalidToken { location } => {
                 report = report.with_code(1)
-                    .with_message(format!("Invalid token"))
+                    .with_message("Invalid token".to_string())
                     .with_label(
                         Label::new((file, self.span.into()))
                             .with_message(
@@ -65,7 +65,7 @@ impl<'a> Error for ParserError<'a> {
                                         self.span.extract_from_str(
                                             source_to_string(source).as_str()
                                         ).fg(
-                                            keyword_color.clone()
+                                            *keyword_color
                                         )
                                 )
                             )
@@ -73,7 +73,7 @@ impl<'a> Error for ParserError<'a> {
             }
             ParseError::UnrecognizedEof { location, expected } => {
                 report = report.with_code(1)
-                    .with_message(format!("Unexpected end of file"))
+                    .with_message("Unexpected end of file".to_string())
                     .with_label(
                         Label::new((file, self.span.into()))
                             .with_message(
@@ -85,7 +85,7 @@ impl<'a> Error for ParserError<'a> {
             }
             ParseError::UnrecognizedToken { token: (start, token, end), expected } => {
                 report = report.with_code(1)
-                    .with_message(format!("Unexpected token"))
+                    .with_message("Unexpected token".to_string())
                     .with_label(
                         Label::new((file, start..end))
                             .with_message(
@@ -97,7 +97,7 @@ impl<'a> Error for ParserError<'a> {
             }
             ParseError::ExtraToken { token: (start, token, end) } => {
                 report = report.with_code(1)
-                    .with_message(format!("Extra token"))
+                    .with_message("Extra token".to_string())
                     .with_label(
                         Label::new((file, start..end))
                             .with_message(
@@ -105,7 +105,7 @@ impl<'a> Error for ParserError<'a> {
                                         self.span.extract_from_str(
                                             source_to_string(source).as_str()
                                         ).fg(
-                                            keyword_color.clone()
+                                            *keyword_color
                                         )
                                 )
                             )
@@ -113,7 +113,7 @@ impl<'a> Error for ParserError<'a> {
             }
             ParseError::User { error } => {
                 report = report.with_code(1)
-                    .with_message(format!("User error"))
+                    .with_message("User error".to_string())
                     .with_label(
                         Label::new((file, self.span.into()))
                             .with_message(
@@ -121,7 +121,7 @@ impl<'a> Error for ParserError<'a> {
                                         self.span.extract_from_str(
                                             source_to_string(source).as_str()
                                         ).fg(
-                                            keyword_color.clone()
+                                            *keyword_color
                                         )
                                 )
                             )

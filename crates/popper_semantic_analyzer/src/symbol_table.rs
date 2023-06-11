@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use ast::Span;
 
 
 pub struct SymbolTable {
@@ -90,11 +91,11 @@ pub enum Type {
 }
 
 #[derive(Debug, Clone)]
-pub struct SymbolFlags(Vec<Flag>);
+pub struct SymbolFlags(Vec<Flag>, Span);
 
 impl SymbolFlags {
-    pub fn new() -> Self {
-        Self(Vec::new())
+    pub fn new(span: Span) -> Self {
+        Self(Vec::new(), span)
     }
 
     pub fn add_flag(&mut self, flag: Flag) {
@@ -167,6 +168,20 @@ impl SymbolFlags {
                 _ => false,
             }
         })
+    }
+
+    pub fn get_type(&self) -> Option<Type> {
+        for flag in &self.0 {
+            match flag {
+                Flag::Type(t) => return Some(t.clone()),
+                _ => continue,
+            }
+        }
+        None
+    }
+
+    pub fn span(&self) -> Span {
+        self.1
     }
 }
 
