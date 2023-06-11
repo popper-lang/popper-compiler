@@ -1,31 +1,11 @@
 [package]
-<<<<<<< HEAD
 name = "popper_common"
 version = "0.1.0"
 edition = "2021"
-=======
-<<<<<<< HEAD:crates/popper_sbc/Cargo.toml
-name = "popper_sbc"
-=======
-name = "popper_common"
->>>>>>> full-rewrite:crates/popper_common/Cargo.toml
-version = "0.1.0"
-edition = "2021"
-description = "Simple Bytecode Compiler for Popper Language"
-license = "MIT"
 
->>>>>>> full-rewrite
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-<<<<<<< HEAD
-<<<<<<< HEAD:examples/ex1/Cargo.toml
-popper = { path = "../../" }
 
-=======
-<<<<<<< HEAD:crates/popper_sbc/Cargo.toml
->>>>>>> full-rewrite
-=======
 ariadne = "0.2.0"
->>>>>>> full-rewrite:crates/popper_common/Cargo.toml
