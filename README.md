@@ -47,5 +47,7 @@ my langage is **SFBCF**:
  * ❌ SAC ( Simple Asm Compiler )
  * ❌ AAC ( Asm Arch Compiler ) 
 
+# Info
 
+if you want information how this langage work you can read [STEP.md](STEP.md)
 
