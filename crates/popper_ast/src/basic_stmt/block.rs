@@ -1,6 +1,8 @@
 use crate::{Span, Statement};
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Block {
     span: Span,
     pub statements: Vec<Statement>,

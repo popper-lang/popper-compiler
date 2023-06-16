@@ -4,7 +4,9 @@ use crate::Expression;
 
 /// A parenthesized group of expressions.
 /// Syntax: `(expr)`
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct ParenGroup {
     span: Span,
     pub expr: Box<Expression>,

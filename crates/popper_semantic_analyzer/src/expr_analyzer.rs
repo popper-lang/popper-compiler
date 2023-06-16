@@ -1,16 +1,16 @@
 use ast::*;
 use crate::errors::TypeMismatch;
-use crate::symbol_table::{SymbolTable, SymbolFlags, Flag, ConstantType, Type};
+use crate::symbol_table::{SymbolTable, SymbolFlags, Flag, Type};
 use crate::visitor::ExprVisitor;
 use popper_common::error::Error;
 
-struct ExprAnalyzer {
+pub struct ExprAnalyzer {
     symbol_table: SymbolTable,
 }
 
 
 impl ExprAnalyzer {
-    fn new(symbol_table: SymbolTable) -> Self {
+    pub fn new(symbol_table: SymbolTable) -> Self {
         Self { symbol_table }
     }
 }
@@ -87,25 +87,44 @@ impl ExprVisitor for ExprAnalyzer {
             if flag_expr.has_flag(Flag::Type(Type::Boolean)) {
                 Ok(flag_expr)
             } else {
-                todo!("throw type mismatch error")
+                Err(
+                    Box::new(
+                        TypeMismatch::new(
+                            (flag_expr.span(), "Boolean".to_string()),
+                            (flag_expr.span(), flag_expr.get_type().unwrap().to_string())
+                        )
+                    )
+                )
             }
         } else if unary_op.op == UnaryOpKind::Neg {
             if flag_expr.has_flag(Flag::Type(Type::Integer)) || flag_expr.has_flag(Flag::Type(Type::Float)) {
                 Ok(flag_expr)
             } else {
-                todo!("throw type mismatch error")
+                Err(
+                    Box::new(
+                        TypeMismatch::new(
+                            (flag_expr.span(), "Integer or Float".to_string()),
+                            (flag_expr.span(), flag_expr.get_type().unwrap().to_string())
+                        )
+                    )
+                )
             }
         } else {
-            todo!("throw type mismatch error")
+            unreachable!()
         }
     }
 
     fn visit_group(&mut self, group: ParenGroup) -> Result<Self::Output, Self::Error> {
-        todo!()
+        self.visit_expr(*group.expr)
     }
 
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
-        todo!()
+        match expr {
+            Expression::Constant(constant) => self.visit_constant(constant),
+            Expression::BinOp(bin_op) => self.visit_bin_op(bin_op),
+            Expression::UnaryOp(unary_op) => self.visit_unary_op(unary_op),
+            Expression::Group(group) => self.visit_group(group),
+        }
     }
 }
 

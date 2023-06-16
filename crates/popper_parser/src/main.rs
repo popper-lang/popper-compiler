@@ -12,7 +12,7 @@ use popper_common::error::Error;
 lalrpop_mod!(pub popper);
 
 fn main() {
-    let res = popper::FileParser::new().parse("while { 1 + 1 }");
+    let res = popper::FileParser::new().parse(r#"3 + 3;"#);
     if let Ok(e) = res{
         println!("{:#?}", e);
 
@@ -21,10 +21,10 @@ fn main() {
 
         let err = ParserError {
             error: err,
-            span: Span::new(0, 10),
+            span: Span::new(0, 4),
         };
 
-        err.report(generate_color(), &Source::from("while { 1 + 1 }"), "<main>");
+        err.report(generate_color(), &Source::from(r#"3 + 3"#), "<main>");
 
     }
 }

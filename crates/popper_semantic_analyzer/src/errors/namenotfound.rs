@@ -39,14 +39,14 @@ impl Error for NameNotFound {
             .with_label(
                 ariadne::Label::new((file, self.name.0.into()))
                     .with_message(
-                        format!("`{}` not found", self.name.1).fg(variable.clone())
+                        format!("`{}` not found", self.name.1).fg(*variable)
                     )
             )
             ;
 
         if let Some(name_more_closed) = &self.name_more_closed {
             report = report.with_note(
-                format!("Did you mean `{}`?", name_more_closed).fg(variable.clone())
+                format!("Did you mean `{}`?", name_more_closed).fg(*variable)
             );
         }
 

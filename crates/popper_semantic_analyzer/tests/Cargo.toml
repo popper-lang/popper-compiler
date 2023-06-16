@@ -1,16 +1,12 @@
 [package]
-name = "ast"
+name = "tests"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.96", optional = true }
+popper_semantic_analyzer = { path = "." }
+popper_parser = { path = "../popper-parser" }
 
-[features]
-serde = ["dep:serde"]
-extra-trait = []
-
-debug = ["serde", "extra-trait"]
 

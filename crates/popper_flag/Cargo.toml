@@ -1,16 +1,9 @@
 [package]
-name = "ast"
+name = "popper_flag"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { version = "1.0.96", optional = true }
-
-[features]
-serde = ["dep:serde"]
-extra-trait = []
-
-debug = ["serde", "extra-trait"]
-
+popper_ast = { path = "../popper_ast" }

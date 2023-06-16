@@ -1,6 +1,8 @@
 use crate::span::Span;
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Ident {
     pub span: Span,
     pub name: String,
@@ -12,7 +14,9 @@ impl Ident {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Int {
     span: Span,
     pub value: i64,
@@ -27,7 +31,9 @@ impl Int {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Float {
     span: Span,
     pub value: f64,
@@ -42,14 +48,16 @@ impl Float {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct StringLiteral {
     span: Span,
     pub value: String,
 }
 
 impl StringLiteral {
-    fn new(span: Span, value: String) -> Self {
+    pub fn new(span: Span, value: String) -> Self {
         Self { span, value }
     }
     pub fn span(&self) -> Span {
@@ -57,7 +65,9 @@ impl StringLiteral {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Bool {
     span: Span,
     pub value: bool,
@@ -72,7 +82,9 @@ impl Bool {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct Null {
     span: Span,
 }
@@ -86,7 +98,9 @@ impl Null {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub enum Constant {
     Ident(Ident),
     Int(Int),

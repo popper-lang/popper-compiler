@@ -11,12 +11,19 @@ use ast::While;
 use ast::ParenGroup;
 use ast::Ident;
 use ast::Bool;
+use ast::StringLiteral as AstString;
 
 grammar<'a>;
 
 Num: i64 = {
     r"[0-9]+" => i64::from_str(<>).unwrap(),
 };
+
+Str: String = {
+    <s:r#""(\\.|[^"])*""#> => s.replace("\\\"", "\"").replace("\"", ""), // remove quotes
+
+};
+
 
 Chars: String = r"[a-zA-Z_][a-zA-Z0-9_]*" => <>.to_string();
 
@@ -96,7 +103,8 @@ Term: Expression = {
     Int,
     ParenGroup,
     Ident,
-    Bool
+    Bool,
+    String
 };
 
 
@@ -127,6 +135,17 @@ Int: Expression = {
 Bool: Expression = {
     Span<"true"> => Expression::Constant(Constant::Bool(Bool::new(<>.0, true))),
     Span<"false"> => Expression::Constant(Constant::Bool(Bool::new(<>.0, false)))
+}
+
+String: Expression = {
+    <t:Span<Str>> => Expression::Constant(
+                                Constant::StringLiteral(
+                                    AstString::new(
+                                        t.0,
+                                        t.1
+                                    )
+                                )
+                            )
 }
 
 Span<T>: (Span, T) = {

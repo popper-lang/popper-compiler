@@ -4,7 +4,9 @@ use crate::UnaryOp;
 use crate::Span;
 use crate::ParenGroup;
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub enum Expression {
     Constant(Constant),
     BinOp(BinOp),

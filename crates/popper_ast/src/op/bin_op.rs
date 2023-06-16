@@ -1,7 +1,9 @@
 use crate::span::Span;
 use crate::expr::Expression;
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct BinOp {
     span: Span,
     pub op: BinOpKind,
@@ -19,7 +21,9 @@ impl BinOp {
     }
 }
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub enum BinOpKind {
     Add,
     Sub,

@@ -9,10 +9,13 @@ build = "src/build.rs"
 [dependencies]
 regex = { version = "1.3", features = ["perf", "std", "unicode"] }
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }
-ast = { path = "../popper_ast" }
+ast = { path = "../popper_ast", features = ["extra-trait"] }
 popper_common = { path = "../popper_common" }
 ariadne = "0.2.0"
 
 [build-dependencies]
 lalrpop = "0.20.0"
+
+[features]
+logs = []
 

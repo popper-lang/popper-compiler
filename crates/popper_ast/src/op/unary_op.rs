@@ -1,7 +1,9 @@
 use crate::expr::Expression;
 use crate::span::Span;
 
-#[derive(Debug, Clone)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 pub struct UnaryOp {
     pub op: UnaryOpKind,
     pub expr: Box<Expression>,
@@ -18,7 +20,9 @@ impl UnaryOp {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Copy)]
 pub enum UnaryOpKind {
     Neg,
     Not,
