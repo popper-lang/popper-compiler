@@ -39,5 +39,15 @@ my langage is **SFBCF**:
 * **C**oncurrency support with lightweight threads (also known as "green threads")
 * **F**ast and efficient interpreteur
 
+# Todo
+ * ✅ Lexer & Parser (with help of the library [lalrpop](https://github.com/lalrpop/lalrpop) )
+ * ⬛️ Semantical Analizer (Work-in-progress)
+ * ❌ SBC ( Simple Bytecode Compiler )
+ * ❌ MBC ( Memory Bytecode Compiler )
+ * ❌ SAC ( Simple Asm Compiler )
+ * ❌ AAC ( Asm Arch Compiler ) 
 
+# Info
+
+if you want information how this langage work you can read [STEP.md](STEP.md)
 
