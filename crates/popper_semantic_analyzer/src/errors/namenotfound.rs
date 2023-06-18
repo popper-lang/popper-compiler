@@ -1,8 +1,7 @@
 use ariadne::Source;
 use ariadne::Fmt;
 use thiserror::Error;
-use crate::symbol_table::SymbolFlags;
-use crate::visitor::ExprVisitor;
+use ast::visitor::ExprVisitor;
 use popper_common::error::{ColorConfig, Error, source_to_string};
 use ast::Span;
 

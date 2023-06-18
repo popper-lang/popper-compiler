@@ -1,17 +1,25 @@
 use ast::*;
 use crate::errors::TypeMismatch;
-use crate::symbol_table::{SymbolTable, SymbolFlags, Flag, Type};
-use crate::visitor::ExprVisitor;
+use popper_flag::{
+    ScopeFlag,
+    Flag,
+    TypeFlag,
+    VariableFlag,
+    Environment,
+    SymbolFlags,
+};
+
+use ast::visitor::ExprVisitor;
 use popper_common::error::Error;
 
 pub struct ExprAnalyzer {
-    symbol_table: SymbolTable,
+    env: Environment,
 }
 
 
 impl ExprAnalyzer {
-    pub fn new(symbol_table: SymbolTable) -> Self {
-        Self { symbol_table }
+    pub fn new(env: Environment) -> Self {
+        Self { env: env }
     }
 }
 
@@ -42,11 +50,12 @@ impl ExprVisitor for ExprAnalyzer {
                     .clone()
             ),
             Constant::Ident(ident) => {
-                match self.symbol_table.get(&ident.name) {
-                    Some(_) => Ok(
+                match self.env.get_variable(&ident.name) {
+                    Some(v) => Ok(
                         SymbolFlags::new(ident.span)
-                            .set_ident()
-                            .clone()
+                            .add_flag(
+                                *v.value.clone()
+                            ).clone()
                     ),
                     None => todo!("throw name not found error")
                 }
@@ -64,14 +73,14 @@ impl ExprVisitor for ExprAnalyzer {
         let flag_lhs = self.visit_expr(*bin_op.lhs)?;
         let flag_rhs = self.visit_expr(*bin_op.rhs)?;
 
-        if flag_lhs.is_same_type(&flag_rhs) {
+        if flag_lhs.is_same_value(flag_rhs.clone()) {
             Ok(flag_lhs)
         } else {
             Err(
                 Box::new(
                     TypeMismatch::new(
-                        (flag_lhs.span(), flag_lhs.get_type().unwrap().to_string()),
-                        (flag_rhs.span(), flag_rhs.get_type().unwrap().to_string())
+                        (flag_lhs.clone().span(), flag_lhs.get_value().unwrap().to_string()),
+                        (flag_rhs.clone().span(), flag_rhs.get_value().unwrap().to_string())
                     )
                 )
             )
@@ -84,27 +93,27 @@ impl ExprVisitor for ExprAnalyzer {
 
         let flag_expr = self.visit_expr(*unary_op.expr)?;
         if unary_op.op == UnaryOpKind::Not {
-            if flag_expr.has_flag(Flag::Type(Type::Boolean)) {
+            if flag_expr.clone().is_boolean() {
                 Ok(flag_expr)
             } else {
                 Err(
                     Box::new(
                         TypeMismatch::new(
-                            (flag_expr.span(), "Boolean".to_string()),
-                            (flag_expr.span(), flag_expr.get_type().unwrap().to_string())
+                            (flag_expr.span, "boolean".to_string()),
+                            (flag_expr.span, flag_expr.get_value().unwrap().to_string())
                         )
                     )
                 )
             }
         } else if unary_op.op == UnaryOpKind::Neg {
-            if flag_expr.has_flag(Flag::Type(Type::Integer)) || flag_expr.has_flag(Flag::Type(Type::Float)) {
+            if flag_expr.is_integer() || flag_expr.is_float() {
                 Ok(flag_expr)
             } else {
                 Err(
                     Box::new(
                         TypeMismatch::new(
-                            (flag_expr.span(), "Integer or Float".to_string()),
-                            (flag_expr.span(), flag_expr.get_type().unwrap().to_string())
+                            (flag_expr.span, "Integer or Float".to_string()),
+                            (flag_expr.span, flag_expr.get_value().unwrap().to_string())
                         )
                     )
                 )
