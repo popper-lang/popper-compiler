@@ -1,26 +1,14 @@
 [package]
-<<<<<<< HEAD
-<<<<<<< HEAD:crates/popper_sbc/Cargo.toml
 name = "popper_sbc"
-=======
-name = "popper_common"
->>>>>>> full-rewrite:crates/popper_common/Cargo.toml
-=======
-name = "popper_sbc"
->>>>>>> full-rewrite
 version = "0.1.0"
 edition = "2021"
 description = "Simple Bytecode Compiler for Popper Language"
 license = "MIT"
 
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-<<<<<<< HEAD
-<<<<<<< HEAD:crates/popper_sbc/Cargo.toml
-=======
-ariadne = "0.2.0"
->>>>>>> full-rewrite:crates/popper_common/Cargo.toml
-=======
->>>>>>> full-rewrite
+popper_flag = { path = "../popper_flag" }
+popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"] }
+
+[dev-dependencies]
+popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait", "serde"] }

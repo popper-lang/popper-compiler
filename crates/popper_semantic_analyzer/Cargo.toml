@@ -4,12 +4,19 @@ version = "0.1.0"
 edition = "2021"
 description = "A semantic analyzer for the Popper programming language."
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ast = { path = "../popper_ast", features = ["visitor"] }
+popper_ast = { path = "../popper_ast", features = ["visitor"] }
 popper_common = { path = "../popper_common" }
 popper_flag = { path = "../popper_flag" }
 thiserror = "1.0.40"
 ariadne = "0.2.0"
+
+[dev-dependencies]
+popper_ast = { path = "../popper_ast", features = ["visitor", "serde"] }
+serde_json = "1.0.64"
+
+
+
+
 

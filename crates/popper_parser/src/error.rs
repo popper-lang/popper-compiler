@@ -11,7 +11,7 @@ pub struct ParserErrorType<'a>(pub ParseError<usize, Token<'a>, &'static str>);
 #[derive(Clone)]
 pub struct ParserError<'a> {
     pub error: ParserErrorType<'a>,
-    pub span: ast::Span,
+    pub span: popper_ast::Span,
 }
 
 
@@ -44,13 +44,13 @@ impl<'a> std::fmt::Display for ParserErrorType<'a> {
 }
 
 impl<'a> Error for ParserError<'a> {
-    fn report(&self, color: ColorConfig, source: &Source, file: &str) {
+    fn report(&self, color: ColorConfig, source: &str, file: &str) {
         let keyword_color = color.get("keyword").expect("keyword color not found");
 
         let mut report = Report::build(ReportKind::Error,
                                                 file,
                                                 self.span.find_line(
-                                                    source_to_string(source).as_str()
+                                                    source
                                                 )
         );
 
@@ -63,7 +63,7 @@ impl<'a> Error for ParserError<'a> {
                             .with_message(
                                 format!("invalid token `{}`",
                                         self.span.extract_from_str(
-                                            source_to_string(source).as_str()
+                                            source
                                         ).fg(
                                             *keyword_color
                                         )
@@ -103,7 +103,7 @@ impl<'a> Error for ParserError<'a> {
                             .with_message(
                                 format!("unexpected token `{}`",
                                         self.span.extract_from_str(
-                                            source_to_string(source).as_str()
+                                            source
                                         ).fg(
                                             *keyword_color
                                         )
@@ -119,7 +119,7 @@ impl<'a> Error for ParserError<'a> {
                             .with_message(
                                 format!("user error `{}`",
                                         self.span.extract_from_str(
-                                            source_to_string(source).as_str()
+                                            source
                                         ).fg(
                                             *keyword_color
                                         )
@@ -131,7 +131,7 @@ impl<'a> Error for ParserError<'a> {
 
         report
             .finish()
-            .print((file, Source::from(source_to_string(source))))
+            .print((file, Source::from(source)))
             .unwrap();
 
 

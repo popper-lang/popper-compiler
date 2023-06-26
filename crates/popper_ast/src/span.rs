@@ -1,7 +1,7 @@
 
-
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "default-trait", derive(Default))]
 #[derive(Copy, Clone)]
 pub struct Span {
     pub start: usize,

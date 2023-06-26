@@ -3,18 +3,15 @@ mod flag;
 mod scope_flag;
 mod type_flag;
 mod value_flag;
+mod symbol_table;
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub use variable_flag::VariableFlag;
+pub use variable_flag::Environment;
+pub use scope_flag::ScopeFlag;
+pub use flag::Flag;
+pub use type_flag::TypeFlag;
+pub use value_flag::ValueFlag;
+pub use symbol_table::SymbolFlags;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+

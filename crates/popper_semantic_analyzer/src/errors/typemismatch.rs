@@ -1,4 +1,4 @@
-use ast::Span;
+use popper_ast::Span;
 use thiserror::Error;
 use ariadne::{Fmt, Label, Report, ReportKind, Source};
 use popper_common::error::{ColorConfig, Error as PopperError};
@@ -23,14 +23,15 @@ impl TypeMismatch {
 impl PopperError for TypeMismatch {
     fn report(&self,
               color: ColorConfig,
-              source: &Source,
+              source: &str,
               file: &str)  {
+
         let type_color = color.get("type").expect("type color not found");
 
-        let report = Report::build(ReportKind::Error,
+        let mut report = Report::build(ReportKind::Error,
                                        file,
                                        self.expected.0.find_line(
-                                           source_to_string(source).as_str()
+                                           source
                                        )
         )
             .with_code(21)
@@ -44,8 +45,8 @@ impl PopperError for TypeMismatch {
                                 )
                         )
                     )
-            )
-            .with_label(
+            );
+        report.with_label(
                 Label::new((file, self.found.0.into()))
                     .with_message(
                         format!("found type `{}`",
@@ -54,11 +55,9 @@ impl PopperError for TypeMismatch {
                                 )
                         )
                     )
-            );
-
-
-        report.finish().print((file, Source::from(
-            source_to_string(source).as_str()
+            )
+            .finish().print((file, Source::from(
+            source
         ))).unwrap();
     }
 }

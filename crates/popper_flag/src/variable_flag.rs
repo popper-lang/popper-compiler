@@ -2,32 +2,32 @@ use crate::flag::Flag;
 use crate::scope_flag::ScopeFlag;
 use crate::type_flag::TypeFlag;
 use popper_ast::Span;
+use crate::SymbolFlags;
 
+#[derive(PartialEq, Clone, Debug)]
 pub struct VariableFlag {
     pub name: String,
-    pub value: Box<Flag>,
+    pub value: SymbolFlags,
     pub used: bool,
     pub used_at: Vec<Span>,
     pub scope: ScopeFlag,
     pub mutable: bool,
-    pub type_flag: TypeFlag,
 }
 
 
 impl VariableFlag {
     pub fn new(name: String,
-               value: Flag,
+               value: SymbolFlags,
                scope: ScopeFlag,
-               mutable: bool,
-               type_flag: TypeFlag) -> Self {
+               mutable: bool
+               ) -> Self {
         Self {
             name,
-            value: Box::new(value),
+            value,
             used: false,
             used_at: Vec::new(),
             scope,
-            mutable,
-            type_flag
+            mutable
         }
     }
 
@@ -39,6 +39,7 @@ impl VariableFlag {
 
 }
 
+#[derive(Clone, PartialEq, Debug)]
 pub struct Environment {
     pub variables: Vec<VariableFlag>,
 }
@@ -79,11 +80,16 @@ impl Environment {
         self.variables.iter().any(|v| v.name == name)
     }
 
-    pub fn set_variable(&mut self, name: &str, value: Flag) -> &mut Self {
+    pub fn set_variable(&mut self, name: &str, value: SymbolFlags) -> &mut Self {
         if let Some(variable) = self.get_variable_mut(name) {
-            variable.value = Box::new(value);
+            variable.value = value;
         }
         self
     }
+
+    pub fn get_all_variables_name(&self) -> Vec<String> {
+        self.variables.iter().map(|v| v.name.clone()).collect()
+    }
+
 }
 

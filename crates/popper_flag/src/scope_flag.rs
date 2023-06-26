@@ -1,5 +1,5 @@
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Clone)]
 pub enum ScopeFlag {
     #[default] Global,
     Local,

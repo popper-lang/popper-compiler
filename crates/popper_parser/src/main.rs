@@ -4,27 +4,26 @@ use error::generate_color;
 use popper_parser::error::ParserError;
 use popper_parser::error::ParserErrorType;
 use popper_common::error;
-use ast::Span;
+use popper_ast::Span;
 use popper_parser::Source;
 use popper_common::error::Error;
-
+use serde::{Serialize, Deserialize};
+use serde_json::Result;
+use popper_ast::*;
 
 lalrpop_mod!(pub popper);
 
 fn main() {
-    let res = popper::FileParser::new().parse(r#"3 + 3;"#);
+    let body = r#"
+        while true {
+            1 + 2;
+        }
+        "#;
+    let res = popper::FileParser::new().parse(body);
     if let Ok(e) = res{
-        println!("{:#?}", e);
+        println!("{:#}", serde_json::to_string(&e).unwrap());
 
     } else if let Err(e) = res {
-        let err: ParserErrorType = e.into();
-
-        let err = ParserError {
-            error: err,
-            span: Span::new(0, 4),
-        };
-
-        err.report(generate_color(), &Source::from(r#"3 + 3"#), "<main>");
-
+        panic!("{:#?}", e)
     }
 }

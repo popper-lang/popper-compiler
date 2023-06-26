@@ -1,4 +1,4 @@
-use ast::Statement;
+use popper_ast::Statement;
 use lalrpop_util::lalrpop_mod;
 use crate::error::{ParserError, ParserErrorType};
 use popper_common::error::Error;

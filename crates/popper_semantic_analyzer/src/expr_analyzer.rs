@@ -1,5 +1,5 @@
-use ast::*;
-use crate::errors::TypeMismatch;
+use popper_ast::*;
+use crate::errors::{NameNotFound, TypeMismatch};
 use popper_flag::{
     ScopeFlag,
     Flag,
@@ -9,7 +9,9 @@ use popper_flag::{
     SymbolFlags,
 };
 
-use ast::visitor::ExprVisitor;
+use crate::tool::name_similarity::find_similar_name;
+
+use popper_ast::visitor::ExprVisitor;
 use popper_common::error::Error;
 
 pub struct ExprAnalyzer {
@@ -49,15 +51,28 @@ impl ExprVisitor for ExprAnalyzer {
                     .set_boolean()
                     .clone()
             ),
-            Constant::Ident(ident) => {
+            Constant::Ident(ref ident) => {
                 match self.env.get_variable(&ident.name) {
-                    Some(v) => Ok(
-                        SymbolFlags::new(ident.span)
-                            .add_flag(
-                                *v.value.clone()
-                            ).clone()
-                    ),
-                    None => todo!("throw name not found error")
+                    Some(v) => Ok({
+                        let mut s = SymbolFlags::new(ident.span);
+                        s.symbols.extend(v.value.symbols.clone());
+                        s
+                    }),
+                    None => {
+                         let name_candidates = self.env.get_all_variables_name();
+
+                        let similar_name = find_similar_name(name_candidates.as_slice().clone(), ident.name.as_str());
+
+                        Err(
+                            Box::new(
+                                NameNotFound::new(
+                                    (ident.span, ident.name.clone()),
+                                    similar_name.cloned()
+                                )
+
+                            )
+                        )
+                    }
                 }
             },
             Constant::Null(null) => Ok(
@@ -72,7 +87,6 @@ impl ExprVisitor for ExprAnalyzer {
     fn visit_bin_op(&mut self, bin_op: BinOp) -> Result<Self::Output, Self::Error> {
         let flag_lhs = self.visit_expr(*bin_op.lhs)?;
         let flag_rhs = self.visit_expr(*bin_op.rhs)?;
-
         if flag_lhs.is_same_value(flag_rhs.clone()) {
             Ok(flag_lhs)
         } else {

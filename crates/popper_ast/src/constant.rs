@@ -63,6 +63,9 @@ impl StringLiteral {
     pub fn span(&self) -> Span {
         self.span
     }
+    pub fn len(&self) -> usize {
+        self.value.len()
+    }
 }
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]

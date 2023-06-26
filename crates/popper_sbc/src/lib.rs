@@ -1,18 +1,11 @@
-mod symbol_table;
-mod ir_sb;
-mod compiler;
+#![feature(vec_into_raw_parts)]
 
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+pub mod ir_sb;
+pub mod compiler;
+pub mod instr;
+pub mod value;
+pub mod debug;
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod tests;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}

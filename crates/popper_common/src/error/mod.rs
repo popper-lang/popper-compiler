@@ -5,7 +5,7 @@ pub type ColorConfig = std::collections::HashMap<String, Color>;
 pub trait Error {
     fn report(&self,
               color: ColorConfig,
-              source: &Source,
+              source: &str,
               file: &str);
 }
 

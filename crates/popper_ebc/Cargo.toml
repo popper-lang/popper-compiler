@@ -1,12 +1,10 @@
 [package]
-name = "tests"
+name = "popper_ebc"
 version = "0.1.0"
 edition = "2021"
+description = "Extended Bytecode Compiler for Popper language"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-popper_semantic_analyzer = { path = "." }
-popper_parser = { path = "../popper-parser" }
-
-
+popper_sbc = { path = "../popper_sbc" }

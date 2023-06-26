@@ -1,9 +1,10 @@
 use ariadne::Source;
 use ariadne::Fmt;
 use thiserror::Error;
-use ast::visitor::ExprVisitor;
+use popper_ast::visitor::ExprVisitor;
 use popper_common::error::{ColorConfig, Error, source_to_string};
-use ast::Span;
+use popper_ast::Span;
+use crate::tool::name_similarity::find_similar_name;
 
 #[derive(Error, Debug)]
 #[error("name not found")]
@@ -21,7 +22,7 @@ impl NameNotFound {
 impl Error for NameNotFound {
     fn report(&self,
               color: ColorConfig,
-              source: &Source,
+              source: &str,
               file: &str) {
 
         let variable = color.get("variable").expect("variable color not found");
@@ -29,7 +30,7 @@ impl Error for NameNotFound {
         let mut report = ariadne::Report::build(ariadne::ReportKind::Error,
                                                 file,
                                                 self.name.0.find_line(
-                                                    source_to_string(source).as_str()
+                                                    source
                                                 )
         );
 
@@ -38,19 +39,19 @@ impl Error for NameNotFound {
             .with_label(
                 ariadne::Label::new((file, self.name.0.into()))
                     .with_message(
-                        format!("`{}` not found", self.name.1).fg(*variable)
+                        format!("`{}` not found", self.name.1.clone().fg(*variable))
                     )
             )
             ;
 
         if let Some(name_more_closed) = &self.name_more_closed {
             report = report.with_note(
-                format!("Did you mean `{}`?", name_more_closed).fg(*variable)
+                format!("Did you mean `{}`?", name_more_closed.clone().fg(*variable))
             );
         }
 
         report.finish().print((file, Source::from(
-            source_to_string(source).as_str()
+            source
         ))).unwrap();
     }
 }
