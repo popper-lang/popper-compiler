@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use crate::instr::Bytecode;
 
 #[cfg_attr(test, derive(PartialEq))]
@@ -141,6 +142,7 @@ impl Bytecode for i64 {
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        let mut bytecode = bytecode;
         let mut bytes = [0u8; 8];
         bytes.copy_from_slice(&bytecode);
         i64::from_le_bytes(bytes)
@@ -178,3 +180,31 @@ impl Bytecode for bool {
     }
 }
 
+impl<A, B> Bytecode for (A, B)
+where
+    A: Bytecode,
+    B: Bytecode,
+{
+    fn to_bytecode(&self) -> Vec<u8> {
+        let mut bytecode = vec![];
+        bytecode.extend(self.0.to_bytecode());
+        bytecode.extend(self.1.to_bytecode());
+        bytecode
+    }
+
+    fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        let a = A::from_bytecode(bytecode[0..9].to_vec());
+        let b = B::from_bytecode(bytecode[9..18].to_vec());
+        (a, b)
+    }
+}
+
+impl<T> Bytecode for Box<T> where T: Bytecode {
+    fn to_bytecode(&self) -> Vec<u8> {
+        self.as_ref().to_bytecode()
+    }
+
+    fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        Box::new(T::from_bytecode(bytecode))
+    }
+}

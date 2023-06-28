@@ -1,10 +1,11 @@
 [package]
-name = "popper_ebc"
+name = "popper_asm"
 version = "0.1.0"
 edition = "2021"
-description = "Extended Bytecode Compiler for Popper language"
+description = "A Assembler AST to Popper IR compiler"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 popper_sbc = { path = "../popper_sbc" }
+

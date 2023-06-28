@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 popper_ast = { path = "../popper_ast", features = ["extra-trait"] }
+
+[dev-dependencies]
+popper_ast = { path = "../popper_ast", features = ["extra-trait", "serde"]}

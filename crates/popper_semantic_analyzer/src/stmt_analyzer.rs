@@ -23,7 +23,7 @@ impl StmtAnalyzer {
 impl visitor::StmtVisitor for StmtAnalyzer {
     type Output = SymbolFlags;
     type Error = Box<dyn Error>;
-    fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
+    fn visit_expr_stmt(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
 
         analyzer.visit_expr(expr)
@@ -83,7 +83,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
-            Statement::Expression(expr) => self.visit_expr(expr),
+            Statement::Expression(expr) => self.visit_expr_stmt(expr),
             Statement::Let(let_stmt) => self.visit_let_stmt(let_stmt),
             Statement::Block(block) => self.visit_block(block),
             Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),

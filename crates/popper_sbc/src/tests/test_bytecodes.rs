@@ -33,3 +33,13 @@ pub fn test_literal_bytecode() {
     let literal_expected = Literal::from_bytecode(bytecode);
     assert_eq!(literal, literal_expected);
 }
+
+type LiteralTuple = (Literal, Literal);
+
+#[test]
+pub fn test_tuple_bytecode() {
+    let tuple: LiteralTuple = (Literal::Integer(1), Literal::Integer(2));
+    let bytecode = tuple.to_bytecode();
+    let tuple_expected = LiteralTuple::from_bytecode(bytecode);
+    assert_eq!(tuple, tuple_expected);
+}

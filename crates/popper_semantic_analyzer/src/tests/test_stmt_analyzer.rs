@@ -2,13 +2,12 @@ use ariadne::Source;
 use popper_flag::Environment;
 use popper_ast::visitor::{ExprVisitor, StmtVisitor};
 use crate::stmt_analyzer::StmtAnalyzer;
-use crate::tests::get_ast_from_json_file;
+use popper_ast::get_ast_from_json_file;
 use popper_ast::Span;
 use popper_flag::SymbolFlags;
 use popper_ast::Statement;
 use popper_common::error::Error;
 use popper_common::error::generate_color;
-use popper_ast::get_ast_from_json_file;
 
 
 #[cfg(test)]

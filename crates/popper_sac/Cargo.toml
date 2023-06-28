@@ -1,0 +1,11 @@
+[package]
+name = "popper_sac"
+version = "0.1.0"
+edition = "2021"
+description = "A Simple Asm Compiler in Popper Lang"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+popper_asm = { path = "../popper_asm" }
+popper_sbc = { path = "../popper_sbc" }
