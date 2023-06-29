@@ -52,7 +52,7 @@ impl Stack {
     }
 
     pub fn take_lasts_reg_used(&mut self, n: usize) -> Vec<Register> {
-        let mut keys = self.stack.iter().map(|(k, v)| k).cloned().collect::<Vec<Register>>();
+        let mut keys = self.stack.iter().map(|(k, _v)| k).cloned().collect::<Vec<Register>>();
         keys.reverse();
         keys.into_iter().take(n).collect()
 

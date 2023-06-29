@@ -45,13 +45,13 @@ impl<'a> Compiler<'a> {
 
                             self.builder.build_mov(register, asm_value);
                         }
-                        Literal::Float(value) => {
+                        Literal::Float(_value) => {
                             todo!("Floats not implemented yet")
                         }
-                        Literal::String(value) => {
+                        Literal::String(_value) => {
                             todo!("Strings not implemented yet")
                         }
-                        Literal::Boolean(value) => {
+                        Literal::Boolean(_value) => {
                             todo!("Booleans not implemented yet")
                         }
                         Literal::Null => {
