@@ -1,7 +1,6 @@
 mod expr_compiler;
 mod stmt_compiler;
 
-use popper_ast::Span;
 use crate::ir_sb::SbcIr;
 
 #[derive(Clone)]

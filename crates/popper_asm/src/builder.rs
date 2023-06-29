@@ -1,7 +1,7 @@
 use crate::register::Register;
 use crate::asm_value::AsmValue;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Assembly<'a> {
     Mov(Register, Box<AsmValue>),
     Add(Register, Box<AsmValue>, Register),
@@ -22,6 +22,7 @@ pub enum Assembly<'a> {
 pub type Program<'a> = Vec<Assembly<'a>>;
 
 
+#[derive(Clone)]
 pub struct Builder<'a> {
     program: Program<'a>
 }

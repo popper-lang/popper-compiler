@@ -10,7 +10,7 @@ use crate::builder::Program;
 
 pub struct  X86Builder<'a> {
     program: Program<'a>,
-    x86_asm: String
+    pub x86_asm: String
 }
 
 
@@ -116,6 +116,14 @@ impl<'a> X86Builder<'a> {
                             value
                     )
                 },
+                Assembly::IAdd(register, value) => {
+                    let register = self.register_to_str(register.clone());
+                    let value = self.asm_value_to_str(*value.clone());
+                    format!("add {}, {}",
+                            register,
+                            value
+                    )
+                },
                 Assembly::Call(label) => {
                     format!("call {}", label)
                 },
@@ -130,10 +138,16 @@ impl<'a> X86Builder<'a> {
 
                 },
 
-                _ => {
-                    todo!("compile assembly")
+
+                e => {
+                    todo!("compile assembly: {:?}", e)
                 }
             }.to_string() + "\n").as_str();
         }
+
     }
+    pub fn build(&self) -> String {
+        self.x86_asm.clone()
+    }
+
 }

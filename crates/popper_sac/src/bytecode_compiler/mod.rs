@@ -8,7 +8,8 @@ use crate::stack::Stack;
 type BytecodeProgram = Vec<Instruction>;
 
 
-struct Compiler<'a> {
+#[derive(Clone)]
+pub struct Compiler<'a> {
     builder: Builder<'a>,
     bytecode: BytecodeProgram,
     stack: Stack,
@@ -24,7 +25,7 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub fn compile(&mut self) -> Program {
+    pub fn compile(&mut self)  {
         for instr in self.bytecode.iter() {
             match instr {
                 Instruction::PushLiteral(literal) => {
@@ -33,14 +34,16 @@ impl<'a> Compiler<'a> {
                             let asm_value = AsmValue::Immediate(
                                 Immediate::U32(value.clone() as u32)
                             );
-                            self.stack.push(match self.stack.give_register() {
+                            let register = match self.stack.give_register() {
                                 Some(register) => register,
                                 None => panic!("No more registers available")
-                            },
+                            };
+
+                            self.stack.push(register.clone(),
                                             asm_value.clone()
                             );
 
-                            self.builder.build_mov(Register::R1, asm_value);
+                            self.builder.build_mov(register, asm_value);
                         }
                         Literal::Float(value) => {
                             todo!("Floats not implemented yet")
@@ -60,10 +63,21 @@ impl<'a> Compiler<'a> {
                     let registers = self.stack.take_lasts_reg_used(2);
 
                     self.builder.build_iadd(registers[0].clone(), AsmValue::Register(registers[1].clone()));
-                }
+                },
+                Instruction::Pop => {
+                    let register = &self.stack.take_lasts_reg_used(1)[0];
+
+                    if register != &Register::R1 {
+                        self.builder.build_mov(Register::R1, AsmValue::Register(register.clone()));
+                    }
+                },
                 _ => todo!("Instruction not implemented yet")
             }
         }
+
+    }
+
+    pub fn build(self) -> Program<'a> {
         self.builder.build()
     }
 

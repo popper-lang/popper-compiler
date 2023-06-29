@@ -1,5 +1,5 @@
 
-mod parser;
+pub mod parser;
 pub mod error;
 mod test;
 

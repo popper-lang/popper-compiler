@@ -9,7 +9,7 @@ use crate::instr::Instruction;
 use crate::value::StrPtr;
 use crate::value::Literal;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SbcIr {
     pub instructions: Vec<Instruction>,
     ip: usize,

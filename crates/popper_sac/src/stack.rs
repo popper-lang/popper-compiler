@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use popper_asm::register::Register;
 use popper_asm::asm_value::AsmValue;
 
+#[derive(Clone)]
 pub struct Stack {
     stack: HashMap<Register, AsmValue>,
 }
@@ -35,26 +36,19 @@ impl Stack {
         self.stack.insert(register, value);
     }
 
-    pub fn give_register(&self) -> Option<Register> {
-        let mut iter = AVAILABLE_REGISTERS
+    pub fn give_register(&mut self) -> Option<Register> {
+        let reg = AVAILABLE_REGISTERS
             .clone()
-            .into_iter();
-
-        let mut register = iter
+            .into_iter()
+            .filter(|reg| !self.stack.contains_key(reg))
             .next()
-            .unwrap()
-            .clone();
-        while self.stack.contains_key(&register) {
-            register = iter
-                .next()
-                .unwrap()
-                .clone();
+            .map(move |ref e| {
+                self.stack.remove(e);
+                e.clone()
+            } );
 
-            if register == Register::R15 {
-                return None;
-            }
-        }
-        return Some(register)
+
+        return reg
     }
 
     pub fn take_lasts_reg_used(&mut self, n: usize) -> Vec<Register> {

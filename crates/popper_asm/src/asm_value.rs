@@ -1,13 +1,13 @@
 use crate::register::Register;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum AsmValue {
     Register(Register),
     Immediate(Immediate),
     Memory(Memory),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Immediate {
     U8(u8),
     U16(u16),
@@ -15,7 +15,7 @@ pub enum Immediate {
     U64(u64),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Memory {
     RegisterOffset(Register, Immediate),
     Label(String)
