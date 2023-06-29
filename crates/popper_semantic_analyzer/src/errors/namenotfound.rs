@@ -1,10 +1,10 @@
 use ariadne::Source;
 use ariadne::Fmt;
 use thiserror::Error;
-use popper_ast::visitor::ExprVisitor;
-use popper_common::error::{ColorConfig, Error, source_to_string};
+
+use popper_common::error::{ColorConfig, Error};
 use popper_ast::Span;
-use crate::tool::name_similarity::find_similar_name;
+
 
 #[derive(Error, Debug)]
 #[error("name not found")]

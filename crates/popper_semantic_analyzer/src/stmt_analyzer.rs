@@ -3,7 +3,7 @@
 use popper_ast::*;
 
 use crate::errors::TypeMismatch;
-use popper_flag::{ScopeFlag, Flag, TypeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag};
+use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_common::error::Error;
 use popper_ast::visitor::ExprVisitor;
@@ -76,7 +76,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
         let mut analyzer = StmtAnalyzer::new(self.env.clone());
 
-        let body = analyzer.visit_stmt(*while_stmt.body)?;
+        let _body = analyzer.visit_stmt(*while_stmt.body)?;
 
         Ok(symbol_flag)
     }

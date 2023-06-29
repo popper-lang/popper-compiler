@@ -2,7 +2,7 @@ use popper_ast::Span;
 use thiserror::Error;
 use ariadne::{Fmt, Label, Report, ReportKind, Source};
 use popper_common::error::{ColorConfig, Error as PopperError};
-use popper_common::error::source_to_string;
+
 
 
 
@@ -28,7 +28,7 @@ impl PopperError for TypeMismatch {
 
         let type_color = color.get("type").expect("type color not found");
 
-        let mut report = Report::build(ReportKind::Error,
+        let report = Report::build(ReportKind::Error,
                                        file,
                                        self.expected.0.find_line(
                                            source

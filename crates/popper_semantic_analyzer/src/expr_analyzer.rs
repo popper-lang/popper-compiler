@@ -1,10 +1,6 @@
 use popper_ast::*;
 use crate::errors::{NameNotFound, TypeMismatch};
 use popper_flag::{
-    ScopeFlag,
-    Flag,
-    TypeFlag,
-    VariableFlag,
     Environment,
     SymbolFlags,
 };
