@@ -6,11 +6,10 @@ pub enum Assembly<'a> {
     Mov(Register, Box<AsmValue>),
     Add(Register, Box<AsmValue>, Register),
     Sub(Register, Box<AsmValue>, Register),
-    Mul(Register, Box<AsmValue>, Register),
+    Mul(Register),
     Div(Register, Box<AsmValue>, Register),
     IAdd(Register, Box<AsmValue>),
     ISub(Register, Box<AsmValue>),
-    IMul(Register, Box<AsmValue>),
     IDiv(Register, Box<AsmValue>),
 
     Call(&'a str),
@@ -52,8 +51,8 @@ impl<'a> Builder<'a> {
         self.program.push(Assembly::Sub(dest, Box::new(src), dest2));
     }
 
-    pub fn build_mul(&mut self, dest: Register, src: AsmValue, dest2: Register) {
-        self.program.push(Assembly::Mul(dest, Box::new(src), dest2));
+    pub fn build_mul(&mut self, dest: Register) {
+        self.program.push(Assembly::Mul(dest));
     }
 
     pub fn build_div(&mut self, dest: Register, src: AsmValue, dest2: Register) {
@@ -66,10 +65,6 @@ impl<'a> Builder<'a> {
 
     pub fn build_isub(&mut self, dest: Register, src: AsmValue) {
         self.program.push(Assembly::ISub(dest, Box::new(src)));
-    }
-
-    pub fn build_imul(&mut self, dest: Register, src: AsmValue) {
-        self.program.push(Assembly::IMul(dest, Box::new(src)));
     }
 
     pub fn build_idiv(&mut self, dest: Register, src: AsmValue) {

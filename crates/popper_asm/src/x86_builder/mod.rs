@@ -124,6 +124,20 @@ impl<'a> X86Builder<'a> {
                             value
                     )
                 },
+                Assembly::ISub(register, value) => {
+                    let register = self.register_to_str(register.clone());
+                    let value = self.asm_value_to_str(*value.clone());
+                    format!("sub {}, {}",
+                            register,
+                            value
+                    )
+                },
+                Assembly::Mul(register) => {
+                    let register = self.register_to_str(register.clone());
+                    format!("mul {}",
+                            register
+                    )
+                },
                 Assembly::Call(label) => {
                     format!("call {}", label)
                 },

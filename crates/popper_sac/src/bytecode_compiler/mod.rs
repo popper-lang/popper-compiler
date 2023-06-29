@@ -64,6 +64,19 @@ impl<'a> Compiler<'a> {
 
                     self.builder.build_iadd(registers[0].clone(), AsmValue::Register(registers[1].clone()));
                 },
+                Instruction::Sub => {
+                    let registers = self.stack.take_lasts_reg_used(2);
+
+                    self.builder.build_isub(registers[0].clone(), AsmValue::Register(registers[1].clone()));
+                },
+                Instruction::Mul => {
+                    let registers = self.stack.take_lasts_reg_used(2);
+                    self.builder.build_mov(Register::R1, AsmValue::Register(registers[0].clone()));
+                    self.builder.build_mul(registers[1].clone());
+                    self.builder.build_mov(registers[1].clone(), AsmValue::Register(Register::R1));
+                    self.stack.free_register(registers[0].clone());
+                    //self.stack.free_register(registers[1].clone());
+                },
                 Instruction::Pop => {
                     let register = &self.stack.take_lasts_reg_used(1)[0];
 

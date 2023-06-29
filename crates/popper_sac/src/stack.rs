@@ -7,8 +7,7 @@ pub struct Stack {
     stack: HashMap<Register, AsmValue>,
 }
 
-static AVAILABLE_REGISTERS: [Register; 15] = [
-    Register::R1,
+static AVAILABLE_REGISTERS: [Register; 14] = [
     Register::R2,
     Register::R3,
     Register::R4,

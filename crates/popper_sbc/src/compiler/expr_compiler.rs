@@ -13,7 +13,22 @@ impl ExprVisitor for SbCompiler {
         let _ = self.visit_expr(*bin_op.lhs);
         let _ = self.visit_expr(*bin_op.rhs);
 
-        self.ir.emit_add();
+        match bin_op.op {
+            BinOpKind::Add => {
+                self.ir.emit_add();
+            }
+            BinOpKind::Sub => {
+                self.ir.emit_sub();
+            }
+            BinOpKind::Mul => {
+                self.ir.emit_mul();
+            }
+            BinOpKind::Div => {
+                self.ir.emit_div();
+            }
+            _ => todo!("bin op")
+
+        }
 
         Ok(())
     }
