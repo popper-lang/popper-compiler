@@ -14,3 +14,6 @@ popper_sac = { path = "../popper_sac" }
 popper_asm = { path = "../popper_asm" }
 popper_common = { path = "../popper_common" }
 lazy_static = "1.4.0"
+
+[profile.release]
+debug = true
