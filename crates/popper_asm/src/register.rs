@@ -1,4 +1,4 @@
-use std::fmt::Display;
+
 use popper_sbc::instr::Bytecode;
 
 
