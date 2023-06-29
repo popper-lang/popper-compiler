@@ -1,6 +1,6 @@
-use crate::flag::Flag;
+
 use crate::scope_flag::ScopeFlag;
-use crate::type_flag::TypeFlag;
+
 use popper_ast::Span;
 use crate::SymbolFlags;
 
