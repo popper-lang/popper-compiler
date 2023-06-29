@@ -2,10 +2,10 @@ use popper_parser::parser::popper::FileParser;
 use popper_ast::Statement;
 use popper_semantic_analyzer::analyze;
 use popper_common::error::generate_color;
-use popper_common::error::ColorConfig;
+
 use popper_sbc::compile_to_bytecode as compile_to_bytecode_sbc;
 use popper_sbc::ir_sb::SbcIr;
-use popper_asm::builder::{Builder, Program};
+use popper_asm::builder::{Program};
 use popper_asm::x86_builder::X86Builder;
 use popper_sac::bytecode_compiler::Compiler;
 
