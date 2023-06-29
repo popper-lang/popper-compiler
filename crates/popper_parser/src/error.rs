@@ -1,6 +1,6 @@
 use lalrpop_util::lexer::Token;
 use lalrpop_util::ParseError;
-use popper_common::error::{ColorConfig, Error, source_to_string};
+use popper_common::error::{ColorConfig, Error};
 use ariadne::{Report, Source, ReportKind, Label};
 use ariadne::Fmt;
 
@@ -55,7 +55,7 @@ impl<'a> Error for ParserError<'a> {
         );
 
         match self.clone().error.clone().0 {
-            ParseError::InvalidToken { location } => {
+            ParseError::InvalidToken { location: _ } => {
                 report = report.with_code(1)
                     .with_message("Invalid token".to_string())
                     .with_label(
@@ -71,7 +71,7 @@ impl<'a> Error for ParserError<'a> {
                             )
                     );
             }
-            ParseError::UnrecognizedEof { location, expected } => {
+            ParseError::UnrecognizedEof { location: _, expected } => {
                 report = report.with_code(1)
                     .with_message("Unexpected end of file".to_string())
                     .with_label(
@@ -83,7 +83,7 @@ impl<'a> Error for ParserError<'a> {
                             )
                     );
             }
-            ParseError::UnrecognizedToken { token: (start, token, end), expected } => {
+            ParseError::UnrecognizedToken { token: (start, _token, end), expected } => {
                 report = report.with_code(1)
                     .with_message("Unexpected token".to_string())
                     .with_label(
@@ -95,7 +95,7 @@ impl<'a> Error for ParserError<'a> {
                             )
                     );
             }
-            ParseError::ExtraToken { token: (start, token, end) } => {
+            ParseError::ExtraToken { token: (start, _token, end) } => {
                 report = report.with_code(1)
                     .with_message("Extra token".to_string())
                     .with_label(
@@ -111,7 +111,7 @@ impl<'a> Error for ParserError<'a> {
                             )
                     );
             }
-            ParseError::User { error } => {
+            ParseError::User { error: _ } => {
                 report = report.with_code(1)
                     .with_message("User error".to_string())
                     .with_label(
