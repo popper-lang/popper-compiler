@@ -37,7 +37,7 @@ my langage is **SFBCF**:
 * **F**unctional programming paradigm
 * **B**uilt-in support for modules and packages
 * **C**oncurrency support with lightweight threads (also known as "green threads")
-* **F**ast and efficient interpreteur
+* **F**ast and efficient compiler
 
 # Todo
  * ✅ Lexer & Parser (with help of the library [lalrpop](https://github.com/lalrpop/lalrpop) )
