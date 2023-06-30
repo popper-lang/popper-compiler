@@ -7,7 +7,7 @@ Popper is an functional programming language designed to simplify the developmen
 To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
 
 ```bash
-git clone https://github.com/poplang/popper-lang.git
+git clone https://github.com/popper-lang/popper-lang.git
 cd popper-lang
 cargo build
 ```
@@ -18,7 +18,7 @@ Here is an example Popper program that calculates the Fibonacci sequence:
 use "io.pop" as io
 use "itertool.pop" as itertool
 
-fun fib(n) {
+fun fib(n: int) = int {
     if n < 2 {
         n
     } else {
@@ -37,15 +37,14 @@ my langage is **SFBCF**:
 * **F**unctional programming paradigm
 * **B**uilt-in support for modules and packages
 * **C**oncurrency support with lightweight threads (also known as "green threads")
-* **F**ast and efficient interpreteur
+* **F**ast and efficient compiler
 
 # Todo
  * ✅ Lexer & Parser (with help of the library [lalrpop](https://github.com/lalrpop/lalrpop) )
  * ⬛️ Semantical Analizer (Work-in-progress)
- * ❌ SBC ( Simple Bytecode Compiler )
- * ❌ MBC ( Memory Bytecode Compiler )
- * ❌ SAC ( Simple Asm Compiler )
- * ❌ AAC ( Asm Arch Compiler ) 
+ * ⬛️ SBC ( Simple Bytecode Compiler )
+ * ⬛️ SAC ( Simple Asm Compiler )
+ * ⬛️ AAC ( Asm Arch Compiler ) 
 
 # Info
 

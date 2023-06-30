@@ -77,29 +77,7 @@ this program will transform the AST into "simple" bytecode:
 14 CALL "print"
 ```
 
-# STEP 4: Memory Bytecode Compiler
-
-this program will make the bytecode above more ASM-like
-
-```
-0  ARG EDI
-1  ARG ESI
-2  LOAD_STR "sum"
-3  DEF_FUNC 5
-4  JMP 9
-5  LOAD_IDENT EDI
-6  LOAD_IDENT ESI
-7  ADD
-8  RETURN
-9  LOAD_INT (3, EDI)
-10 LOAD_INT (4, ESI)
-11 CALL "sum"
-12 LET 2
-13 LOAD_IDENT 2
-14 CALL "print"
-```
-
-# STEP 5: Simple Asm Compiler
+# STEP 4: Simple Asm Compiler
 
 it will take the bytecode and transform it into a kind of ASM AST:
 
@@ -124,7 +102,7 @@ it will take the bytecode and transform it into a kind of ASM AST:
 ]
 ```
 
-# STEP 6: Asm Arch Compiler
+# STEP 5: Asm Arch Compiler
 
 transforms this AST from ASM to ASM according to its arch , here, mine is x86, so it will transform it
 
