@@ -18,7 +18,7 @@ Here is an example Popper program that calculates the Fibonacci sequence:
 use "io.pop" as io
 use "itertool.pop" as itertool
 
-fun fib(n) {
+fun fib(n: int) = int {
     if n < 2 {
         n
     } else {
