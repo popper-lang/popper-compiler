@@ -7,7 +7,7 @@ Popper is an functional programming language designed to simplify the developmen
 To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
 
 ```bash
-git clone https://github.com/poperlang/popper-lang.git
+git clone https://github.com/popper-lang/popper-lang.git
 cd popper-lang
 cargo build
 ```
