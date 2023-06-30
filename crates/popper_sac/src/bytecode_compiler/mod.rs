@@ -75,7 +75,6 @@ impl<'a> Compiler<'a> {
                     self.builder.build_mul(registers[1].clone());
                     self.builder.build_mov(registers[1].clone(), AsmValue::Register(Register::R1));
                     self.stack.free_register(registers[0].clone());
-                    //self.stack.free_register(registers[1].clone());
                 },
                 Instruction::Pop => {
                     let register = &self.stack.take_lasts_reg_used(1)[0];
@@ -83,6 +82,8 @@ impl<'a> Compiler<'a> {
                     if register != &Register::R1 {
                         self.builder.build_mov(Register::R1, AsmValue::Register(register.clone()));
                     }
+
+                    self.stack.free_all_registers();
                 },
                 _ => todo!("Instruction not implemented yet")
             }

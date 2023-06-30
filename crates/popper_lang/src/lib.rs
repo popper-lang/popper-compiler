@@ -1,4 +1,4 @@
-use popper_parser::parser::popper::FileParser;
+use popper_parser::parser::parse;
 use popper_ast::Statement;
 use popper_semantic_analyzer::analyze;
 use popper_common::error::generate_color;
@@ -11,8 +11,8 @@ use popper_sac::bytecode_compiler::Compiler;
 
 
 
-pub fn get_ast(input: &str) -> Vec<Statement> {
-    FileParser::new().parse(input).unwrap()
+pub fn get_ast(input: &str, file: &str) -> Option<Vec<Statement>> {
+   parse(input, file)
 }
 
 pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool {
@@ -60,7 +60,7 @@ pub fn compile_to_asm<'a>(ir: SbcIr) -> Program<'a> {
 
 }
 
-pub fn compile_to_binary<'a>(program: Program<'a>) -> String {
+pub fn compile_to_binary(program: Program) -> String {
     let mut builder = X86Builder::new(program);
 
     builder.compile();
@@ -71,8 +71,14 @@ pub fn compile_to_binary<'a>(program: Program<'a>) -> String {
 }
 
 pub fn popper_compile(input: &str, file_name: &str) -> String {
-    let ast = get_ast(input);
-
+    let ast = get_ast(input, file_name);
+    let ast = match ast {
+        Some(ast) => ast,
+        None => {
+            println!("Error parsing file");
+            return String::new();
+        }
+    };
     if check_program(ast.clone(), input, file_name) {
         let ir = compile_to_bytecode(ast);
 
