@@ -7,7 +7,7 @@ Popper is an functional programming language designed to simplify the developmen
 To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
 
 ```bash
-git clone https://github.com/poplang/popper-lang.git
+git clone https://github.com/poperlang/popper-lang.git
 cd popper-lang
 cargo build
 ```
@@ -42,9 +42,9 @@ my langage is **SFBCF**:
 # Todo
  * ✅ Lexer & Parser (with help of the library [lalrpop](https://github.com/lalrpop/lalrpop) )
  * ⬛️ Semantical Analizer (Work-in-progress)
- * ❌ SBC ( Simple Bytecode Compiler )
- * ❌ SAC ( Simple Asm Compiler )
- * ❌ AAC ( Asm Arch Compiler ) 
+ * ⬛️ SBC ( Simple Bytecode Compiler )
+ * ⬛️ SAC ( Simple Asm Compiler )
+ * ⬛️ AAC ( Asm Arch Compiler ) 
 
 # Info
 
