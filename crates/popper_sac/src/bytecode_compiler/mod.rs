@@ -111,7 +111,6 @@ impl<'a> Compiler<'a> {
                         self.builder.program.drain(x..self.ip-1);
                         l
                     } else {
-                        dbg!(&self.bytecode[x..]);
                         let l = if x <= self.bytecode.len() {
                             Label::new(
                                 name.clone(),

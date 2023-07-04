@@ -82,7 +82,7 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
         }
     };
     if check_program(ast.clone(), input, file_name) {
-        let ir = dbg!(compile_to_bytecode(ast));
+        let ir = compile_to_bytecode(ast);
 
         let program = compile_to_asm(ir);
 
