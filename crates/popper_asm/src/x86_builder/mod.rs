@@ -4,21 +4,20 @@ mod tests;
 
 use crate::register::Register;
 use crate::asm_value::{AsmValue, Immediate, Memory};
-use crate::builder::Assembly;
-use crate::builder::Program;
+use crate::builder::{Assembly, Builder};
 
 
 pub struct  X86Builder<'a> {
-    program: Program<'a>,
+    builder: Builder<'a>,
     pub x86_asm: String
 }
 
 
 
 impl<'a> X86Builder<'a> {
-    pub fn new(program: Program<'a>) -> Self {
+    pub fn new(builder: Builder<'a>) -> Self {
         Self {
-            program,
+            builder,
             x86_asm: "".to_string()
         }
     }
@@ -88,7 +87,7 @@ impl<'a> X86Builder<'a> {
     }
 
     pub fn compile(&mut self) {
-        for assembly in self.program.iter() {
+        for assembly in self.builder.program.iter() {
             self.x86_asm += (match assembly {
                 Assembly::Mov(register, value) => {
                     let register = self.register_to_str(register.clone());
@@ -141,15 +140,28 @@ impl<'a> X86Builder<'a> {
                 Assembly::Call(label) => {
                     format!("call {}", label)
                 },
+                Assembly::Cmp(lhs, rhs) => {
+                    let lhs = self.asm_value_to_str(*lhs.clone());
+                    let rhs = self.asm_value_to_str(*rhs.clone());
+                    format!("cmp {}, {}",
+                            lhs,
+                            rhs
+                    )
+                },
+                Assembly::Je(label) => {
+                    format!("je {}", label)
+                },
+                Assembly::Jmp(label) => {
+                    format!("jmp {}", label)
+                },
+                Assembly::Jne(label) => {
+                    format!("jne {}", label)
+                },
                 Assembly::Ret => {
                     "ret".to_string()
                 },
-                Assembly::Label(label, asm) => {
-                    let mut compiler = X86Builder::new(asm.clone());
-                    compiler.compile();
-                    compiler.x86_asm = compiler.x86_asm.replace("\n", "\n\t");
-                    format!("{}:\n{}", label, compiler.x86_asm)
-
+                Assembly::Nop => {
+                    "nop".to_string()
                 },
 
 
@@ -157,6 +169,19 @@ impl<'a> X86Builder<'a> {
                     todo!("compile assembly: {:?}", e)
                 }
             }.to_string() + "\n").as_str();
+        }
+
+        for label in self.builder.labels.iter() {
+            let mut builder = Builder::new();
+            builder.program = label.1.clone();
+            let mut x86builder = X86Builder::new(builder);
+            x86builder.compile();
+
+            let mut str = x86builder.build();
+
+            str = str.replace("\n", "\n\t");
+            self.x86_asm = self.x86_asm.replace("\t", "");
+            self.x86_asm += (format!("{}:\n\t{}", label.0, str)).as_str();
         }
 
     }

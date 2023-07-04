@@ -6,8 +6,8 @@ use crate::instr::Instruction;
 pub fn debug_instruction(instruction: &Instruction) -> String {
     match instruction {
         Instruction::PushLiteral(literal) => debug_literal(literal),
-        Instruction::JumpIfFalse(jump) => format!("JumpIfFalse({})", jump),
-        Instruction::Jump(jump) => format!("Jump({})", jump),
+        Instruction::JIFIncluded(jump) => format!("JumpIfFalse({})", jump),
+        Instruction::JmpIncluded(jump) => format!("Jump({})", jump),
         Instruction::Call(name) => format!("Call({})", unsafe { name.as_str()  }),
         Instruction::Add => "Add".to_string(),
         Instruction::Sub => "Sub".to_string(),

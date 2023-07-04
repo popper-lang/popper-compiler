@@ -2,7 +2,10 @@ use popper_lang::popper_compile;
 
 fn main() {
     let s = popper_compile(r#"
-    3 + 4 * 2;
+    1 + 2;
+    while true {
+        3 + 4;
+    }
     "#, "<main>");
 
     println!("{}", s);

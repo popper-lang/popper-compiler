@@ -11,10 +11,13 @@ pub enum Assembly<'a> {
     IAdd(Register, Box<AsmValue>),
     ISub(Register, Box<AsmValue>),
     IDiv(Register, Box<AsmValue>),
-
+    Cmp(Box<AsmValue>, Box<AsmValue>),
+    Je(String),
+    Jne(String),
+    Jmp(String),
     Call(&'a str),
-    Label(&'a str, Vec<Assembly<'a>>),
-    Ret
+    Ret,
+    Nop
 }
 
 
@@ -23,14 +26,16 @@ pub type Program<'a> = Vec<Assembly<'a>>;
 
 #[derive(Clone)]
 pub struct Builder<'a> {
-    program: Program<'a>
+    pub program: Program<'a>,
+    pub labels: Vec<(String, Program<'a>)>
 }
 
 impl<'a> Builder<'a> {
 
     pub fn new() -> Self {
         Self {
-            program: vec![]
+            program: vec![],
+            labels: vec![]
         }
     }
 
@@ -75,12 +80,35 @@ impl<'a> Builder<'a> {
         self.program.push(Assembly::Call(label));
     }
 
-    pub fn build_label(&mut self, label: &'a str, body: Vec<Assembly<'a>>) {
-        self.program.push(Assembly::Label(label, body));
+    pub fn build_label(&mut self, label: String, body: Vec<Assembly<'a>>) {
+        self.labels.push((label, body));
     }
 
     pub fn build_ret(&mut self) {
         self.program.push(Assembly::Ret);
+    }
+
+    pub fn build_cmp(&mut self, lhs: AsmValue, rhs: AsmValue) {
+        self.program.push(
+            Assembly::Cmp(
+                Box::new(lhs),
+                Box::new(rhs)
+            )
+        )
+    }
+
+    pub fn build_je(&mut self, label: String) {
+        self.program.push(Assembly::Je(label));
+    }
+
+    pub fn build_jne(&mut self, label: String) {
+        self.program.push(Assembly::Jne(label));
+    }
+    pub fn build_jmp(&mut self, label: String) {
+        self.program.push(Assembly::Jmp(label));
+    }
+    pub fn build_nop(&mut self) {
+        self.program.push(Assembly::Nop);
     }
 
 

@@ -1,5 +1,4 @@
-use lalrpop_util::{lalrpop_mod, ParseError};
-use lalrpop_util::lexer::Token;
+use lalrpop_util::lalrpop_mod;
 
 use crate::error::{ParserError, ParserErrorType};
 use popper_common::error::generate_color;

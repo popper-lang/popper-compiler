@@ -3,8 +3,6 @@
 /// 
 
 
-use std::collections::HashMap;
-use popper_ast::Span;
 use crate::instr::Instruction;
 use crate::value::StrPtr;
 use crate::value::Literal;
@@ -52,12 +50,12 @@ impl SbcIr {
         self.add_instruction(Instruction::PushLiteral(Literal::Null));
     }
 
-    pub fn emit_jump_if_false(&mut self, jump: usize) {
-        self.add_instruction(Instruction::JumpIfFalse(jump));
+    pub fn emit_jump_if_false_included(&mut self, jump: usize) {
+        self.add_instruction(Instruction::JIFIncluded(jump));
     }
 
-    pub fn emit_jump(&mut self, jump: usize) {
-        self.add_instruction(Instruction::Jump(jump));
+    pub fn emit_jump_included(&mut self, jump: usize) {
+        self.add_instruction(Instruction::JmpIncluded(jump));
     }
 
     pub fn emit_call(&mut self, name: StrPtr) {

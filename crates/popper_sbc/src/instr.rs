@@ -6,8 +6,8 @@ use crate::value::StrPtr;
 pub enum Instruction {
     PushLiteral(Literal),
     PushVariable(StrPtr),
-    JumpIfFalse(usize),
-    Jump(usize),
+    JIFIncluded(usize), // Jump if false included , i.e. if false, jump to instruction at index, and the jump instruction is included in the asm
+    JmpIncluded(usize), // Jump included, i.e. jump to instruction at index, and the jump instruction is included in the asm
     Call(StrPtr),
     Store(StrPtr),
     Add,
@@ -47,12 +47,12 @@ impl Bytecode for Instruction {
                 bytecode.extend(name.to_bytecode());
                 bytecode
             },
-            Instruction::JumpIfFalse(jump) => {
+            Instruction::JIFIncluded(jump) => {
                 let mut bytecode = vec![0x03];
                 bytecode.extend(jump.to_bytecode());
                 bytecode
             },
-            Instruction::Jump(jump) => {
+            Instruction::JmpIncluded(jump) => {
                 let mut bytecode = vec![0x04];
                 bytecode.extend(jump.to_bytecode());
                 bytecode
@@ -82,8 +82,8 @@ impl Bytecode for Instruction {
         match bytecode[0] {
             0x01 => Instruction::PushLiteral(Literal::from_bytecode(bytecode[1..].to_vec())),
             0x02 => Instruction::PushVariable(StrPtr::from_bytecode(bytecode[1..].to_vec())),
-            0x03 => Instruction::JumpIfFalse(usize::from_bytecode(bytecode[1..].to_vec())),
-            0x04 => Instruction::Jump(usize::from_bytecode(bytecode[1..].to_vec())),
+            0x03 => Instruction::JIFIncluded(usize::from_bytecode(bytecode[1..].to_vec())),
+            0x04 => Instruction::JmpIncluded(usize::from_bytecode(bytecode[1..].to_vec())),
             0x05 => Instruction::Call(StrPtr::from_bytecode(bytecode[1..].to_vec())),
             0x06 => Instruction::Store(StrPtr::from_bytecode(bytecode[1..].to_vec())),
             0x07 => Instruction::Add,

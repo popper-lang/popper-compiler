@@ -142,7 +142,7 @@ impl Bytecode for i64 {
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
-        let mut bytecode = bytecode;
+        let bytecode = bytecode;
         let mut bytes = [0u8; 8];
         bytes.copy_from_slice(&bytecode);
         i64::from_le_bytes(bytes)

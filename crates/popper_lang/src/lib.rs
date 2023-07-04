@@ -5,10 +5,9 @@ use popper_common::error::generate_color;
 
 use popper_sbc::compile_to_bytecode as compile_to_bytecode_sbc;
 use popper_sbc::ir_sb::SbcIr;
-use popper_asm::builder::{Program};
+use popper_asm::builder::{Builder, Program};
 use popper_asm::x86_builder::X86Builder;
 use popper_sac::bytecode_compiler::Compiler;
-
 
 
 pub fn get_ast(input: &str, file: &str) -> Option<Vec<Statement>> {
@@ -52,7 +51,7 @@ pub fn compile_to_bytecode(ast: Vec<Statement>) -> SbcIr {
 }
 
 
-pub fn compile_to_asm<'a>(ir: SbcIr) -> Program<'a> {
+pub fn compile_to_asm<'a>(ir: SbcIr) -> (Program<'a>, Vec<(String, Program<'a>)>) {
     let mut compiler = Compiler::new(ir.instructions).clone();
 
     compiler.compile();
@@ -60,12 +59,15 @@ pub fn compile_to_asm<'a>(ir: SbcIr) -> Program<'a> {
 
 }
 
-pub fn compile_to_binary(program: Program) -> String {
-    let mut builder = X86Builder::new(program);
+pub fn compile_to_binary(program: Program, labels: Vec<(String, Program)>) -> String {
+    let mut builder = Builder::new();
+    builder.program = program;
+    builder.labels = labels;
+    let mut x86builder = X86Builder::new(builder);
 
-    builder.compile();
+    x86builder.compile();
 
-    let asm = builder.build();
+    let asm = x86builder.build();
 
     asm
 }
@@ -80,11 +82,11 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
         }
     };
     if check_program(ast.clone(), input, file_name) {
-        let ir = compile_to_bytecode(ast);
+        let ir = dbg!(compile_to_bytecode(ast));
 
         let program = compile_to_asm(ir);
 
-        compile_to_binary(program)
+        compile_to_binary(program.0, program.1)
     } else {
         String::new()
     }

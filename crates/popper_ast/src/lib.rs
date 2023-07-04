@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 pub(crate) mod constant;
 pub(crate) mod expr;
 pub(crate) mod stmt;

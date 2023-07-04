@@ -38,12 +38,11 @@ impl StmtVisitor for SbCompiler {
     fn visit_while_stmt(&mut self, while_stmt: While) -> Result<Self::Output, Self::Error> {
         self.visit_expr(while_stmt.condition)?;
         let start = self.ir.instructions.len();
-        self.ir.emit_jump_if_false(0);
-
+        self.ir.emit_jump_if_false_included(0);
         self.visit_stmt(*while_stmt.body)?;
-        self.ir.emit_jump(start.clone() + 1);
+        self.ir.emit_jump_included(start.clone()-1);
         self.ir.replace_instruction(start,
-                                    Instruction::JumpIfFalse(
+                                    Instruction::JIFIncluded(
                                         self.ir.instructions.len()
                                     )
         );
