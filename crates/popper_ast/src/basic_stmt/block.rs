@@ -3,6 +3,7 @@ use crate::{Span, Statement};
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// a block statement. Syntax: `{ <stmt*> }`
 pub struct Block {
     span: Span,
     pub statements: Vec<Statement>,

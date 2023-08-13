@@ -10,7 +10,7 @@ pub mod debug;
 mod tests;
 
 
-pub fn compile_to_bytecode(ast: Vec<popper_ast::Statement>) -> crate::ir_sb::SbcIr {
+pub fn compile_to_bytecode(ast: Vec<popper_ast::Statement>) -> Vec<crate::instr::Instruction> {
     use popper_ast::visitor::StmtVisitor;
 
     let mut compiler = compiler::SbCompiler::new();
@@ -18,7 +18,7 @@ pub fn compile_to_bytecode(ast: Vec<popper_ast::Statement>) -> crate::ir_sb::Sbc
         let _ = compiler.visit_stmt(stmt);
     }
 
-    compiler.ir
+    compiler.build()
 
 
 }

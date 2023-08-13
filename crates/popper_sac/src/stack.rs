@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use popper_asm::register::Register;
 use popper_asm::asm_value::AsmValue;
 
+/// stack save register, and give register who is useless
 #[derive(Clone)]
 pub struct Stack {
     stack: HashMap<Register, AsmValue>,
@@ -49,7 +50,6 @@ impl Stack {
 
         return reg
     }
-
     pub fn take_lasts_reg_used(&mut self, n: usize) -> Vec<Register> {
         let mut keys = self.stack.iter().map(|(k, _v)| k).cloned().collect::<Vec<Register>>();
         keys.reverse();

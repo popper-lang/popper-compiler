@@ -1,25 +1,77 @@
 use crate::value::Literal;
 use crate::value::StrPtr;
 
-#[cfg_attr(test, derive(PartialEq))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
+/// different instruction of bytecode
 pub enum Instruction {
+    /// Name: Push Literal
+    /// Opcode: 0x01
+    /// Operand:
+    /// - Literal: a literal
     PushLiteral(Literal),
+    /// Name: Push Variable
+    /// Opcode: 0x02
+    /// Operand:
+    /// - StrPtr: a pointer of a str
     PushVariable(StrPtr),
-    JIFIncluded(usize), // Jump if false included , i.e. if false, jump to instruction at index, and the jump instruction is included in the asm
-    JmpIncluded(usize), // Jump included, i.e. jump to instruction at index, and the jump instruction is included in the asm
+    /// Name: Jump If False
+    /// Opcode: 0x03
+    /// Operand:
+    /// - bool: if it is included on the asm code
+    /// - Vec<Instruction>: the byte code to execute if the condition is false
+    JIF(bool, Vec<Instruction>),
+    /// Name: Jump
+    /// Opcode: 0x04
+    /// Operand:
+    /// - bool: if it is included on the asm code
+    /// - Vec<Instruction>: the byte code to execute
+    Jmp(bool, Vec<Instruction>),
+    /// Name: Jump If True
+    /// Opcode: 0x05
+    /// Operand:
+    /// - bool: if it is included on the asm code
+    /// - Vec<Instruction>: the byte code to execute if the condition is true
+    JIT(bool, Vec<Instruction>),
+    /// Name: Call function
+    /// Opcode: 0x0F
+    /// Operand:
+    /// - StrPtr: a pointer of a str, the name of the function
     Call(StrPtr),
+    /// Name: Store variable
+    /// Opcode: 0x06
+    /// Operand:
+    /// - StrPtr: a pointer of a str, the name of the variable
     Store(StrPtr),
+    /// Name: Add
+    /// Opcode: 0x07
     Add,
+    /// Name: Subtract
+    /// Opcode: 0x08
     Sub,
+    /// Name: Multiply
+    /// Opcode: 0x09
     Mul,
+    /// Name: Divide
+    /// Opcode: 0x0A
     Div,
+    /// Name: Negation
+    /// Opcode: 0x0B
     Neg,
+    /// Name: Return
+    /// Opcode: 0x0C
     Return,
+    /// Name: Nop (do nothing)
+    /// Opcode: 0x0D
     Nop,
-    Pop
+    /// Name: Pop
+    /// Opcode: 0x0E
+    Pop,
+    /// Name: End Jump
+    /// Opcode: 0x10
+    EndJmp
 }
 
+/// bytecode trait for compile rust data to bytecode data
 pub trait Bytecode: Sized {
     fn to_bytecode(&self) -> Vec<u8>;
     fn from_bytecode(bytecode: Vec<u8>) -> Self;
@@ -34,6 +86,10 @@ pub trait Bytecode: Sized {
     }
 }
 
+
+/// jump format
+type JFormat = (bool, Vec<Instruction>);
+
 impl Bytecode for Instruction {
     fn to_bytecode(&self) -> Vec<u8> {
         match self {
@@ -47,16 +103,18 @@ impl Bytecode for Instruction {
                 bytecode.extend(name.to_bytecode());
                 bytecode
             },
-            Instruction::JIFIncluded(jump) => {
+            Instruction::JIF(jump, instrs) => {
                 let mut bytecode = vec![0x03];
-                bytecode.extend(jump.to_bytecode());
+                let t = (jump.clone(), instrs.clone());
+                bytecode.extend(t.to_bytecode());
                 bytecode
-            },
-            Instruction::JmpIncluded(jump) => {
+            }
+            Instruction::Jmp(jump, instrs) => {
                 let mut bytecode = vec![0x04];
-                bytecode.extend(jump.to_bytecode());
+                let t = (jump.clone(), instrs.clone());
+                bytecode.extend(t.to_bytecode());
                 bytecode
-            },
+            }
             Instruction::Call(name) => {
                 let mut bytecode = vec![0x05];
                 bytecode.extend(name.to_bytecode());
@@ -67,6 +125,7 @@ impl Bytecode for Instruction {
                 bytecode.extend(name.to_bytecode());
                 bytecode
             },
+
             Instruction::Add => vec![0x07],
             Instruction::Sub => vec![0x08],
             Instruction::Mul => vec![0x09],
@@ -75,6 +134,13 @@ impl Bytecode for Instruction {
             Instruction::Return => vec![0x0C],
             Instruction::Nop => vec![0x0D],
             Instruction::Pop => vec![0x0E],
+            Instruction::JIT(jump, instrs) => {
+                let mut bytecode = vec![0x0F];
+                let t = (jump.clone(), instrs.clone());
+                bytecode.extend(t.to_bytecode());
+                bytecode
+            }
+            Instruction::EndJmp => vec![0x10]
         }
     }
 
@@ -82,8 +148,14 @@ impl Bytecode for Instruction {
         match bytecode[0] {
             0x01 => Instruction::PushLiteral(Literal::from_bytecode(bytecode[1..].to_vec())),
             0x02 => Instruction::PushVariable(StrPtr::from_bytecode(bytecode[1..].to_vec())),
-            0x03 => Instruction::JIFIncluded(usize::from_bytecode(bytecode[1..].to_vec())),
-            0x04 => Instruction::JmpIncluded(usize::from_bytecode(bytecode[1..].to_vec())),
+            0x03 => {
+                let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
+                Instruction::JIF(is_included, instrs)
+            },
+            0x04 => {
+                let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
+                Instruction::Jmp(is_included, instrs)
+            },
             0x05 => Instruction::Call(StrPtr::from_bytecode(bytecode[1..].to_vec())),
             0x06 => Instruction::Store(StrPtr::from_bytecode(bytecode[1..].to_vec())),
             0x07 => Instruction::Add,
@@ -94,7 +166,12 @@ impl Bytecode for Instruction {
             0x0C => Instruction::Return,
             0x0D => Instruction::Nop,
             0x0E => Instruction::Pop,
-            _ => panic!("Invalid bytecode")
+            0x0F => {
+                let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
+                Instruction::JIT(is_included, instrs)
+            },
+            0x10 => Instruction::EndJmp,
+            e => panic!("Invalid bytecode: {}", e)
         }
     }
 }

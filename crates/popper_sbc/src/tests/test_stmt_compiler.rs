@@ -14,13 +14,12 @@ pub fn test_while_stmt() {
     }
     let instructions_expected = vec![
         Instruction::PushLiteral(Literal::Boolean(true)),
-        Instruction::JIFIncluded(7),
-        Instruction::PushLiteral(Literal::Integer(1)),
-        Instruction::PushLiteral(Literal::Integer(2)),
-        Instruction::Add,
-        Instruction::Pop,
-        Instruction::JmpIncluded(2),
-        Instruction::Nop
+        Instruction::JIF(true, vec![
+            Instruction::PushLiteral(Literal::Integer(1)),
+            Instruction::PushLiteral(Literal::Integer(2)),
+            Instruction::Add,
+            Instruction::PushLiteral(Literal::Boolean(true))
+        ]),
     ];
 
     assert_eq!(compiler.ir.instructions, instructions_expected);

@@ -172,6 +172,7 @@ impl<'a> X86Builder<'a> {
         }
 
         for label in self.builder.labels.iter() {
+
             let mut builder = Builder::new();
             builder.program = label.1.clone();
             let mut x86builder = X86Builder::new(builder);

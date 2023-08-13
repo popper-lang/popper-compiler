@@ -5,6 +5,7 @@ use crate::Statement;
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// a while statement. Syntax: `while <expr> <stmt>`
 pub struct While {
     span: Span,
     pub condition: Expression,

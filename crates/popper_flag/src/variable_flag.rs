@@ -5,6 +5,7 @@ use popper_ast::Span;
 use crate::SymbolFlags;
 
 #[derive(PartialEq, Clone, Debug)]
+/// variable flag is used to store Variable information
 pub struct VariableFlag {
     pub name: String,
     pub value: SymbolFlags,
@@ -39,6 +40,7 @@ impl VariableFlag {
 
 }
 
+/// store Variable in environement
 #[derive(Clone, PartialEq, Debug)]
 pub struct Environment {
     pub variables: Vec<VariableFlag>,

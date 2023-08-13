@@ -8,6 +8,7 @@ use popper_common::error::{ColorConfig, Error as PopperError};
 
 #[derive(Error, Debug)]
 #[error("type mismatch")]
+/// this error is throw when there is a type mismatch
 pub struct TypeMismatch {
     pub expected: (Span, String),
     pub found: (Span, String),

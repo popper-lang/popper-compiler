@@ -1,7 +1,7 @@
 use crate::register::Register;
 use crate::asm_value::AsmValue;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Assembly<'a> {
     Mov(Register, Box<AsmValue>),
     Add(Register, Box<AsmValue>, Register),
@@ -111,5 +111,7 @@ impl<'a> Builder<'a> {
         self.program.push(Assembly::Nop);
     }
 
-
+    pub fn push(&mut self, assembly: Assembly<'a>) {
+        self.program.push(assembly);
+    }
 }

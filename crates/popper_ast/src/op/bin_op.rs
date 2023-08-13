@@ -4,6 +4,7 @@ use crate::expr::Expression;
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// binary operation: `<expr> <op> <expr`
 pub struct BinOp {
     span: Span,
     pub op: BinOpKind,
@@ -25,18 +26,32 @@ impl BinOp {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
 pub enum BinOpKind {
+    /// +
     Add,
+    /// -
     Sub,
+    /// *
     Mul,
+    /// /
     Div,
+    /// %
     Mod,
+    /// ^
     Pow,
+    /// ==
     Eq,
+    /// !=
     Neq,
+    /// <
     Lt,
+    /// <=
     Lte,
+    /// >
     Gt,
+    /// >=
     Gte,
+    /// &&
     And,
+    /// ||
     Or
 }

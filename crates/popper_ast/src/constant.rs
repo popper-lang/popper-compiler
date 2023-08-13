@@ -3,6 +3,7 @@ use crate::span::Span;
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// a ident must start by a letter and next by letter, number or `_` charatcter
 pub struct Ident {
     pub span: Span,
     pub name: String,
@@ -17,6 +18,7 @@ impl Ident {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// any int number: ex `192`, `4920`, `11`
 pub struct Int {
     span: Span,
     pub value: i64,
@@ -34,6 +36,7 @@ impl Int {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// any float number: ex `0.38`, `39.21`
 pub struct Float {
     span: Span,
     pub value: f64,
@@ -51,6 +54,7 @@ impl Float {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// any string literal starts by `"` and end by `"`: ex `"hello12"`, `"world__"`
 pub struct StringLiteral {
     span: Span,
     pub value: String,
@@ -71,6 +75,7 @@ impl StringLiteral {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// true | false
 pub struct Bool {
     span: Span,
     pub value: bool,
@@ -88,6 +93,7 @@ impl Bool {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// null
 pub struct Null {
     span: Span,
 }

@@ -2,6 +2,7 @@ use ariadne::{Color, Source};
 
 pub type ColorConfig = std::collections::HashMap<String, Color>;
 
+/// error trait for `Popper Lang`, all error in `Popper-Lang` will implement this trait
 pub trait Error {
     fn report(&self,
               color: ColorConfig,
@@ -9,6 +10,8 @@ pub trait Error {
               file: &str);
 }
 
+
+/// it is the default configuration of color of error in `Popper-lang` , if you want to add new , create a new function
 pub fn generate_color() -> ColorConfig {
     let mut color_map = std::collections::HashMap::new();
     color_map.insert("type".to_string(), Color::Red);
@@ -23,6 +26,7 @@ pub fn generate_color() -> ColorConfig {
     color_map
 }
 
+/// convert a source to a string
 pub fn source_to_string(source: &Source) -> String {
     String::from_iter(source.chars())
 }

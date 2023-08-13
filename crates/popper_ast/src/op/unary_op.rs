@@ -4,6 +4,7 @@ use crate::span::Span;
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// Unary operation: `<op> <expr>`
 pub struct UnaryOp {
     pub op: UnaryOpKind,
     pub expr: Box<Expression>,
@@ -24,7 +25,9 @@ impl UnaryOp {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone, Copy)]
 pub enum UnaryOpKind {
+    /// -
     Neg,
+    /// !
     Not,
 }
 

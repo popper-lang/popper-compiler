@@ -1,5 +1,4 @@
 
-
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum TypeFlag {
     Bool,

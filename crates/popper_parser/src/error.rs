@@ -4,10 +4,12 @@ use popper_common::error::{ColorConfig, Error};
 use ariadne::{Report, Source, ReportKind, Label};
 use ariadne::Fmt;
 
-
+/// parser errpr type implemented with lalrpop error
 #[derive(Clone)]
 pub struct ParserErrorType<'a>(pub ParseError<usize, Token<'a>, &'static str>);
 
+
+/// PopperLang Parser error
 #[derive(Clone)]
 pub struct ParserError<'a> {
     pub error: ParserErrorType<'a>,

@@ -1,3 +1,4 @@
+use std::ops::{Range, RangeFrom};
 use popper_asm::builder::{Assembly, Builder, Program};
 use popper_sbc::instr::Instruction;
 use popper_sbc::value::Literal;
@@ -6,15 +7,18 @@ use popper_asm::asm_value::{AsmValue, Immediate};
 use crate::stack::Stack;
 use crate::label::Label;
 
+
+
 type BytecodeProgram = Vec<Instruction>;
 
-
+/// compiler who compile bytecode instruction to asm-like instruction
 #[derive(Clone)]
 pub struct Compiler<'a> {
     builder: Builder<'a>,
     bytecode: BytecodeProgram,
     stack: Stack,
-    labels: Vec<Label>,
+    labels: Vec<Label<'a>>,
+    to_free: Vec<Range<usize>>,
     ip: usize,
 }
 
@@ -26,6 +30,7 @@ impl<'a> Compiler<'a> {
             bytecode,
             stack: Stack::new(),
             labels: Vec::new(),
+            to_free: Vec::new(),
             ip: 0,
         }
     }
@@ -34,7 +39,7 @@ impl<'a> Compiler<'a> {
         self.stack = stack;
     }
 
-    pub fn set_labels(&mut self, labels: Vec<Label>) {
+    pub fn set_labels(&mut self, labels: Vec<Label<'a>>) {
         self.labels = labels;
     }
 
@@ -97,85 +102,38 @@ impl<'a> Compiler<'a> {
                     self.builder.build_mov(registers[1].clone(), AsmValue::Register(Register::R1));
                     self.stack.free_register(registers[0].clone());
                 },
-                Instruction::JIFIncluded(x) => {
-                    let name = "label".to_string() + &x.to_string();
-                    if self.labels.iter().filter(|x| x.label == name ).count()  != 0 {
-                        self.builder.build_jne(name.clone());
-                        continue;
-                    }
-                    let label = if x < self.ip {
-                        let l = Label::new(
-                            name.clone(),
-                            self.bytecode[x..self.ip-1].to_vec()
-                        );
-                        self.builder.program.drain(x..self.ip-1);
-                        l
+                Instruction::JIF(is_included, instrs) => {
+                    let name = "label".to_string() + self.labels.len().to_string().as_str();
+                    let instr = Assembly::Jne(name.clone());
+                    let instr_to_add = if is_included {
+                        vec![instr.clone()]
                     } else {
-                        let l = if x <= self.bytecode.len() {
-                            Label::new(
-                                name.clone(),
-                                self.bytecode[x..].to_vec()
-                            )
-                        } else {
-                            Label::new(
-                                name.clone(),
-                                self.bytecode[x-1..].to_vec()
-                            )
-                        };
-                        if x <= self.bytecode.len() {
-                            self.bytecode.drain(x..);
-                        } else {
-                            self.bytecode.drain(x - 1..);
-                        }
-                        l
+                        vec![]
                     };
-
-
-                    self.labels.push(label.clone());
-
-                    self.builder.build_jne(name.clone());
-                    self.builder.build_label(name, label.assembly(self.stack.clone(), self.labels.clone()).0);
+                    self.build_label(instrs, name.clone(), instr, instr_to_add);
 
                 },
-                Instruction::JmpIncluded(x) => {
-                    let name = "label".to_string() + &x.to_string();
-                    let label = if x < self.ip {
-                        let l = Label::new(
-                            name.clone(),
-                            self.bytecode[x..self.ip-1].to_vec()
-                        );
-                        self.builder.program.drain(x..self.ip-1);
-                        l
+                Instruction::Jmp(is_included, instrs) => {
+                    let name = "label".to_string() + self.labels.len().to_string().as_str();
+                    let instr = Assembly::Jmp(name.clone());
+                    let instr_to_add = if is_included {
+                        vec![instr.clone()]
                     } else {
-                        let l = if x <= self.bytecode.len() {
-                            Label::new(
-                                name.clone(),
-                                self.bytecode[x..].to_vec()
-                            )
-                        } else {
-                            Label::new(
-                                name.clone(),
-                                self.bytecode[x-1..].to_vec()
-                            )
-                        };
-                        if x <= self.bytecode.len() {
-                            self.bytecode.drain(x..);
-                        } else {
-                            self.bytecode.drain(x - 1..);
-                        }
-                        l
+                        vec![]
                     };
-                    let mut res = label.clone().assembly(self.stack.clone(), self.labels.clone()).0;
-
-                    res.push(Assembly::Jmp(name.clone()));
-
-                    self.labels.push(label.clone());
-                    self.builder.build_jmp(name.clone());
-
-                    self.builder.build_label(name.clone(), res);
-
-
+                    self.build_label(instrs, name.clone(), instr, instr_to_add);
+                }
+                Instruction::JIT(is_included, instrs) => {
+                    let name = "label".to_string() + self.labels.len().to_string().as_str();
+                    let instr = Assembly::Je(name.clone());
+                    let instr_to_add = if is_included {
+                        vec![instr.clone()]
+                    } else {
+                        vec![]
+                    };
+                    self.build_label(instrs, name.clone(), instr, instr_to_add);
                 },
+
                 Instruction::Pop => {
                     let register = &self.stack.take_lasts_reg_used(1)[0];
 
@@ -189,11 +147,34 @@ impl<'a> Compiler<'a> {
                 e => todo!("Instruction not implemented yet: {:?}", e)
             }
         }
-
     }
 
     pub fn build(self) -> (Program<'a>, Vec<(String, Program<'a>)>) {
-        (self.builder.build(), self.builder.labels)
+        let builder_labels = self.labels.into_iter().map(|x| (x.label, x.program)).collect();
+        (self.builder.build(), builder_labels)
+    }
+
+    fn build_label(&mut self,  body: Vec<Instruction>, name: String, instr: Assembly<'a>, instr_to_add: Vec<Assembly<'a>>) {
+        if self.labels.iter().filter(|x| x.label == name ).count()  != 0 {
+            self.builder.push(instr);
+            return;
+        }
+
+        let program = {
+            let mut compiler = Compiler::new(body);
+            compiler.set_labels(self.labels.clone());
+            compiler.set_stack(self.stack.clone());
+            compiler.compile();
+            for instr in instr_to_add {
+                compiler.builder.push(instr);
+            }
+            compiler.build().0
+        };
+        self.builder.push(instr);
+
+        self.labels.push(
+            Label::new(name, program)
+        )
     }
 
 }

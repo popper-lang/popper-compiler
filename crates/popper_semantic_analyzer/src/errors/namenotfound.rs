@@ -8,6 +8,7 @@ use popper_ast::Span;
 
 #[derive(Error, Debug)]
 #[error("name not found")]
+/// this error is throw when the SSO don't find a variable
 pub struct NameNotFound {
     name: (Span, String),
     pub name_more_closed: Option<String>

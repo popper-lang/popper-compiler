@@ -11,7 +11,7 @@ impl StmtVisitor for SbCompiler {
 
     fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
         for stmt in block.statements {
-            let _ = self.visit_stmt(stmt);
+            let _ = self.visit_stmt(stmt)?;
         }
         Ok(())
     }
@@ -37,16 +37,9 @@ impl StmtVisitor for SbCompiler {
 
     fn visit_while_stmt(&mut self, while_stmt: While) -> Result<Self::Output, Self::Error> {
         self.visit_expr(while_stmt.condition)?;
-        let start = self.ir.instructions.len();
-        self.ir.emit_jump_if_false_included(0);
-        self.visit_stmt(*while_stmt.body)?;
-        self.ir.emit_jump_included(start.clone()-1);
-        self.ir.replace_instruction(start,
-                                    Instruction::JIFIncluded(
-                                        self.ir.instructions.len()
-                                    )
-        );
-        self.ir.emit_nop();
+        let mut stmt = SbCompiler::build_stmt(*while_stmt.body);
+        stmt.push(self.ir.instructions.last().cloned().unwrap());
+        self.ir.emit_jump_if_true(true, stmt);
         Ok(())
     }
 
@@ -64,7 +57,37 @@ impl StmtVisitor for SbCompiler {
             Statement::Block(block) => {
                 self.visit_block(block)?;
             }
+            Statement::If(if_stmt) => {
+                self.visit_if_stmt(if_stmt)?;
+            }
+
+            Statement::IfElse(if_else_stmt) => {
+                self.visit_if_else_stmt(if_else_stmt)?;
+            }
         }
+        Ok(())
+    }
+
+    fn visit_if_stmt(&mut self, if_stmt: If) -> Result<Self::Output, Self::Error> {
+        self.visit_expr(if_stmt.condition)?;
+        self.ir.emit_jump_if_true(
+            false,
+            SbCompiler::build_stmt(*if_stmt.body)
+        );
+        Ok(())
+    }
+
+    fn visit_if_else_stmt(&mut self, if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
+        self.visit_expr(if_else_stmt.condition)?;
+        self.ir.emit_jump_if_true(
+            false,
+            SbCompiler::build_stmt(*if_else_stmt.body)
+        );
+        self.ir.emit_jump_if_false(
+            false,
+            SbCompiler::build_stmt(*if_else_stmt.else_body)
+        );
+
         Ok(())
     }
 }

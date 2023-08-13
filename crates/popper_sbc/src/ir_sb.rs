@@ -7,6 +7,7 @@ use crate::instr::Instruction;
 use crate::value::StrPtr;
 use crate::value::Literal;
 
+/// a ir that store all instruction
 #[derive(Clone, Debug)]
 pub struct SbcIr {
     pub instructions: Vec<Instruction>,
@@ -48,14 +49,6 @@ impl SbcIr {
 
     pub fn emit_null(&mut self) {
         self.add_instruction(Instruction::PushLiteral(Literal::Null));
-    }
-
-    pub fn emit_jump_if_false_included(&mut self, jump: usize) {
-        self.add_instruction(Instruction::JIFIncluded(jump));
-    }
-
-    pub fn emit_jump_included(&mut self, jump: usize) {
-        self.add_instruction(Instruction::JmpIncluded(jump));
     }
 
     pub fn emit_call(&mut self, name: StrPtr) {
@@ -100,6 +93,22 @@ impl SbcIr {
 
     pub fn emit_pop(&mut self) {
         self.add_instruction(Instruction::Pop);
+    }
+
+    pub fn emit_jump_if_false(&mut self, is_included: bool, instrs: Vec<Instruction>) {
+        self.add_instruction(Instruction::JIF(is_included, instrs));
+    }
+
+    pub fn emit_jump(&mut self, is_included: bool, instrs: Vec<Instruction>) {
+        self.add_instruction(Instruction::Jmp(is_included, instrs));
+    }
+
+    pub fn emit_jump_if_true(&mut self, is_included: bool, instrs: Vec<Instruction>) {
+        self.add_instruction(Instruction::JIT(is_included, instrs));
+    }
+
+    pub fn emit_end_jump(&mut self) {
+        self.add_instruction(Instruction::EndJmp);
     }
 
     pub fn replace_instruction(&mut self, index: usize, instruction: Instruction) {

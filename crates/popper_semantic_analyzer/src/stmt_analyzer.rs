@@ -81,12 +81,58 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(symbol_flag)
     }
 
+    fn visit_if_stmt(&mut self, if_stmt: If) -> Result<Self::Output, Self::Error> {
+        let mut analyzer = ExprAnalyzer::new(self.env.clone());
+        let symbol_flag = SymbolFlags::new(if_stmt.span);
+        let condition = analyzer.visit_expr(if_stmt.condition.clone())?;
+
+        if !condition.is_boolean() {
+            return Err(Box::new(
+                TypeMismatch::new(
+                    (if_stmt.condition.span(), ValueFlag::Boolean.to_string()),
+                    (if_stmt.condition.span(), condition.get_value().unwrap().to_string()),
+                )
+            ))
+        }
+
+        let mut analyzer = StmtAnalyzer::new(self.env.clone());
+
+        let _body = analyzer.visit_stmt(*if_stmt.body)?;
+
+        Ok(symbol_flag)
+    }
+
+    fn visit_if_else_stmt(&mut self, if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
+
+        let mut analyzer = ExprAnalyzer::new(self.env.clone());
+        let symbol_flag = SymbolFlags::new(if_else_stmt.span);
+        let condition = analyzer.visit_expr(if_else_stmt.condition.clone())?;
+
+        if !condition.is_boolean() {
+            return Err(Box::new(
+                TypeMismatch::new(
+                    (if_else_stmt.condition.span(), ValueFlag::Boolean.to_string()),
+                    (if_else_stmt.condition.span(), condition.get_value().unwrap().to_string()),
+                )
+            ))
+        }
+
+        let mut analyzer = StmtAnalyzer::new(self.env.clone());
+
+        let _body = analyzer.visit_stmt(*if_else_stmt.body)?;
+        let _else_body = analyzer.visit_stmt(*if_else_stmt.else_body)?;
+
+        Ok(symbol_flag)
+    }
+
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
             Statement::Expression(expr) => self.visit_expr_stmt(expr),
             Statement::Let(let_stmt) => self.visit_let_stmt(let_stmt),
             Statement::Block(block) => self.visit_block(block),
             Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),
+            Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
+            Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
         }
     }
 

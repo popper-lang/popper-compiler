@@ -1,8 +1,7 @@
 use std::fmt::Debug;
 use crate::instr::Bytecode;
 
-#[cfg_attr(test, derive(PartialEq))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Integer(i64),
     Float(f64),
@@ -50,7 +49,7 @@ impl Bytecode for Literal {
     }
 }
 
-
+/// str ptr that can be represented in bytecode
 #[derive(Debug, Clone, Copy)]
 pub struct StrPtr {
     ptr: *const u8,
@@ -165,10 +164,7 @@ impl Bytecode for f64 {
 
 impl Bytecode for bool {
     fn to_bytecode(&self) -> Vec<u8> {
-        let mut bytecode = vec![];
-        let n = if *self { 1 } else { 0 };
-        bytecode.push(n);
-        bytecode
+        vec![ if *self { 1 } else { 0 } ]
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
@@ -199,12 +195,37 @@ where
     }
 }
 
-impl<T> Bytecode for Box<T> where T: Bytecode {
+impl<T> Bytecode for Box<T>
+    where T: Bytecode {
     fn to_bytecode(&self) -> Vec<u8> {
         self.as_ref().to_bytecode()
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
         Box::new(T::from_bytecode(bytecode))
+    }
+}
+
+impl<T> Bytecode for Vec<T>
+where T: Bytecode {
+    fn to_bytecode(&self) -> Vec<u8> {
+        let mut bytecode = vec![];
+        bytecode.extend(self.len().to_bytecode());
+        for item in self {
+            bytecode.extend(item.to_bytecode());
+        }
+        bytecode
+    }
+
+    fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        let len = usize::from_bytecode(bytecode[0..8].to_vec());
+        let mut vec = vec![];
+        let mut index = 8;
+        for _ in 0..len {
+            let item = T::from_bytecode(bytecode[index..index+9].to_vec());
+            vec.push(item);
+            index += 9;
+        }
+        vec
     }
 }

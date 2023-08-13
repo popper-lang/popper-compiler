@@ -1,6 +1,8 @@
 use popper_ast::Span;
 use crate::{Flag, TypeFlag, ValueFlag, ScopeFlag, Environment, VariableFlag};
 
+
+/// save all flags in this struct
 #[derive(Clone, PartialEq, Debug)]
 pub struct SymbolFlags {
     pub symbols: Vec<Flag>,

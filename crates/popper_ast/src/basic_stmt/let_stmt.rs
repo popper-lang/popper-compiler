@@ -5,6 +5,7 @@ use crate::Span;
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+/// A let statement to create variable. Syntax: `let <ident>: <type> = <expr>;`
 pub struct LetStmt {
     pub name: Ident,
     pub value: Expression,

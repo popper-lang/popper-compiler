@@ -6,7 +6,7 @@ macro_rules! visit {
     };
 }
 
-
+/// expr visitor
 pub trait ExprVisitor {
     type Output;
     type Error;
@@ -18,6 +18,7 @@ pub trait ExprVisitor {
     visit!(visit_expr, expr => Expression );
 }
 
+/// stmt visitor
 pub trait StmtVisitor {
     type Output;
     type Error;
@@ -27,4 +28,6 @@ pub trait StmtVisitor {
     visit!(visit_stmt, stmt => Statement);
     visit!(visit_block, block => Block);
     visit!(visit_while_stmt, while_stmt => While);
+    visit!(visit_if_stmt, if_stmt => If);
+    visit!(visit_if_else_stmt, if_else_stmt => IfElse);
 }

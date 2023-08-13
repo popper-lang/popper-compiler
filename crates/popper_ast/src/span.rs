@@ -1,8 +1,10 @@
 
+
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature = "default-trait", derive(Default))]
 #[derive(Copy, Clone)]
+/// Span is used to save a token / stmt / expr location
 pub struct Span {
     pub start: usize,
     pub end: usize,

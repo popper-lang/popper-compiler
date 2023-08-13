@@ -43,3 +43,13 @@ pub fn test_tuple_bytecode() {
     let tuple_expected = LiteralTuple::from_bytecode(bytecode);
     assert_eq!(tuple, tuple_expected);
 }
+
+type LiteralList = Vec<Literal>;
+
+#[test]
+pub fn test_list_bytecode() {
+    let list: LiteralList = vec![Literal::Integer(1), Literal::Integer(2)];
+    let bytecode = list.to_bytecode();
+    let list_expected = LiteralList::from_bytecode(bytecode);
+    assert_eq!(list, list_expected);
+}
