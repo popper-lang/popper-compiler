@@ -4,6 +4,7 @@ use crate::Block;
 use crate::LetStmt;
 use crate::If;
 use crate::IfElse;
+use crate::Function;
 
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -16,4 +17,5 @@ pub enum Statement {
     Let(LetStmt),
     If(If),
     IfElse(IfElse),
+    Function(Function),
 }
