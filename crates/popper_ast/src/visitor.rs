@@ -30,4 +30,5 @@ pub trait StmtVisitor {
     visit!(visit_while_stmt, while_stmt => While);
     visit!(visit_if_stmt, if_stmt => If);
     visit!(visit_if_else_stmt, if_else_stmt => IfElse);
+    visit!(visit_function, function => Function);
 }

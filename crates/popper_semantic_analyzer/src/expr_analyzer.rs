@@ -3,6 +3,7 @@ use crate::errors::{NameNotFound, TypeMismatch};
 use popper_flag::{
     Environment,
     SymbolFlags,
+    ValueFlag
 };
 
 use crate::tool::name_similarity::find_similar_name;
@@ -18,6 +19,24 @@ pub struct ExprAnalyzer {
 impl ExprAnalyzer {
     pub fn new(env: Environment) -> Self {
         Self { env: env }
+    }
+
+    pub fn get_type(&self, ty: Type) -> ValueFlag {
+        match ty.type_kind {
+            TypeKind::Bool => ValueFlag::Boolean,
+            TypeKind::Float => ValueFlag::Float,
+            TypeKind::Int => ValueFlag::Integer,
+            TypeKind::String => ValueFlag::String,
+            TypeKind::Array(ty, _) => ValueFlag::Array(Box::new(self.get_type(*ty))),
+            TypeKind::Function(args, returnty) => {
+                let mut args_type = Vec::new();
+                for arg in args {
+                    args_type.push(self.get_type(arg));
+                }
+                ValueFlag::Function(args_type, Box::new(self.get_type(*returnty)))
+            }
+            _ => unimplemented!()
+        }
     }
 }
 

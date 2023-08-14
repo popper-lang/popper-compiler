@@ -1,5 +1,5 @@
 use popper_ast::Span;
-use crate::{Flag, TypeFlag, ValueFlag, ScopeFlag, Environment, VariableFlag};
+use crate::{Flag, ValueFlag, ScopeFlag, Environment, VariableFlag};
 
 
 /// save all flags in this struct
@@ -60,12 +60,22 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_array(&mut self, type_flag: TypeFlag) -> &mut Self {
+    pub fn set_array(&mut self, value_flag: ValueFlag) -> &mut Self {
         self.add_flag(
             Flag::Value(
-                ValueFlag::Array(type_flag)
+                ValueFlag::Array(Box::new(value_flag))
             )
         );
+        self
+    }
+
+    pub fn set_function(&mut self, args: Vec<ValueFlag>, returnty: ValueFlag) -> &mut Self {
+        self.add_flag(
+            Flag::Value(
+                ValueFlag::Function(args, Box::new(returnty))
+            )
+        );
+
         self
     }
 
@@ -78,13 +88,14 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_init_variable(&mut self, name: String, value: SymbolFlags, scope: ScopeFlag, mutable: bool) -> &mut Self {
+    pub fn set_init_variable(&mut self, name: String, value: SymbolFlags, scope: ScopeFlag, mutable: bool, span: Span) -> &mut Self {
         self.vars.add_variable(
             VariableFlag::new(
                 name,
                 value,
                 scope,
-                mutable
+                mutable,
+                span
             )
         );
         self
@@ -110,10 +121,10 @@ impl SymbolFlags {
         self.symbols.iter().any(|s| s == &Flag::Value(ValueFlag::Boolean))
     }
 
-    pub fn is_array(&self, type_flag: TypeFlag) -> bool {
+    pub fn is_array(&self, value_flag: ValueFlag) -> bool {
         self.symbols.iter().any(|s|
             s == &Flag::Value(
-                ValueFlag::Array(type_flag.clone())
+                ValueFlag::Array(Box::new(value_flag.clone()))
             )
         )
     }

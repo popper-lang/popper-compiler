@@ -1,8 +1,6 @@
 
 use lalrpop_util::lalrpop_mod;
-use error::generate_color;
-use popper_parser::error::ParserError;
-use popper_parser::error::ParserErrorType;
+
 use popper_common::error;
 use popper_ast::Span;
 use popper_parser::Source;
@@ -15,8 +13,12 @@ lalrpop_mod!(pub popper);
 
 fn main() {
     let body = r#"
-        while true {
-            1 + 2;
+        func hello(name: string): int {
+            4 + 5;
+        }
+
+        func hello(name: string): int {
+            4 + 5;
         }
         "#;
     let res = popper::FileParser::new().parse(body);

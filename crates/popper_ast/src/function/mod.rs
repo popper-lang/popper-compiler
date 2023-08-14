@@ -11,17 +11,17 @@ use crate::Statement;
 #[derive(Clone)]
 pub struct Function {
     pub name: String,
-    pub argument: Arguments,
+    pub arguments: Arguments,
     pub returntype: Type,
     pub body: Vec<Statement>,
     pub span: Span
 }
 
 impl Function {
-    pub fn new(name: String, argument: Arguments, returntype: Type, body: Vec<Statement>, span: Span) -> Self {
+    pub fn new(name: String, arguments: Arguments, returntype: Type, body: Vec<Statement>, span: Span) -> Self {
         Self {
             name,
-            argument,
+            arguments,
             returntype,
             body,
             span

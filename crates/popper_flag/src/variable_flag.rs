@@ -13,6 +13,7 @@ pub struct VariableFlag {
     pub used_at: Vec<Span>,
     pub scope: ScopeFlag,
     pub mutable: bool,
+    pub span: Span
 }
 
 
@@ -20,7 +21,8 @@ impl VariableFlag {
     pub fn new(name: String,
                value: SymbolFlags,
                scope: ScopeFlag,
-               mutable: bool
+               mutable: bool,
+               span: Span
                ) -> Self {
         Self {
             name,
@@ -28,7 +30,8 @@ impl VariableFlag {
             used: false,
             used_at: Vec::new(),
             scope,
-            mutable
+            mutable,
+            span
         }
     }
 

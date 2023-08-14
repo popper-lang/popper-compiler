@@ -1,4 +1,4 @@
-
+use std::fmt::{Display, Formatter};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -32,6 +32,12 @@ impl Span {
         line
     }
 
+}
+
+impl Display for Span {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}", self.start, self.end)
+    }
 }
 
 impl From<Span> for std::ops::Range<usize> {

@@ -2,7 +2,7 @@
 
 use popper_ast::*;
 
-use crate::errors::TypeMismatch;
+use crate::errors::{AlreadyExist, TypeMismatch};
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_common::error::Error;
@@ -40,7 +40,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let_stmt.name.name,
             value.clone(),
             self.current_scope.clone(),
-            let_stmt.mutable
+            let_stmt.mutable,
+            let_stmt.span
         );
 
         self.env.add_variable(variable);
@@ -125,6 +126,40 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(symbol_flag)
     }
 
+    fn visit_function(&mut self, function: Function) -> Result<Self::Output, Self::Error> {
+        if let Some(f) = self.env.get_variable(function.name.as_str()) {
+            let err = AlreadyExist::new(f.span, (function.name, function.span));
+            return Err(Box::new(err));
+        }
+        let args: Vec<ValueFlag>  = function.arguments.args.iter().map(|arg| {
+            let expr_analyser = ExprAnalyzer::new(self.env.clone());
+            expr_analyser.get_type(arg.ty.clone())
+        }).collect();
+
+        let return_type = {
+            let expr_analyser = ExprAnalyzer::new(self.env.clone());
+            Box::new(expr_analyser.get_type(function.returntype.clone()))
+        };
+
+        let symbol_flag = SymbolFlags::new(function.span)
+            .set_function(args, *return_type)
+            .clone()
+        ;
+
+
+        let function_flag = VariableFlag::new(
+            function.name,
+            symbol_flag,
+            self.current_scope.clone(),
+            false,
+            function.span
+        );
+
+        self.env.add_variable(function_flag);
+
+        Ok(SymbolFlags::new(function.span))
+    }
+
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
             Statement::Expression(expr) => self.visit_expr_stmt(expr),
@@ -133,6 +168,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),
             Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
             Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
+            Statement::Function(fn_stmt) => self.visit_function(fn_stmt)
         }
     }
 

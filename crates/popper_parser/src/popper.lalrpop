@@ -218,7 +218,7 @@ Arguments: Arguments = {
 
 
 FunctionStmt: (Ident, Arguments, Type, Vec<Statement>) = {
-    <t:Span<Ident>> <args:Group< "(", Arguments, ")" >> ":" <ty:Types> <body:Block> => {
+   "func" <t:Span<Ident>> <args:Group< "(", Arguments, ")" >> ":" <ty:Types> <body:Block> => {
         (t.1, args.1, ty, body)
     }
 }

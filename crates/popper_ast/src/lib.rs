@@ -26,5 +26,6 @@ pub use function::*;
 pub fn get_ast_from_json_file(file: &str) -> Vec<Statement> {
     let file = std::fs::read_to_string(file).unwrap();
     let ast: Vec<Statement> = serde_json::from_str(&file).unwrap();
+    ast
 }
 

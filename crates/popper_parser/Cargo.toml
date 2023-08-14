@@ -22,4 +22,5 @@ lalrpop = "0.20.0"
 
 [features]
 logs = []
+serde = ["popper_ast/serde"]
 
