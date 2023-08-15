@@ -1,4 +1,5 @@
 use popper_asm::builder::Program;
+use popper_sbc::value::ByteType;
 use crate::bytecode_compiler::Compiler;
 use crate::stack::Stack;
 
@@ -19,6 +20,21 @@ impl<'a> Label<'a> {
         Self {
             label,
             program
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LabelFn<'a> {
+    pub label: Label<'a>,
+    pub fn_type: (Vec<ByteType>, ByteType)
+}
+
+impl<'a> LabelFn<'a> {
+    pub fn new(label: Label<'a>, fn_type: (Vec<ByteType>, ByteType)) -> Self {
+        Self {
+            label,
+            fn_type
         }
     }
 }

@@ -3,7 +3,7 @@ use super::SbCompiler;
 use popper_ast::*;
 use visitor::{StmtVisitor, ExprVisitor};
 use crate::instr::Instruction;
-use crate::value::StrPtr;
+use crate::value::{ByteArg, ByteType, ByteStr};
 
 impl StmtVisitor for SbCompiler {
     type Error = ();
@@ -25,11 +25,9 @@ impl StmtVisitor for SbCompiler {
     fn visit_let_stmt(&mut self, let_stmt: LetStmt) -> Result<Self::Output, Self::Error> {
 
         let name = let_stmt.name.name;
-        let len = name.len();
-        let name = name.as_ptr();
         self.visit_expr(let_stmt.value)?;
         self.ir.emit_store(
-            StrPtr::new(name, len)
+            ByteStr::new(name)
         );
 
         Ok(())
@@ -64,6 +62,8 @@ impl StmtVisitor for SbCompiler {
             Statement::IfElse(if_else_stmt) => {
                 self.visit_if_else_stmt(if_else_stmt)?;
             }
+
+            Statement::Function(func) => self.visit_function(func)?
         }
         Ok(())
     }
@@ -89,5 +89,25 @@ impl StmtVisitor for SbCompiler {
         );
 
         Ok(())
+    }
+
+    fn visit_function(&mut self, function: Function) -> Result<Self::Output, Self::Error> {
+        let name = ByteStr::new(function.name);
+        let arguments: Vec<ByteArg> = function.arguments.args.iter().map(|x| ByteArg::from_ast_argument(x.clone())).collect();
+
+        let mut stmt = function.body
+            .iter()
+            .map(|stmt| SbCompiler::build_stmt(stmt.clone()))
+            .flatten()
+            .collect::<Vec<Instruction>>();
+
+        let returnty  = ByteType::from_ast_type(function.returntype.clone());
+
+        self.ir.emit_function(name, arguments, Box::new(returnty), stmt);
+
+        Ok(())
+
+
+
     }
 }

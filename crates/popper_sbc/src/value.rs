@@ -1,11 +1,14 @@
 use std::fmt::Debug;
+use popper_ast::Argument;
+use popper_ast::{Type, TypeKind};
 use crate::instr::Bytecode;
+use std::pin::Pin;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {
     Integer(i64),
     Float(f64),
-    String(StrPtr),
+    String(ByteStr),
     Boolean(bool),
     Null
 }
@@ -41,7 +44,7 @@ impl Bytecode for Literal {
         match bytecode[0] {
             0x01 => Literal::Integer(i64::from_bytecode(bytecode[1..].to_vec())),
             0x02 => Literal::Float(f64::from_bytecode(bytecode[1..].to_vec())),
-            0x03 => Literal::String(StrPtr::from_bytecode(bytecode[1..].to_vec())),
+            0x03 => Literal::String(ByteStr::from_bytecode(bytecode[1..].to_vec())),
             0x04 => Literal::Boolean(bool::from_bytecode(bytecode[1..].to_vec())),
             0x05 => Literal::Null,
             _ => panic!("Invalid bytecode for Literal"),
@@ -50,72 +53,28 @@ impl Bytecode for Literal {
 }
 
 /// str ptr that can be represented in bytecode
-#[derive(Debug, Clone, Copy)]
-pub struct StrPtr {
-    ptr: *const u8,
-    len: usize,
+#[derive(Debug, Clone, PartialEq)]
+pub struct ByteStr {
+    pub str: String
 }
 
-impl PartialEq for StrPtr {
-    fn eq(&self, other: &Self) -> bool {
-        unsafe {
-            let slice = std::slice::from_raw_parts(self.ptr, self.clone().len);
-            let other_slice = std::slice::from_raw_parts(other.ptr, other.clone().len);
-            slice == other_slice
-        }
+
+impl ByteStr {
+    pub fn new(str: String) -> Self {
+        Self { str }
     }
 }
 
-impl StrPtr {
-    pub fn new(ptr: *const u8, len: usize) -> Self {
-        Self { ptr, len }
-    }
 
-    pub unsafe fn as_str(&self) -> &str {
-        unsafe {
-            let slice = std::slice::from_raw_parts(self.ptr, self.clone().len);
-            std::str::from_utf8_unchecked(slice)
-        }
-    }
-
-    pub fn from_str(string: &str) -> Self {
-        let ptr = string.as_ptr();
-        let len = string.len();
-        Self { ptr, len }
-    }
-}
-
-type U8Ptr = *const u8;
-
-impl Bytecode for StrPtr {
+impl Bytecode for ByteStr {
     fn to_bytecode(&self) -> Vec<u8> {
-        let mut bytecode = vec![];
-        bytecode.extend(self.ptr.to_bytecode());
-        bytecode.extend(self.len.to_bytecode());
-        bytecode
+        self.str.as_bytes().to_vec()
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
-
-        let ptr = U8Ptr::from_bytecode(bytecode[0..8].to_vec());
-        let len = usize::from_bytecode(bytecode[8..16].to_vec());
-        Self { ptr, len }
-    }
-}
-
-impl Bytecode for U8Ptr {
-    fn to_bytecode(&self) -> Vec<u8> {
-        let mut vec = vec![];
-        unsafe {
-            let bytes = std::slice::from_raw_parts(*self, 8);
-            vec.extend(bytes);
-        };
-
-        vec.into_iter().cloned().collect()
-    }
-
-    fn from_bytecode(bytecode: Vec<u8>) -> Self {
-        bytecode.into_raw_parts().0
+        let bytecode = bytecode;
+        let str = String::from_utf8(bytecode).expect("Invalid bytecode for ByteStr");
+        Self::new(str)
     }
 }
 
@@ -172,6 +131,113 @@ impl Bytecode for bool {
             0 => false,
             1 => true,
             _ => panic!("Invalid bytecode for bool"),
+        }
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ByteArg {
+    pub name: ByteStr,
+    pub ty: ByteType
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ByteType {
+    Int,
+    Float,
+    Str,
+    Bool,
+    Array(Box<ByteType>),
+    Fn(Vec<ByteType>, Box<ByteType>)
+}
+
+impl ByteArg {
+    pub fn new(name: ByteStr, ty: ByteType) -> Self {
+        Self {
+            name,
+            ty
+        }
+    }
+
+    pub fn from_ast_argument(ast_argument: Argument) -> Self {
+        Self {
+            name: ByteStr::new(ast_argument.name),
+            ty: ByteType::from_ast_type(ast_argument.ty)
+        }
+    }
+}
+
+impl ByteType {
+    pub fn from_ast_type(ast_type: Type) -> Self {
+        match ast_type.type_kind {
+            TypeKind::Int => ByteType::Int,
+            TypeKind::Float => ByteType::Float,
+            TypeKind::String => ByteType::Str,
+            TypeKind::Bool => ByteType::Bool,
+            TypeKind::Array(ty, _) => ByteType::Array(Box::new(ByteType::from_ast_type(*ty))),
+            TypeKind::Function(args, ret) => {
+                let args = args.into_iter().map(|arg| ByteType::from_ast_type(arg)).collect();
+                ByteType::Fn(args, Box::new(ByteType::from_ast_type(*ret)))
+            }
+            _ => todo!()
+
+        }
+    }
+}
+
+impl Bytecode for ByteArg {
+    fn to_bytecode(&self) -> Vec<u8> {
+        let mut bytecode = vec![];
+        bytecode.extend(self.name.to_bytecode());
+        bytecode.extend(self.ty.to_bytecode());
+        bytecode
+    }
+
+    fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        let name = ByteStr::from_bytecode(bytecode[0..16].to_vec());
+        let ty = ByteType::from_bytecode(bytecode[16..].to_vec());
+        Self {
+            name,
+            ty
+        }
+    }
+}
+
+impl Bytecode for ByteType {
+    fn to_bytecode(&self) -> Vec<u8> {
+        match self {
+            ByteType::Int => vec![0],
+            ByteType::Float => vec![1],
+            ByteType::Str => vec![2],
+            ByteType::Bool => vec![3],
+            ByteType::Array(ty) => {
+                let mut bytecode = vec![4];
+                bytecode.extend(ty.to_bytecode());
+                bytecode
+            }
+            ByteType::Fn(args, ret) => {
+                let mut bytecode = vec![5];
+                bytecode.extend(args.to_bytecode());
+                bytecode.extend(ret.to_bytecode());
+                bytecode
+            }
+        }
+    }
+
+    fn from_bytecode(bytecode: Vec<u8>) -> Self {
+        match bytecode[0] {
+            0 => ByteType::Int,
+            1 => ByteType::Float,
+            2 => ByteType::Str,
+            3 => ByteType::Bool,
+            4 => ByteType::Array(Box::new(ByteType::from_bytecode(bytecode[1..].to_vec()))),
+            5 => {
+                let args = Vec::<ByteType>::from_bytecode(bytecode[1..].to_vec());
+                let ret = Box::new(ByteType::from_bytecode(bytecode[1..].to_vec()));
+                ByteType::Fn(args, ret)
+            }
+            _ => panic!("Invalid bytecode for ByteType")
         }
     }
 }

@@ -16,10 +16,6 @@ fn main() {
         func hello(name: string): int {
             4 + 5;
         }
-
-        func hello(name: string): int {
-            4 + 5;
-        }
         "#;
     let res = popper::FileParser::new().parse(body);
     if let Ok(e) = res{

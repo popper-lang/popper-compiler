@@ -1,5 +1,8 @@
 use crate::value::Literal;
-use crate::value::StrPtr;
+use crate::value::ByteStr;
+use crate::value::ByteArg;
+use crate::value::ByteType;
+
 
 #[derive(Debug, Clone, PartialEq)]
 /// different instruction of bytecode
@@ -13,7 +16,7 @@ pub enum Instruction {
     /// Opcode: 0x02
     /// Operand:
     /// - StrPtr: a pointer of a str
-    PushVariable(StrPtr),
+    PushVariable(ByteStr),
     /// Name: Jump If False
     /// Opcode: 0x03
     /// Operand:
@@ -36,12 +39,12 @@ pub enum Instruction {
     /// Opcode: 0x0F
     /// Operand:
     /// - StrPtr: a pointer of a str, the name of the function
-    Call(StrPtr),
+    Call(ByteStr),
     /// Name: Store variable
     /// Opcode: 0x06
     /// Operand:
     /// - StrPtr: a pointer of a str, the name of the variable
-    Store(StrPtr),
+    Store(ByteStr),
     /// Name: Add
     /// Opcode: 0x07
     Add,
@@ -66,9 +69,7 @@ pub enum Instruction {
     /// Name: Pop
     /// Opcode: 0x0E
     Pop,
-    /// Name: End Jump
-    /// Opcode: 0x10
-    EndJmp
+    StoreFn(ByteStr, Vec<ByteArg>, Box<ByteType>, Vec<Instruction>)
 }
 
 /// bytecode trait for compile rust data to bytecode data
@@ -140,14 +141,21 @@ impl Bytecode for Instruction {
                 bytecode.extend(t.to_bytecode());
                 bytecode
             }
-            Instruction::EndJmp => vec![0x10]
+            Instruction::StoreFn(s, args, ret, instrs) => {
+                let mut bytecode = vec![0x10];
+                bytecode.extend(s.to_bytecode());
+                bytecode.extend(args.to_bytecode());
+                bytecode.extend(ret.to_bytecode());
+                bytecode.extend(instrs.to_bytecode());
+                bytecode
+            }
         }
     }
 
     fn from_bytecode(bytecode: Vec<u8>) -> Self {
         match bytecode[0] {
             0x01 => Instruction::PushLiteral(Literal::from_bytecode(bytecode[1..].to_vec())),
-            0x02 => Instruction::PushVariable(StrPtr::from_bytecode(bytecode[1..].to_vec())),
+            0x02 => Instruction::PushVariable(ByteStr::from_bytecode(bytecode[1..].to_vec())),
             0x03 => {
                 let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
                 Instruction::JIF(is_included, instrs)
@@ -156,8 +164,8 @@ impl Bytecode for Instruction {
                 let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
                 Instruction::Jmp(is_included, instrs)
             },
-            0x05 => Instruction::Call(StrPtr::from_bytecode(bytecode[1..].to_vec())),
-            0x06 => Instruction::Store(StrPtr::from_bytecode(bytecode[1..].to_vec())),
+            0x05 => Instruction::Call(ByteStr::from_bytecode(bytecode[1..].to_vec())),
+            0x06 => Instruction::Store(ByteStr::from_bytecode(bytecode[1..].to_vec())),
             0x07 => Instruction::Add,
             0x08 => Instruction::Sub,
             0x09 => Instruction::Mul,
@@ -170,11 +178,27 @@ impl Bytecode for Instruction {
                 let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
                 Instruction::JIT(is_included, instrs)
             },
-            0x10 => Instruction::EndJmp,
+            0x10 => {
+                let s =  ByteStr::from_bytecode(bytecode[1..].to_vec());
+                let args = Vec::<ByteArg>::from_bytecode(bytecode[1..].to_vec());
+                let ret = Box::<ByteType>::from_bytecode(bytecode[1..].to_vec());
+                let instrs = Vec::<Instruction>::from_bytecode(bytecode[1..].to_vec());
+                Instruction::StoreFn(s, args, ret, instrs)
+            },
             e => panic!("Invalid bytecode: {}", e)
         }
     }
 }
 
+
+pub fn find_used_variable_in_instrs(instrs: Vec<Instruction>, spec: Option<ByteStr>) -> Vec<ByteStr> {
+    instrs.iter()
+        .filter(|instr| matches!(instr, Instruction::PushVariable(s) if spec.is_none() || s == spec.as_ref().unwrap()))
+        .map(|instr| match instr {
+            Instruction::PushVariable(s) => s.clone(),
+            _ => unreachable!()
+        })
+        .collect()
+}
 
 

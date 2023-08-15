@@ -4,8 +4,8 @@
 
 
 use crate::instr::Instruction;
-use crate::value::StrPtr;
-use crate::value::Literal;
+use crate::value::{ByteArg, ByteType};
+use crate::value::{Literal, ByteStr};
 
 /// a ir that store all instruction
 #[derive(Clone, Debug)]
@@ -39,7 +39,7 @@ impl SbcIr {
         self.add_instruction(Instruction::PushLiteral(Literal::Float(value)));
     }
 
-    pub fn emit_string(&mut self, value: StrPtr) {
+    pub fn emit_string(&mut self, value: ByteStr) {
         self.add_instruction(Instruction::PushLiteral(Literal::String(value)));
     }
 
@@ -51,11 +51,11 @@ impl SbcIr {
         self.add_instruction(Instruction::PushLiteral(Literal::Null));
     }
 
-    pub fn emit_call(&mut self, name: StrPtr) {
+    pub fn emit_call(&mut self, name: ByteStr) {
         self.add_instruction(Instruction::Call(name));
     }
 
-    pub fn emit_store(&mut self, name: StrPtr) {
+    pub fn emit_store(&mut self, name: ByteStr) {
         self.add_instruction(Instruction::Store(name));
     }
 
@@ -79,7 +79,7 @@ impl SbcIr {
         self.add_instruction(Instruction::Div);
     }
 
-    pub fn emit_variable(&mut self, name: StrPtr) {
+    pub fn emit_variable(&mut self, name: ByteStr) {
         self.add_instruction(Instruction::PushVariable(name));
     }
 
@@ -107,8 +107,8 @@ impl SbcIr {
         self.add_instruction(Instruction::JIT(is_included, instrs));
     }
 
-    pub fn emit_end_jump(&mut self) {
-        self.add_instruction(Instruction::EndJmp);
+    pub fn emit_function(&mut self, name: ByteStr, args: Vec<ByteArg>, ty: Box<ByteType>, body: Vec<Instruction>) {
+        self.add_instruction(Instruction::StoreFn(name, args, ty, body));
     }
 
     pub fn replace_instruction(&mut self, index: usize, instruction: Instruction) {

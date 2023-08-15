@@ -3,7 +3,7 @@
 use super::SbCompiler;
 use popper_ast::*;
 use visitor::ExprVisitor;
-use crate::value::StrPtr; // This is the ExprVisitor from popper_ast::visitor
+use crate::value::ByteStr; // This is the ExprVisitor from popper_ast::visitor
 
 impl ExprVisitor for SbCompiler {
     type Output = ();
@@ -42,22 +42,16 @@ impl ExprVisitor for SbCompiler {
             Constant::Float(float) => {
                 self.ir.emit_float(float.value);
             }
-            Constant::StringLiteral(string) => {
-                let string = string.value;
-                let len = string.len();
-                let string = string.as_ptr();
-                self.ir.emit_string(StrPtr::new(string, len));
+            Constant::StringLiteral(StringLiteral  { value , ..}) => {
+                self.ir.emit_string(ByteStr::new(value));
             }
             Constant::Bool(boolean) => {
                 self.ir.emit_bool(boolean.value);
             }
             Constant::Ident(ident) => {
                 let ident = ident.name;
-                let len = ident.len();
-                let ident = ident.as_ptr();
-
                 self.ir.emit_variable(
-                    StrPtr::new(ident, len)
+                    ByteStr::new(ident)
                 );
             }
             Constant::Null(_) => {

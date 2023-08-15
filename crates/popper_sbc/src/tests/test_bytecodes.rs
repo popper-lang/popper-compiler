@@ -1,6 +1,6 @@
 
 use crate::instr::Instruction;
-use crate::value::StrPtr;
+use crate::value::ByteStr;
 use crate::value::Literal;
 use crate::instr::Bytecode;
 
@@ -16,9 +16,9 @@ pub fn test_literal_bytecode() {
     let literal_expected = Literal::from_bytecode(bytecode);
     assert_eq!(literal, literal_expected);
 
-    let literal = StrPtr::from_str("hello");
+    let literal = ByteStr::from_str("hello");
     let bytecode = literal.to_bytecode();
-    let literal_expected = StrPtr::from_bytecode(bytecode);
+    let literal_expected = ByteStr::from_bytecode(bytecode);
     unsafe {
         assert_eq!(literal.as_str(), literal_expected.as_str());
     }
