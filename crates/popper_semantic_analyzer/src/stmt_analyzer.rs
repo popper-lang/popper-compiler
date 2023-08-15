@@ -1,14 +1,13 @@
-
-
+use std::collections::HashMap;
 use popper_ast::*;
 
 use crate::errors::{AlreadyExist, TypeMismatch};
-use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag};
+use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_common::error::Error;
 use popper_ast::visitor::ExprVisitor;
 
-
+#[derive(Clone)]
 pub struct StmtAnalyzer {
     env: Environment,
     current_scope: ScopeFlag,
@@ -131,10 +130,32 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let err = AlreadyExist::new(f.span, (function.name, function.span));
             return Err(Box::new(err));
         }
-        let args: Vec<ValueFlag>  = function.arguments.args.iter().map(|arg| {
+        let args: HashMap<String, ValueFlag>  = function.arguments.args.iter().map(|arg| {
             let expr_analyser = ExprAnalyzer::new(self.env.clone());
-            expr_analyser.get_type(arg.ty.clone())
+            (arg.name.clone(), expr_analyser.get_type(arg.ty.clone()))
         }).collect();
+
+        let mut stmt_analyser =  StmtAnalyzer::from(self.clone());
+
+        stmt_analyser.current_scope = ScopeFlag::Function;
+
+        for (name, val) in args.clone() {
+            let mut symbol_flag = SymbolFlags::new(function.span);
+            symbol_flag = symbol_flag.add_flag(Flag::Value(val.clone())).clone();
+            let variable = VariableFlag::new(
+                name,
+                symbol_flag.clone(),
+                stmt_analyser.current_scope.clone(),
+                false,
+                function.span
+            );
+
+            stmt_analyser.env.add_variable(variable);
+        }
+
+        for stmt in function.body {
+            stmt_analyser.visit_stmt(stmt)?;
+        }
 
         let return_type = {
             let expr_analyser = ExprAnalyzer::new(self.env.clone());
@@ -142,7 +163,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         };
 
         let symbol_flag = SymbolFlags::new(function.span)
-            .set_function(args, *return_type)
+            .set_function(args
+                              .values()
+                              .cloned()
+                              .collect(), *return_type)
             .clone()
         ;
 

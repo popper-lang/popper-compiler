@@ -156,14 +156,21 @@ impl ExprVisitor for ExprAnalyzer {
         self.visit_expr(*group.expr)
     }
 
+    fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
+        todo!()
+    }
+
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
         match expr {
             Expression::Constant(constant) => self.visit_constant(constant),
             Expression::BinOp(bin_op) => self.visit_bin_op(bin_op),
             Expression::UnaryOp(unary_op) => self.visit_unary_op(unary_op),
             Expression::Group(group) => self.visit_group(group),
+            Expression::Call(call) => self.visit_call(call),
         }
     }
+
+
 }
 
 

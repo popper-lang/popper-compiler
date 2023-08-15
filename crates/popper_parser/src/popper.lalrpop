@@ -20,6 +20,7 @@ use popper_ast::IfElse;
 use popper_ast::Argument;
 use popper_ast::Arguments;
 use popper_ast::Function;
+use popper_ast::Call;
 
 grammar<'a>;
 
@@ -169,26 +170,53 @@ IfElse: Statement = {
     }
 }
 
+
+
+
+
+
+CallSyntax: (Ident, Vec<Expression>) = {
+     <t:Ident> "(" <args:Comma<Term>> ")" => {
+        (t, args)
+    }
+}
+
+
+
+CallExpr: Expression = {
+    <t:Span<CallSyntax>> => {
+        Expression::Call(
+                Call::new(
+                    t.1.0.name,
+                    t.1.1,
+                    t.0
+                )
+          )
+
+    }
+}
+
 Expr: Expression = {
     BinOp<Expr, OpTerm, Factor>,
-    Factor,
+    Factor
 };
 
 Factor: Expression = {
-    BinOp<Factor, OpFactor, Term>,
-    Term
+    BinOp<Factor, OpFactor, Call>,
+    Call
 };
 
-ParenGroup: Expression = {
-    <g:Group<"(", Expr, ")">> => {
-        Expression::Group(
-            ParenGroup::new(
-                g.0,
-                g.1
-            )
-        )
-    }
+Call: Expression = {
+    CallExpr,
+    Term
+}
 
+
+Term: Expression = {
+    Int,
+    ExprIdent,
+    Bool,
+    String
 };
 
 Argument: (Ident, Type) = {
@@ -236,15 +264,6 @@ Function: Statement = {
         )
     }
 }
-
-Term: Expression = {
-    Int,
-    ParenGroup,
-    ExprIdent,
-    Bool,
-    String
-};
-
 
 Ident: Ident = {
     <t:Span<Chars>> => {

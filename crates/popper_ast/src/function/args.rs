@@ -1,4 +1,4 @@
-use crate::Type;
+use crate::{Expression, Type};
 use crate::Span;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -34,6 +34,25 @@ impl Arguments {
         Self {
             args: args.clone(),
             argument_total: args.len(),
+            span
+        }
+    }
+}
+
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
+pub struct ArgumentValue {
+    pub name: String,
+    pub value: Expression,
+    pub span: Span
+}
+
+impl ArgumentValue {
+    pub fn new(name: String, value: Expression, span: Span) -> Self {
+        Self {
+            name,
+            value,
             span
         }
     }

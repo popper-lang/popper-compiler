@@ -98,6 +98,34 @@ pub fn test_already_exist() {
     }
 }
 
+#[cfg(test)]
+pub fn test_function() {
+    let ast = get_ast_from_json_file("src/tests/assets/test_function.json");
+    let body = r#"
+        func hello(name: string): int {
+            5 + nam;
+            4 + name;
+        }
+        "#;
+
+    let mut analyzer = StmtAnalyzer::new(Environment::new());
+    let mut result = Ok(SymbolFlags::new(Span::new(0, 0)));
+    for stmt in ast {
+        result = analyzer.visit_stmt(stmt);
+    }
+
+    if let Err(err) = result {
+        err.report(
+            generate_color(),
+            body,
+            "<test `test_function`>"
+        ) // We don't use assert here because we want to see the error message
+        // in the terminal
+        // So the test will fail if the error message is not printed
+        // Now, the test is passed
+    }
+}
+
 
 
 #[cfg(test)]
@@ -105,4 +133,5 @@ pub fn run_tests() {
     test_bad_type_add();
     test_unknow_variable();
     test_already_exist();
+    test_function();
 }

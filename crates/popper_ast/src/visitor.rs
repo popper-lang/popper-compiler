@@ -16,6 +16,7 @@ pub trait ExprVisitor {
     visit!(visit_unary_op, unary_op => UnaryOp );
     visit!(visit_group, group => ParenGroup );
     visit!(visit_expr, expr => Expression );
+    visit!(visit_call, call => Call);
 }
 
 /// stmt visitor

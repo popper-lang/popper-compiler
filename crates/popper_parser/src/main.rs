@@ -14,7 +14,8 @@ lalrpop_mod!(pub popper);
 fn main() {
     let body = r#"
         func hello(name: string): int {
-            4 + 5;
+            5 + nam;
+            4 + name;
         }
         "#;
     let res = popper::FileParser::new().parse(body);
