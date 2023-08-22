@@ -62,6 +62,7 @@ impl StmtVisitor for SbCompiler {
             Statement::IfElse(if_else_stmt) => {
                 self.visit_if_else_stmt(if_else_stmt)?;
             }
+            Statement::Return(ret) => self.visit_return(ret)?,
 
             Statement::Function(func) => self.visit_function(func)?
         }
@@ -95,10 +96,9 @@ impl StmtVisitor for SbCompiler {
         let name = ByteStr::new(function.name);
         let arguments: Vec<ByteArg> = function.arguments.args.iter().map(|x| ByteArg::from_ast_argument(x.clone())).collect();
 
-        let mut stmt = function.body
+        let stmt = function.body
             .iter()
-            .map(|stmt| SbCompiler::build_stmt(stmt.clone()))
-            .flatten()
+            .flat_map(|stmt| SbCompiler::build_stmt(stmt.clone()))
             .collect::<Vec<Instruction>>();
 
         let returnty  = ByteType::from_ast_type(function.returntype.clone());
@@ -106,8 +106,9 @@ impl StmtVisitor for SbCompiler {
         self.ir.emit_function(name, arguments, Box::new(returnty), stmt);
 
         Ok(())
+    }
 
-
-
+    fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
+        Ok(())
     }
 }
