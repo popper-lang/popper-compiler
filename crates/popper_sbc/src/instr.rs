@@ -38,8 +38,9 @@ pub enum Instruction {
     /// Name: Call function
     /// Opcode: 0x0F
     /// Operand:
-    /// - StrPtr: a pointer of a str, the name of the function
-    Call(ByteStr),
+    /// - ByteStr: a pointer of a str, the name of the function
+    /// - Vec<Instruction>: the arguments
+    Call(ByteStr, Vec<Instruction>),
     /// Name: Store variable
     /// Opcode: 0x06
     /// Operand:
@@ -69,7 +70,14 @@ pub enum Instruction {
     /// Name: Pop
     /// Opcode: 0x0E
     Pop,
-    StoreFn(ByteStr, Vec<ByteArg>, Box<ByteType>, Vec<Instruction>)
+    /// Name: Push Function
+    /// Opcode: 0x10
+    /// Operand:
+    /// - ByteStr: the name of the function
+    /// - Vec<ByteArg>: the arguments of the function
+    /// - Box<ByteType>: the return type of the function
+    /// - Vec<Instruction>: the byte code of the function
+    StoreFn(ByteStr, Vec<ByteArg>, Box<ByteType>, Vec<Instruction>),
 }
 
 /// bytecode trait for compile rust data to bytecode data
@@ -116,9 +124,10 @@ impl Bytecode for Instruction {
                 bytecode.extend(t.to_bytecode());
                 bytecode
             }
-            Instruction::Call(name) => {
+            Instruction::Call(name, args) => {
                 let mut bytecode = vec![0x05];
                 bytecode.extend(name.to_bytecode());
+                bytecode.extend(args.to_bytecode());
                 bytecode
             },
             Instruction::Store(name) => {
@@ -164,7 +173,8 @@ impl Bytecode for Instruction {
                 let (is_included, instrs) = JFormat::from_bytecode(bytecode[1..].to_vec());
                 Instruction::Jmp(is_included, instrs)
             },
-            0x05 => Instruction::Call(ByteStr::from_bytecode(bytecode[1..].to_vec())),
+            0x05 => Instruction::Call(ByteStr::from_bytecode(bytecode[1..8].to_vec()),
+                                      Vec::<Instruction>::from_bytecode(bytecode[8..].to_vec())),
             0x06 => Instruction::Store(ByteStr::from_bytecode(bytecode[1..].to_vec())),
             0x07 => Instruction::Add,
             0x08 => Instruction::Sub,

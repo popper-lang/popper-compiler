@@ -1,4 +1,4 @@
-use crate::{Call, Constant};
+use crate::{Call, Constant, Return};
 use crate::BinOp;
 use crate::UnaryOp;
 use crate::Span;
@@ -12,7 +12,7 @@ pub enum Expression {
     BinOp(BinOp),
     UnaryOp(UnaryOp),
     Group(ParenGroup),
-    Call(Call)
+    Call(Call),
 }
 
 impl Expression {
@@ -22,7 +22,7 @@ impl Expression {
             Expression::BinOp(b) => b.span(),
             Expression::UnaryOp(u) => u.span(),
             Expression::Group(g) => g.span(),
-            Expression::Call(c) => c.span
+            Expression::Call(c) => c.span,
         }
     }
 }

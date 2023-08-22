@@ -16,11 +16,11 @@ pub fn test_literal_bytecode() {
     let literal_expected = Literal::from_bytecode(bytecode);
     assert_eq!(literal, literal_expected);
 
-    let literal = ByteStr::from_str("hello");
+    let literal = ByteStr::new("hello".to_string());
     let bytecode = literal.to_bytecode();
     let literal_expected = ByteStr::from_bytecode(bytecode);
     unsafe {
-        assert_eq!(literal.as_str(), literal_expected.as_str());
+        assert_eq!(literal, literal_expected);
     }
 
     let literal = Literal::Boolean(true);

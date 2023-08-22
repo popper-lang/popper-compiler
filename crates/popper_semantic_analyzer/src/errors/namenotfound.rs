@@ -47,7 +47,7 @@ impl Error for NameNotFound {
 
         if let Some(name_more_closed) = &self.name_more_closed {
             report = report.with_note(
-                format!("Did you mean `{}`?", name_more_closed.clone().fg(*variable))
+                format!("Did you mean `{}` ?", name_more_closed.clone().fg(*variable))
             );
         }
 

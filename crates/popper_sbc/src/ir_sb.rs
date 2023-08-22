@@ -51,10 +51,6 @@ impl SbcIr {
         self.add_instruction(Instruction::PushLiteral(Literal::Null));
     }
 
-    pub fn emit_call(&mut self, name: ByteStr) {
-        self.add_instruction(Instruction::Call(name));
-    }
-
     pub fn emit_store(&mut self, name: ByteStr) {
         self.add_instruction(Instruction::Store(name));
     }
@@ -109,6 +105,10 @@ impl SbcIr {
 
     pub fn emit_function(&mut self, name: ByteStr, args: Vec<ByteArg>, ty: Box<ByteType>, body: Vec<Instruction>) {
         self.add_instruction(Instruction::StoreFn(name, args, ty, body));
+    }
+
+    pub fn emit_call_fn(&mut self, name: ByteStr, args: Vec<Instruction>) {
+        self.add_instruction(Instruction::Call(name, args));
     }
 
     pub fn replace_instruction(&mut self, index: usize, instruction: Instruction) {

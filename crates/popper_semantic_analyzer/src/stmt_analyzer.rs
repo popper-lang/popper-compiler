@@ -184,6 +184,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(SymbolFlags::new(function.span))
     }
 
+    fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
+        Ok(SymbolFlags::new(return_expr.span))
+    }
+
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
             Statement::Expression(expr) => self.visit_expr_stmt(expr),
@@ -192,7 +196,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),
             Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
             Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
-            Statement::Function(fn_stmt) => self.visit_function(fn_stmt)
+            Statement::Function(fn_stmt) => self.visit_function(fn_stmt),
+            Statement::Return(ret_stmt) => self.visit_return(ret_stmt)
         }
     }
 

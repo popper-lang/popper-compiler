@@ -21,6 +21,7 @@ use popper_ast::Argument;
 use popper_ast::Arguments;
 use popper_ast::Function;
 use popper_ast::Call;
+use popper_ast::Return;
 
 grammar<'a>;
 
@@ -196,6 +197,15 @@ CallExpr: Expression = {
     }
 }
 
+Return: Statement = {
+    Span<("return" Expr? ";")> => {
+        Statement::Return(Return::new(
+            <>.1.1,
+            <>.0
+        ))
+    }
+}
+
 Expr: Expression = {
     BinOp<Expr, OpTerm, Factor>,
     Factor
@@ -328,6 +338,7 @@ Statement: Statement = {
     Let,
     If,
     Function,
+    Return,
     <e:Expr> ";" => { Statement::Expression(e) }
 }
 

@@ -7,15 +7,15 @@ use crate::asm_value::{AsmValue, Immediate, Memory};
 use crate::builder::{Assembly, Builder};
 
 
-pub struct  X86Builder<'a> {
-    builder: Builder<'a>,
+pub struct  X86Builder {
+    builder: Builder,
     pub x86_asm: String
 }
 
 
 
-impl<'a> X86Builder<'a> {
-    pub fn new(builder: Builder<'a>) -> Self {
+impl X86Builder {
+    pub fn new(builder: Builder) -> Self {
         Self {
             builder,
             x86_asm: "".to_string()

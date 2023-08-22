@@ -5,7 +5,7 @@ use crate::LetStmt;
 use crate::If;
 use crate::IfElse;
 use crate::Function;
-
+use crate::Return;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -18,4 +18,5 @@ pub enum Statement {
     If(If),
     IfElse(IfElse),
     Function(Function),
+    Return(Return),
 }

@@ -32,4 +32,5 @@ pub trait StmtVisitor {
     visit!(visit_if_stmt, if_stmt => If);
     visit!(visit_if_else_stmt, if_else_stmt => IfElse);
     visit!(visit_function, function => Function);
+    visit!(visit_return, return_expr => Return);
 }

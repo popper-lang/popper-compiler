@@ -104,6 +104,15 @@ impl SymbolFlags {
     pub fn get_variable(&self, name: &str) -> Option<&VariableFlag> {
         self.vars.get_variable(name)
     }
+    
+    pub fn get_function(&self) -> Option<(&Vec<ValueFlag>, &Box<ValueFlag>)> {
+        self.symbols.iter().find_map(|s| {
+            match s {
+                Flag::Value(ValueFlag::Function(args, ret)) => Some((args, ret)),
+                _ => None
+            }
+        })
+    }
 
     pub fn is_integer(&self) -> bool {
         self.symbols.iter().any(|s| s == &Flag::Value(ValueFlag::Integer))
@@ -141,7 +150,7 @@ impl SymbolFlags {
 
 
     pub fn is_same_value(&self, other: Self) -> bool {
-        if self.get_value() == None || other.get_value() == None {
+        if self.get_value().is_none() || other.get_value().is_none() {
             return false;
         }
 

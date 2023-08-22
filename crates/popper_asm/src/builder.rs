@@ -2,7 +2,7 @@ use crate::register::Register;
 use crate::asm_value::AsmValue;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Assembly<'a> {
+pub enum Assembly {
     Mov(Register, Box<AsmValue>),
     Add(Register, Box<AsmValue>, Register),
     Sub(Register, Box<AsmValue>, Register),
@@ -15,22 +15,22 @@ pub enum Assembly<'a> {
     Je(String),
     Jne(String),
     Jmp(String),
-    Call(&'a str),
+    Call(String),
     Ret,
     Nop
 }
 
 
-pub type Program<'a> = Vec<Assembly<'a>>;
+pub type Program = Vec<Assembly>;
 
 
 #[derive(Clone)]
-pub struct Builder<'a> {
-    pub program: Program<'a>,
-    pub labels: Vec<(String, Program<'a>)>
+pub struct Builder {
+    pub program: Program,
+    pub labels: Vec<(String, Program)>
 }
 
-impl<'a> Builder<'a> {
+impl Builder {
 
     pub fn new() -> Self {
         Self {
@@ -39,7 +39,7 @@ impl<'a> Builder<'a> {
         }
     }
 
-    pub fn build(&self) -> Program<'a> {
+    pub fn build(&self) -> Program {
         self.program.clone()
     }
 
@@ -76,11 +76,11 @@ impl<'a> Builder<'a> {
         self.program.push(Assembly::IDiv(dest, Box::new(src)));
     }
 
-    pub fn build_call(&mut self, label: &'a str) {
+    pub fn build_call(&mut self, label: String) {
         self.program.push(Assembly::Call(label));
     }
 
-    pub fn build_label(&mut self, label: String, body: Vec<Assembly<'a>>) {
+    pub fn build_label(&mut self, label: String, body: Vec<Assembly>) {
         self.labels.push((label, body));
     }
 
@@ -111,7 +111,7 @@ impl<'a> Builder<'a> {
         self.program.push(Assembly::Nop);
     }
 
-    pub fn push(&mut self, assembly: Assembly<'a>) {
+    pub fn push(&mut self, assembly: Assembly) {
         self.program.push(assembly);
     }
 }

@@ -8,7 +8,7 @@ pub fn debug_instruction(instruction: &Instruction) -> String {
         Instruction::PushLiteral(literal) => debug_literal(literal),
         Instruction::JIF(is_include, instrs) => format!("JumpIfFalse({:?}, is_included={})", instrs, is_include),
         Instruction::Jmp(is_include, instrs) => format!("Jump({:?}, is_included={})", instrs,is_include),
-        Instruction::Call(name) => format!("Call({})", name.str),
+        Instruction::Call(name, args) => format!("Call({}, {:?})", name.str, args),
         Instruction::Add => "Add".to_string(),
         Instruction::Sub => "Sub".to_string(),
         Instruction::Mul => "Mul".to_string(),

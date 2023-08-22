@@ -128,10 +128,71 @@ pub fn test_function() {
 
 
 
+
+#[cfg(test)]
+pub fn test_call_mismatch_type() {
+    let ast = get_ast_from_json_file("src/tests/assets/call_mismatch_type.json");
+    let body = r#"
+        func add(a: int, b: int): unit {
+            return a + b;
+        }
+
+        add("hello", 4);
+        "#;
+
+    let mut analyzer = StmtAnalyzer::new(Environment::new());
+    let mut result = Ok(SymbolFlags::new(Span::new(0, 0)));
+    for stmt in ast {
+        result = analyzer.visit_stmt(stmt);
+    }
+
+    if let Err(err) = result {
+        err.report(
+            generate_color(),
+            body,
+            "<test `test_call_mismatch`>"
+        ) // We don't use assert here because we want to see the error message
+        // in the terminal
+        // So the test will fail if the error message is not printed
+        // Now, the test is passed
+    }
+}
+
+#[cfg(test)]
+pub fn test_call_diff_length_argument() {
+    let ast = get_ast_from_json_file("src/tests/assets/call_diff_length_argument.json");
+    let body = r#"
+        func add(a: int, b: int): unit {
+            return a + b;
+        }
+
+        add(2, 4, 1);
+        "#;
+    let mut analyzer = StmtAnalyzer::new(Environment::new());
+    let mut result = Ok(SymbolFlags::new(Span::new(0, 0)));
+    for stmt in ast {
+        result = analyzer.visit_stmt(stmt);
+    }
+
+    if let Err(err) = result {
+        err.report(
+            generate_color(),
+            body,
+            "<test `test_diff_length_argument`>"
+        ) // We don't use assert here because we want to see the error message
+        // in the terminal
+        // So the test will fail if the error message is not printed
+        // Now, the test is passed
+    }
+}
+
+
 #[cfg(test)]
 pub fn run_tests() {
     test_bad_type_add();
     test_unknow_variable();
     test_already_exist();
     test_function();
+    test_call_mismatch_type();
+    test_call_diff_length_argument();
 }

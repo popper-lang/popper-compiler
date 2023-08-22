@@ -4,7 +4,7 @@ use popper_sbc::instr::{find_used_variable_in_instrs, Instruction};
 use popper_sbc::value::{ByteType, Literal};
 use popper_asm::register::Register;
 use popper_asm::asm_value::{AsmValue, Immediate};
-use crate::stack::{Stack, StackEnv};
+use crate::stack::{AVAILABLE_ARG_REGISTER, Stack, StackEnv};
 use crate::label::Label;
 use crate::label::LabelFn;
 
@@ -14,19 +14,20 @@ type BytecodeProgram = Vec<Instruction>;
 
 /// compiler who compile bytecode instruction to asm-like instruction
 #[derive(Clone)]
-pub struct Compiler<'a> {
-    builder: Builder<'a>,
+pub struct Compiler {
+    builder: Builder,
     bytecode: BytecodeProgram,
     stack: Stack,
     stack_env: StackEnv,
-    labels: Vec<Label<'a>>,
-    labels_fn: Vec<LabelFn<'a>>,
+    labels: Vec<Label>,
+    labels_fn: Vec<LabelFn>,
     to_free: Vec<Range<usize>>,
+    is_fn: bool,
     ip: usize,
 }
 
 
-impl<'a> Compiler<'a> {
+impl Compiler {
     pub fn new(bytecode: BytecodeProgram) -> Self {
         Self {
             builder: Builder::new(),
@@ -36,6 +37,7 @@ impl<'a> Compiler<'a> {
             labels: Vec::new(),
             to_free: Vec::new(),
             labels_fn: Vec::new(),
+            is_fn: false,
             ip: 0,
         }
     }
@@ -46,8 +48,12 @@ impl<'a> Compiler<'a> {
         self.stack = stack;
     }
 
-    pub fn set_labels(&mut self, labels: Vec<Label<'a>>) {
+    pub fn set_labels(&mut self, labels: Vec<Label>) {
         self.labels = labels;
+    }
+
+    pub fn set_labels_fn(&mut self, labels_fn: Vec<LabelFn>) {
+        self.labels_fn = labels_fn;
     }
 
     pub fn compile(&mut self)  {
@@ -94,7 +100,6 @@ impl<'a> Compiler<'a> {
                 },
                 Instruction::Add => {
                     let registers = self.stack.take_lasts_reg_used(2);
-
                     self.builder.build_iadd(registers[0].clone(), AsmValue::Register(registers[1].clone()));
                 },
                 Instruction::Sub => {
@@ -142,17 +147,18 @@ impl<'a> Compiler<'a> {
                 },
 
                 Instruction::Pop => {
-                    let register = &self.stack.take_lasts_reg_used(1)[0];
-
-                    self.builder.build_mov(Register::R1, AsmValue::Register(register.clone()));
-
-                    self.stack.free_all_registers();
+                    dbg!(&self.builder.program);
+                    let registers = &self.stack.take_lasts_reg_used(1);
+                    if !registers.is_empty() {
+                        self.builder.build_mov(Register::R1, AsmValue::Register(registers[0].clone()));
+                    }
+                    if !self.is_fn { self.stack.free_all_registers() } else {}
                 },
                 Instruction::StoreFn(name, args, ret, body) => {
                     let name = format!("fn_{}", name.str);
                     let mut stack = Stack::from(self.stack.clone());
-                    for arg in args.clone() {
-                        self.stack_env.push(arg.name.str, stack.give_arg_register().expect("TODO: handle err")) // TODO: handle err
+                    for (reg, arg) in AVAILABLE_ARG_REGISTER.iter().zip(args.clone()) {
+                        self.stack_env.push(arg.name.str, reg.clone()) // TODO: handle err
                     }
 
                     let body = {
@@ -169,6 +175,31 @@ impl<'a> Compiler<'a> {
                     self.labels_fn.push(LabelFn::new(label, fn_ty));
 
                 }
+                Instruction::Call(ref name, args) => {
+                    let name = "fn_".to_owned() + &name.str;
+
+                    let fn_ty = self.labels_fn.iter().find(|x| x.label.label == name.clone()).expect("TODO: handle err");
+
+                    let mut compiler = Compiler::new(args.clone());
+
+                    compiler.set_stack(self.stack.clone());
+                    compiler.set_stack_env(self.stack_env.clone());
+                    compiler.set_labels(self.labels.clone());
+                    compiler.set_labels_fn(self.labels_fn.clone());
+                    compiler.is_fn = true;
+                    compiler.compile();
+
+                    let regs = compiler.stack.take_lasts_reg_used(args.len());
+
+                    for (reg_to_mov, reg) in AVAILABLE_ARG_REGISTER.iter().zip(regs) {
+                        compiler.builder.build_mov(reg_to_mov.clone(), AsmValue::Register(reg));
+                    }
+
+                    self.builder = compiler.builder;
+
+                    self.builder.build_call(name.clone());
+
+                },
 
                 Instruction::PushVariable(var) => {
                     let register = self.stack_env.get(var.str.as_str()).expect("TODO: handle err"); // TODO:HANDLE ERR
@@ -182,13 +213,13 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub fn build(self) -> (Program<'a>, Vec<(String, Program<'a>)>) {
-        let mut builder_labels: Vec<(String, Program<'a>)> = self.labels.into_iter().map(|x| (x.label, x.program)).collect();
-        builder_labels.extend(self.labels_fn.into_iter().map(|d| (d.label.label, d.label.program)).collect::<Vec<(String, Program<'a>)>>());
+    pub fn build(self) -> (Program, Vec<(String, Program)>) {
+        let mut builder_labels: Vec<(String, Program)> = self.labels.into_iter().map(|x| (x.label, x.program)).collect();
+        builder_labels.extend(self.labels_fn.into_iter().map(|d| (d.label.label, d.label.program)).collect::<Vec<(String, Program)>>());
         (self.builder.build(), builder_labels)
     }
 
-    fn build_label(&mut self,  body: Vec<Instruction>, name: String, instr: Assembly<'a>, instr_to_add: Vec<Assembly<'a>>) {
+    fn build_label(&mut self,  body: Vec<Instruction>, name: String, instr: Assembly, instr_to_add: Vec<Assembly>) {
         if self.labels.iter().filter(|x| x.label == name ).count()  != 0 {
             self.builder.push(instr);
             return;

@@ -82,6 +82,9 @@ impl ExprVisitor for SbCompiler {
             Expression::Group(group) => {
                 self.visit_group(group)?;
             }
+            Expression::Call(call) => {
+                self.visit_call(call)?;
+            }
         }
 
         Ok(())
@@ -89,6 +92,20 @@ impl ExprVisitor for SbCompiler {
 
     fn visit_group(&mut self, group: ParenGroup) -> Result<Self::Output, Self::Error> {
         self.visit_expr(*group.expr)?;
+        Ok(())
+    }
+
+    fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
+        let mut compiler = SbCompiler::new();
+        dbg!(&call.arguments);
+        for arg in call.arguments {
+            compiler.visit_expr(arg)?;
+        }
+        let args = compiler.build();
+        self.ir.emit_call_fn(
+            ByteStr::new(call.name),
+            args
+        );
         Ok(())
     }
 }

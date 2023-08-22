@@ -1,16 +1,13 @@
 use popper_ast::*;
-use crate::errors::{NameNotFound, TypeMismatch};
-use popper_flag::{
-    Environment,
-    SymbolFlags,
-    ValueFlag
-};
+use crate::errors::{DiffLengthOfArgument, NameNotFound, TypeMismatch};
+use popper_flag::{Environment, SymbolFlags, ValueFlag, VariableFlag};
 
 use crate::tool::name_similarity::find_similar_name;
 
 use popper_ast::visitor::ExprVisitor;
 use popper_common::error::Error;
 
+#[derive(Clone)]
 pub struct ExprAnalyzer {
     env: Environment,
 }
@@ -18,7 +15,7 @@ pub struct ExprAnalyzer {
 
 impl ExprAnalyzer {
     pub fn new(env: Environment) -> Self {
-        Self { env: env }
+        Self { env }
     }
 
     pub fn get_type(&self, ty: Type) -> ValueFlag {
@@ -35,6 +32,7 @@ impl ExprAnalyzer {
                 }
                 ValueFlag::Function(args_type, Box::new(self.get_type(*returnty)))
             }
+            TypeKind::Unit => ValueFlag::None,
             _ => unimplemented!()
         }
     }
@@ -157,7 +155,64 @@ impl ExprVisitor for ExprAnalyzer {
     }
 
     fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
-        todo!()
+        let x = self.env.get_variable(&call.name);
+
+        match x {
+            Some(var) => {
+                match var.value.get_function() {
+                    Some((args, _)) => {
+                        let args_s = call.arguments.iter().map(|arg| self.clone().visit_expr(arg.clone())).collect::<Result<Vec<_>, _>>()?;
+                        if args_s.len() != args.len() {
+                            return Err(
+                                Box::new(
+                                    DiffLengthOfArgument::new(args.len(), args_s.len(), call.span)
+                                )
+                            );
+                        }
+                        for (arg_get, arg_model) in args_s.iter().zip(args) {
+                            let arg_get_value: ValueFlag = arg_get.get_value().unwrap();
+                            let arg_model_value: ValueFlag = arg_model.clone();
+                            if arg_get_value != arg_model_value  {
+                                return Err(
+                                    Box::new(
+                                        TypeMismatch::new(
+                                            (call.span, arg_model_value.to_string()),
+                                            (call.span, arg_get_value.to_string())
+                                        )
+                                    )
+                                );
+                            }
+                        }
+                        Ok(SymbolFlags::new(call.span))
+                    },
+                    None => {
+                        Err(
+                            Box::new(
+                                TypeMismatch::new(
+                                    (call.span, "function".to_string()),
+                                    (call.span, var.value.get_value().unwrap().to_string())
+                                )
+                            )
+                        )
+                    }
+                }
+            },
+            None => {
+                let name_candidates = self.env.get_all_variables_name();
+
+                let similar_name = find_similar_name(name_candidates.as_slice().clone(), call.name.as_str());
+
+                Err(
+                    Box::new(
+                        NameNotFound::new(
+                            (call.span, call.name.clone()),
+                            similar_name.cloned()
+                        )
+
+                    )
+                )
+            }
+        }
     }
 
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {

@@ -6,12 +6,12 @@ use popper_asm::register::Register;
 use popper_asm::asm_value::AsmValue;
 
 /// stack save register, and give register who is useless
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Stack {
     stack: HashMap<Register, AsmValue>,
 }
 
-static AVAILABLE_REGISTERS: [Register; 9] = [
+pub static AVAILABLE_REGISTERS: [Register; 9] = [
     Register::R7,
     Register::R8,
     Register::R9,
@@ -23,7 +23,7 @@ static AVAILABLE_REGISTERS: [Register; 9] = [
     Register::R15,
 ];
 
-static AVAILABLE_ARG_REGISTER: [Register; 6] = [
+pub static AVAILABLE_ARG_REGISTER: [Register; 6] = [
     Register::R1,
     Register::R2,
     Register::R3,
@@ -41,6 +41,7 @@ impl Stack {
     }
 
     pub fn push(&mut self, register: Register, value: AsmValue) {
+        dbg!(&register, &value);
         self.stack.insert(register, value);
     }
 
@@ -76,6 +77,8 @@ impl Stack {
     pub fn free_register(&mut self, register: Register) {
         self.stack.remove(&register);
     }
+
+
 
     pub fn free_all_registers(&mut self) {
         self.stack.clear();

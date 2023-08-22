@@ -85,7 +85,7 @@ pub fn compile_to_bytecode(ast: Vec<Statement>) -> Vec<Instruction> {
 ///
 /// `Program<'a>` is used to store asm
 /// `Vec<(String, Program<'a>)>` are all the labels of asm: `Vec<(<name of label>, <content of label>)>`
-pub fn compile_to_asm<'a>(instructions: Vec<Instruction>) -> (Program<'a>, Vec<(String, Program<'a>)>) {
+pub fn compile_to_asm<'a>(instructions: Vec<Instruction>) -> (Program, Vec<(String, Program)>) {
     let mut compiler = Compiler::new(instructions).clone();
 
     compiler.compile();
@@ -126,6 +126,7 @@ pub fn compile_to_binary(program: Program, labels: Vec<(String, Program)>) -> St
 ///
 pub fn popper_compile(input: &str, file_name: &str) -> String {
     let ast = get_ast(input, file_name);
+    dbg!(&ast);
     let ast = match ast {
         Some(ast) => ast,
         None => {

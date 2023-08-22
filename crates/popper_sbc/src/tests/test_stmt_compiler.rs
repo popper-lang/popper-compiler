@@ -38,9 +38,10 @@ pub fn test_function() {
 
     let instructions_expected = vec![
         Instruction::StoreFn(
+            ByteStr::new("hello".to_string()),
             vec![
                 ByteArg::new(
-                    ByteStr::from_str("name"),
+                    ByteStr::new("name".to_string()),
                     ByteType::Str
                 )
             ],

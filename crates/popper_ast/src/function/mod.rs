@@ -1,8 +1,10 @@
 mod args;
 mod call;
+mod return_expr;
 
 pub use args::{Arguments, Argument, ArgumentValue};
 pub use call::Call;
+pub use return_expr::Return;
 
 use crate::Type;
 use crate::Span;

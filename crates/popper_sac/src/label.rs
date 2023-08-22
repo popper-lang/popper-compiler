@@ -10,13 +10,13 @@ use crate::stack::Stack;
 /// ```
 /// it is a examble ) in a bytecode fmt (Instruction is a Bytecode instruction)
 #[derive(Clone, Debug)]
-pub struct Label<'a> {
+pub struct Label {
     pub label: String,
-    pub program: Program<'a>
+    pub program: Program
 }
 
-impl<'a> Label<'a> {
-    pub fn new(label: String, program: Program<'a>) -> Self {
+impl Label {
+    pub fn new(label: String, program: Program) -> Self {
         Self {
             label,
             program
@@ -25,13 +25,13 @@ impl<'a> Label<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub struct LabelFn<'a> {
-    pub label: Label<'a>,
+pub struct LabelFn {
+    pub label: Label,
     pub fn_type: (Vec<ByteType>, ByteType)
 }
 
-impl<'a> LabelFn<'a> {
-    pub fn new(label: Label<'a>, fn_type: (Vec<ByteType>, ByteType)) -> Self {
+impl LabelFn {
+    pub fn new(label: Label, fn_type: (Vec<ByteType>, ByteType)) -> Self {
         Self {
             label,
             fn_type
