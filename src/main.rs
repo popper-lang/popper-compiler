@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
-use popper_lang::popper_compile;
 use popper_lang::check_program;
 use popper_lang::get_ast;
+use popper_lang::popper_compile;
 
 #[derive(Parser)]
 /// Popper is a programming language
@@ -42,30 +42,31 @@ fn main() {
             match ast {
                 Some(ast) => {
                     println!("{:#?}", ast);
-                },
+                }
                 None => {
                     println!("Error parsing file");
                 }
             }
-        },
+        }
         Commands::Check { filename } => {
             let ast = get_ast(&std::fs::read_to_string(filename).unwrap(), filename);
             match ast {
                 Some(ast) => {
-                    let res = check_program(ast, &std::fs::read_to_string(filename).unwrap(), filename);
+                    let res =
+                        check_program(ast, &std::fs::read_to_string(filename).unwrap(), filename);
                     if res {
                         println!("No errors found");
                     }
-                },
+                }
                 None => {
                     println!("Error parsing file");
                 }
             }
-        },
+        }
         Commands::Compile { filename } => {
             let body = std::fs::read_to_string(filename).unwrap();
             let ir = popper_compile(body.as_str(), filename);
             println!("{}", ir);
-        },
+        }
     }
 }
