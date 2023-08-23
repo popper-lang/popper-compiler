@@ -109,6 +109,12 @@ impl StmtVisitor for SbCompiler {
     }
 
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
+        if let Some(expr) = return_expr.expression {
+            self.visit_expr(*expr)?;
+        } else {
+            self.ir.emit_null();
+        }
+        self.ir.emit_return();
         Ok(())
     }
 }

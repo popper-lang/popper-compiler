@@ -41,7 +41,6 @@ impl Stack {
     }
 
     pub fn push(&mut self, register: Register, value: AsmValue) {
-        dbg!(&register, &value);
         self.stack.insert(register, value);
     }
 

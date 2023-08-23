@@ -28,7 +28,7 @@ pub enum TypeKind {
     Tuple(Vec<Type>),
     /// `[type]`
     Array(Box<Type>, usize),
-    /// `func(type,*) -> type`
+    /// `func(type,*) : type`
     Function(Vec<Type>, Box<Type>),
     /// `*type`
     Pointer(Box<Type>),
@@ -46,4 +46,46 @@ pub enum TypeKind {
     Char,
     /// `string`
     String
+}
+
+impl ToString for TypeKind {
+    fn to_string(&self) -> String {
+        match self.clone() {
+            TypeKind::Tuple(tys) =>
+                format!(
+                    "({})",
+                    tys
+                        .iter()
+                        .map(|ty| ty.type_kind.to_string())
+                        .collect::<Vec<String>>()
+                        .join(",")
+                )
+            ,
+            TypeKind::Array(ty, size) =>
+                format!("[{}:{}]", ty.type_kind.to_string().clone(), size)
+            ,
+            TypeKind::Function(tys, ret) =>
+                format!("func({}): {}",
+                        tys
+                            .iter()
+                            .map(|t| t.type_kind.to_string())
+                            .collect::<Vec<String>>()
+                            .join(","),
+                        ret.type_kind.to_string()
+                )
+            ,
+            TypeKind::Pointer(ty) =>
+                format!("*{}", ty.type_kind.to_string())
+            ,
+            TypeKind::Reference(ty) =>
+                format!("&{}", ty.type_kind.to_string())
+            ,
+            TypeKind::Unit => String::from("()"),
+            TypeKind::Int => String::from("int"),
+            TypeKind::Float => String::from("float"),
+            TypeKind::Bool => String::from("bool"),
+            TypeKind::Char => String::from("char"),
+            TypeKind::String => String::from("string")
+        }
+    }
 }

@@ -1,4 +1,4 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
 
 mod expr_compiler;
 mod stmt_compiler;

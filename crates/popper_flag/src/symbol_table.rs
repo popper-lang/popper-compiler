@@ -24,6 +24,12 @@ impl SymbolFlags {
         self
     }
 
+    pub fn set_value(&mut self, value: ValueFlag) -> &mut Self {
+        self.add_flag(
+            Flag::Value(value)
+        )
+    }
+
     pub fn set_integer(&mut self) -> &mut Self {
         self.add_flag(
             Flag::Value(

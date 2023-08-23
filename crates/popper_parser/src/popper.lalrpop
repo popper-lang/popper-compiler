@@ -8,7 +8,6 @@ use popper_ast::Constant;
 use popper_ast::Int;
 use popper_ast::Block;
 use popper_ast::While;
-use popper_ast::ParenGroup;
 use popper_ast::Ident;
 use popper_ast::Bool;
 use popper_ast::StringLiteral as AstString;
@@ -109,18 +108,15 @@ Types: Type = {
 
 }
 
-TypeDecl: (Ident, Type) = {
-    <t:Ident> ":" <ty:Types> => {
-        (
-            t,
-            ty
-        )
+TypeDecl: Type = {
+    ":" <ty:Types> => {
+        ty
     }
 }
 
-LetStmt: (Ident, Type, Expression) = {
-    "let" <td:TypeDecl> "=" <e:Expr> => {
-        (td.0, td.1, e)
+LetStmt: (Ident, Option<Type>, Expression) = {
+    "let" <t:Ident> <td:TypeDecl?> "=" <e:Expr> => {
+        (t, td, e)
     }
 }
 
@@ -339,9 +335,7 @@ Statement: Statement = {
     If,
     Function,
     Return,
-    <e:Expr> ";" => { Statement::Expression(e) }
+    <e:Expr> ";" =>  Statement::Expression(e)
 }
 
-pub File: Vec<Statement> = {
-    <stmts:Statement*> => { stmts }
-}
+pub File: Vec<Statement> = Statement*;

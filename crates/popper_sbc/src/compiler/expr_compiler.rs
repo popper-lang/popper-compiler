@@ -97,7 +97,6 @@ impl ExprVisitor for SbCompiler {
 
     fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
         let mut compiler = SbCompiler::new();
-        dbg!(&call.arguments);
         for arg in call.arguments {
             compiler.visit_expr(arg)?;
         }

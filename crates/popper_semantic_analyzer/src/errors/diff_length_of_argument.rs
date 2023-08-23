@@ -25,10 +25,7 @@ impl DiffLengthOfArgument {
 }
 
 impl Error for DiffLengthOfArgument {
-    fn report(&self, color: ColorConfig, source: &str, file: &str) {
-        let type_color = color.get("type").unwrap();
-        let var_color = color.get("variable").unwrap();
-
+    fn report(&self, _color: ColorConfig, source: &str, file: &str) {
         let report = Report::build(ReportKind::Error, file, self.function_span.find_line(source));
 
         report.with_code(24)

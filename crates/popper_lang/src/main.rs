@@ -6,7 +6,7 @@ fn main() {
         return a + b;
     }
 
-    add(3, 4);
+    let x = add(3, 4);
     "#, "<main>");
 
     println!("{}", s);

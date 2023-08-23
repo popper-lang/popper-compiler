@@ -2,7 +2,6 @@ use std::fmt::Debug;
 use popper_ast::Argument;
 use popper_ast::{Type, TypeKind};
 use crate::instr::Bytecode;
-use std::pin::Pin;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Literal {

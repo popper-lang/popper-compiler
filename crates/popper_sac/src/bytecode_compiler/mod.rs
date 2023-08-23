@@ -8,7 +8,8 @@ use crate::stack::{AVAILABLE_ARG_REGISTER, Stack, StackEnv};
 use crate::label::Label;
 use crate::label::LabelFn;
 
-
+mod jump;
+use jump::Jumper;
 
 type BytecodeProgram = Vec<Instruction>;
 
@@ -115,39 +116,38 @@ impl Compiler {
                     self.stack.free_register(registers[0].clone());
                 },
                 Instruction::JIF(is_included, instrs) => {
-                    let name = "label".to_string() + self.labels.len().to_string().as_str();
-                    let instr = Assembly::Jne(name.clone());
-                    let instr_to_add = if is_included {
-                        vec![instr.clone()]
-                    } else {
-                        vec![]
-                    };
-                    self.build_label(instrs, name.clone(), instr, instr_to_add);
+                    let name = Jumper::create_name(self.clone());
+                    let jumper = Jumper::new(
+                        name.clone(),
+                        Assembly::Jne(name),
+                        instrs
+                    );
+
+                    jumper.build_assembler(self, is_included);
 
                 },
                 Instruction::Jmp(is_included, instrs) => {
-                    let name = "label".to_string() + self.labels.len().to_string().as_str();
-                    let instr = Assembly::Jmp(name.clone());
-                    let instr_to_add = if is_included {
-                        vec![instr.clone()]
-                    } else {
-                        vec![]
-                    };
-                    self.build_label(instrs, name.clone(), instr, instr_to_add);
+                    let name = Jumper::create_name(self.clone());
+                    let jumper = Jumper::new(
+                        name.clone(),
+                        Assembly::Jmp(name),
+                        instrs
+                    );
+
+                    jumper.build_assembler(self, is_included);
                 }
                 Instruction::JIT(is_included, instrs) => {
-                    let name = "label".to_string() + self.labels.len().to_string().as_str();
-                    let instr = Assembly::Je(name.clone());
-                    let instr_to_add = if is_included {
-                        vec![instr.clone()]
-                    } else {
-                        vec![]
-                    };
-                    self.build_label(instrs, name.clone(), instr, instr_to_add);
+                    let name = Jumper::create_name(self.clone());
+                    let jumper = Jumper::new(
+                        name.clone(),
+                        Assembly::Je(name),
+                        instrs
+                    );
+
+                    jumper.build_assembler(self, is_included);
                 },
 
                 Instruction::Pop => {
-                    dbg!(&self.builder.program);
                     let registers = &self.stack.take_lasts_reg_used(1);
                     if !registers.is_empty() {
                         self.builder.build_mov(Register::R1, AsmValue::Register(registers[0].clone()));
@@ -198,13 +198,37 @@ impl Compiler {
                     self.builder = compiler.builder;
 
                     self.builder.build_call(name.clone());
+                    self.stack.push(Register::R1, AsmValue::Register(Register::R1));
+                },
+                Instruction::Return => {
+                    let regs = self.stack.take_lasts_reg_used(1);
+                    let reg = &regs[0];
+
+                    self.builder.build_mov(
+                        Register::R1,
+                        AsmValue::Register(reg.clone())
+                    );
+                    self.builder.build_ret();
 
                 },
 
                 Instruction::PushVariable(var) => {
-                    let register = self.stack_env.get(var.str.as_str()).expect("TODO: handle err"); // TODO:HANDLE ERR
-                    self.stack.push(register.clone(), AsmValue::Register(register.clone()));
+                    let register = self.stack_env
+                        .get(var.str.as_str())
+                        .expect("TODO: handle err"); // TODO:HANDLE ERR
+                    self.stack.push(
+                        register.clone(),
+                        AsmValue::Register(register.clone())
+                    );
                 },
+                Instruction::Store(name) => {
+                    let reg = self.stack.give_normal_register().expect("Panic: No register available");
+                    let regs = self.stack.take_lasts_reg_used(1);
+
+                    let last_reg = regs.last().unwrap();
+                    self.stack_env.push(name.str, reg.clone());
+                    self.builder.build_mov(reg, AsmValue::Register(last_reg.clone()))
+                }
                 Instruction::Nop => {
                     self.builder.build_nop();
                 },

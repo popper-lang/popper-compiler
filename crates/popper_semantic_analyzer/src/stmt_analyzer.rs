@@ -31,9 +31,23 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
     fn visit_let_stmt(&mut self, let_stmt: LetStmt) -> Result<Self::Output, Self::Error> {
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
+        let value = analyzer.visit_expr(let_stmt.value.clone())?;
 
-        let value = analyzer.visit_expr(let_stmt.value)?;
+        if let Some(ref ty) = let_stmt.r#type {
+            let r: ValueFlag = ValueFlag::from_ty(ty.clone());
+            let x = value.get_value().unwrap();
 
+            if r != x {
+                return Err(
+                    Box::new(
+                        TypeMismatch::new(
+                            (ty.clone().span, ty.type_kind.to_string()),
+                            (let_stmt.value.span(), x.to_string())
+                        )
+                    )
+                )
+            }
+        }
 
         let variable = VariableFlag::new(
             let_stmt.name.name,

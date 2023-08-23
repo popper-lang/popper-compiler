@@ -12,7 +12,6 @@ use popper_sbc::instr::Instruction;
 use popper_sac::bytecode_compiler::Compiler;
 use popper_asm::builder::{Builder, Program};
 use popper_asm::x86_builder::X86Builder;
-use popper_sbc::debug::debug_instructions;
 
 
 ///
@@ -126,7 +125,6 @@ pub fn compile_to_binary(program: Program, labels: Vec<(String, Program)>) -> St
 ///
 pub fn popper_compile(input: &str, file_name: &str) -> String {
     let ast = get_ast(input, file_name);
-    dbg!(&ast);
     let ast = match ast {
         Some(ast) => ast,
         None => {
@@ -136,8 +134,6 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
     };
     if check_program(ast.clone(), input, file_name) {
         let ir =  compile_to_bytecode(ast);
-
-        println!("{}", debug_instructions(ir.as_slice()));
 
         let program = compile_to_asm(ir);
 

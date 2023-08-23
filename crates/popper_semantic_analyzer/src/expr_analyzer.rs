@@ -1,6 +1,6 @@
 use popper_ast::*;
 use crate::errors::{DiffLengthOfArgument, NameNotFound, TypeMismatch};
-use popper_flag::{Environment, SymbolFlags, ValueFlag, VariableFlag};
+use popper_flag::{Environment, SymbolFlags, ValueFlag};
 
 use crate::tool::name_similarity::find_similar_name;
 
@@ -160,7 +160,7 @@ impl ExprVisitor for ExprAnalyzer {
         match x {
             Some(var) => {
                 match var.value.get_function() {
-                    Some((args, _)) => {
+                    Some((args, ret)) => {
                         let args_s = call.arguments.iter().map(|arg| self.clone().visit_expr(arg.clone())).collect::<Result<Vec<_>, _>>()?;
                         if args_s.len() != args.len() {
                             return Err(
@@ -183,7 +183,7 @@ impl ExprVisitor for ExprAnalyzer {
                                 );
                             }
                         }
-                        Ok(SymbolFlags::new(call.span))
+                        Ok(SymbolFlags::new(call.span).set_value(*ret.clone()).clone())
                     },
                     None => {
                         Err(
