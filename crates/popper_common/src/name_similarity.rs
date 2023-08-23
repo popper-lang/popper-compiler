@@ -41,7 +41,7 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
 /// # Example
 ///
 /// ```
-/// use popper_semantic_analyzer::tool::name_similarity::find_similar_name;
+/// use popper_common::name_similarity::find_similar_name;
 ///
 /// let names = vec![
 ///    String::from("foo"),

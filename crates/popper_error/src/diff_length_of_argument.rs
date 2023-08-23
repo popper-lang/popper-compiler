@@ -2,7 +2,7 @@ use ariadne::{Label, ReportKind, Source};
 use ariadne::Report;
 use thiserror::Error;
 
-use popper_common::error::{ColorConfig, Error};
+use crate::{ColorConfig, Error};
 use popper_common::plurialize::plurialize;
 use popper_ast::Span;
 

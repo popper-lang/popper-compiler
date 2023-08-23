@@ -1,3 +1,8 @@
+pub mod alreadyexist;
+pub mod diff_length_of_argument;
+pub mod namenotfound;
+pub mod typemismatch;
+
 use ariadne::{Color, Source};
 
 pub type ColorConfig = std::collections::HashMap<String, Color>;

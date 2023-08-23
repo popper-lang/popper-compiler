@@ -2,7 +2,7 @@ use ariadne::Source;
 use ariadne::Fmt;
 use thiserror::Error;
 
-use popper_common::error::{ColorConfig, Error};
+use crate::{ColorConfig, Error};
 use popper_ast::Span;
 
 

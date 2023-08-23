@@ -9,6 +9,7 @@ description = "A semantic analyzer for the Popper programming language."
 popper_ast = { path = "../popper_ast", features = ["visitor"] }
 popper_common = { path = "../popper_common" }
 popper_flag = { path = "../popper_flag" }
+popper_error = { path = "../popper_error" }
 thiserror = "1.0.40"
 ariadne = "0.2.0"
 

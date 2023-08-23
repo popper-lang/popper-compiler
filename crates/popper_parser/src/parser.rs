@@ -1,14 +1,14 @@
 use lalrpop_util::lalrpop_mod;
 
 use crate::error::{ParserError, ParserErrorType};
-use popper_common::error::generate_color;
-use popper_common::error::Error;
+use popper_error::generate_color;
+use popper_error::Error;
 use popper_ast::Statement;
 
 
 
 
-lalrpop_mod!(pub popper); // synthesized by LALRPOP
+lalrpop_mod!(pub popper); // lalrpop gen code
 
 
 pub fn parse<'a>(input: &'a str, file: &'a str) -> Option<Vec<Statement>> {

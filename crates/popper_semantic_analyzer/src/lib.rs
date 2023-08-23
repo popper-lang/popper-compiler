@@ -2,17 +2,15 @@
 
 mod expr_analyzer;
 mod stmt_analyzer;
-mod errors;
 
-pub mod tool;
 
 #[cfg(test)]
 mod tests;
 
-pub fn analyze(stmts: Vec<popper_ast::Statement>) -> Vec<Result<(), Box<dyn popper_common::error::Error>>> {
+pub fn analyze(stmts: Vec<popper_ast::Statement>) -> Vec<Result<(), Box<dyn popper_error::Error>>> {
     use popper_flag::Environment;
     use popper_ast::visitor::StmtVisitor;
-    use popper_common::error::Error;
+    use popper_error::Error;
     use popper_flag::SymbolFlags;
 
     let mut stmt_analyzer = stmt_analyzer::StmtAnalyzer::new(Environment::new());

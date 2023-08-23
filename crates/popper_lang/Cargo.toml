@@ -13,6 +13,7 @@ popper_sbc = { path = "../popper_sbc" }
 popper_sac = { path = "../popper_sac" }
 popper_asm = { path = "../popper_asm" }
 popper_common = { path = "../popper_common" }
+popper_error = { path = "../popper_error" }
 lazy_static = "1.4.0"
 
 [profile.release]

@@ -1,7 +1,7 @@
 use popper_ast::Span;
 use thiserror::Error;
 use ariadne::{Fmt, Label, Report, ReportKind, Source};
-use popper_common::error::{ColorConfig, Error as PopperError};
+use crate::{ColorConfig, Error as PopperError};
 
 
 

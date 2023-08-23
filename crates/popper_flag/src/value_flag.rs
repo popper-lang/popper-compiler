@@ -37,8 +37,8 @@ impl Display for ValueFlag {
 }
 
 impl ValueFlag {
-    pub fn from_ty(ty: Type) -> Self {
-        match ty.type_kind {
+    pub fn from_ty_kind(ty: TypeKind) -> Self {
+        match ty {
             TypeKind::String => ValueFlag::String,
             TypeKind::Bool => ValueFlag::Boolean,
             TypeKind::Int => ValueFlag::Integer,
@@ -51,11 +51,15 @@ impl ValueFlag {
             TypeKind::Function(args, ret) => ValueFlag::Function(args
                 .iter()
                 .cloned()
-                .map(|x| Self::from_ty(x)).collect(),
+                .map(Self::from_ty).collect(),
                                                                  Box::new(Self::from_ty(*ret))
             ),
             _ => unimplemented!()
 
         }
+    }
+
+    pub fn from_ty(ty: Type) -> Self {
+        Self::from_ty_kind(ty.type_kind)
     }
 }

@@ -3,7 +3,7 @@ use popper_ast::Statement;
 
 use popper_semantic_analyzer::analyze;
 
-use popper_common::error::generate_color;
+use popper_error::generate_color;
 
 use popper_sbc::compile_to_bytecode
     as compile_to_bytecode_sbc;

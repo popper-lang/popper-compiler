@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 use popper_ast::*;
 
-use crate::errors::{AlreadyExist, TypeMismatch};
+use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error};
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
-use popper_common::error::Error;
 use popper_ast::visitor::ExprVisitor;
 
 #[derive(Clone)]

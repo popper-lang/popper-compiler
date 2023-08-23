@@ -1,6 +1,6 @@
 use lalrpop_util::lexer::Token;
 use lalrpop_util::ParseError;
-use popper_common::error::{ColorConfig, Error};
+use popper_error::{ColorConfig, Error};
 use ariadne::{Report, Source, ReportKind, Label};
 use ariadne::Fmt;
 

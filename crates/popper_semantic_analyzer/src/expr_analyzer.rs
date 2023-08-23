@@ -1,11 +1,12 @@
 use popper_ast::*;
-use crate::errors::{DiffLengthOfArgument, NameNotFound, TypeMismatch};
+use popper_error::{diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound, typemismatch::TypeMismatch};
 use popper_flag::{Environment, SymbolFlags, ValueFlag};
 
-use crate::tool::name_similarity::find_similar_name;
 
 use popper_ast::visitor::ExprVisitor;
-use popper_common::error::Error;
+use popper_error::Error;
+use popper_common::name_similarity::find_similar_name;
+
 
 #[derive(Clone)]
 pub struct ExprAnalyzer {
