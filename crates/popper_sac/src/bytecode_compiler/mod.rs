@@ -4,6 +4,7 @@ use popper_sbc::instr::{find_used_variable_in_instrs, Instruction};
 use popper_sbc::value::{ByteType, Literal};
 use popper_asm::register::Register;
 use popper_asm::asm_value::{AsmValue, Immediate};
+use popper_builtin::builtins;
 use crate::stack::{AVAILABLE_ARG_REGISTER, Stack, StackEnv};
 use crate::label::Label;
 use crate::label::LabelFn;
@@ -30,6 +31,16 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(bytecode: BytecodeProgram) -> Self {
+        let mut labels_fn = Vec::new();
+        for builtin in builtins() {
+            labels_fn.push(
+                LabelFn::new(
+                    Label::new(format!("fn_{}", builtin.lang_name()), builtin.call()),
+                    (builtin.args_type().iter().map(ByteType::from_ast_type_kind).collect(), ByteType::from_ast_type_kind(&builtin.ret_type()))
+                )
+            )
+        }
+
         Self {
             builder: Builder::new(),
             bytecode,
@@ -37,7 +48,7 @@ impl Compiler {
             stack_env: StackEnv::new(),
             labels: Vec::new(),
             to_free: Vec::new(),
-            labels_fn: Vec::new(),
+            labels_fn,
             is_fn: false,
             ip: 0,
         }
@@ -240,7 +251,10 @@ impl Compiler {
     pub fn build(self) -> (Program, Vec<(String, Program)>) {
         let mut builder_labels: Vec<(String, Program)> = self.labels.into_iter().map(|x| (x.label, x.program)).collect();
         builder_labels.extend(self.labels_fn.into_iter().map(|d| (d.label.label, d.label.program)).collect::<Vec<(String, Program)>>());
-        (self.builder.build(), builder_labels)
+        let builder = self.builder.build();
+        let label = Label::new("_main".to_string(), builder.clone());
+        builder_labels.push((label.label, label.program));
+        (builder, builder_labels)
     }
 
     fn build_label(&mut self,  body: Vec<Instruction>, name: String, instr: Assembly, instr_to_add: Vec<Assembly>) {

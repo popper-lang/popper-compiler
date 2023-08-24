@@ -143,6 +143,7 @@ pub struct ByteArg {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ByteType {
+    Unit,
     Int,
     Float,
     Str,
@@ -169,7 +170,11 @@ impl ByteArg {
 
 impl ByteType {
     pub fn from_ast_type(ast_type: Type) -> Self {
-        match ast_type.type_kind {
+        Self::from_ast_type_kind(&ast_type.type_kind)
+    }
+
+    pub fn from_ast_type_kind(ast_type_kind: &TypeKind) -> Self {
+        match ast_type_kind.clone() {
             TypeKind::Int => ByteType::Int,
             TypeKind::Float => ByteType::Float,
             TypeKind::String => ByteType::Str,
@@ -178,8 +183,9 @@ impl ByteType {
             TypeKind::Function(args, ret) => {
                 let args = args.into_iter().map(|arg| ByteType::from_ast_type(arg)).collect();
                 ByteType::Fn(args, Box::new(ByteType::from_ast_type(*ret)))
-            }
-            _ => todo!()
+            },
+            TypeKind::Unit => ByteType::Unit,
+            e => todo!("{:?}", e)
 
         }
     }
@@ -221,6 +227,7 @@ impl Bytecode for ByteType {
                 bytecode.extend(ret.to_bytecode());
                 bytecode
             }
+            ByteType::Unit => vec![6]
         }
     }
 
@@ -235,7 +242,8 @@ impl Bytecode for ByteType {
                 let args = Vec::<ByteType>::from_bytecode(bytecode[1..].to_vec());
                 let ret = Box::new(ByteType::from_bytecode(bytecode[1..].to_vec()));
                 ByteType::Fn(args, ret)
-            }
+            },
+            6 => ByteType::Unit,
             _ => panic!("Invalid bytecode for ByteType")
         }
     }

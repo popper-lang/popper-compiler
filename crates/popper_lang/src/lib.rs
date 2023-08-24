@@ -100,17 +100,13 @@ pub fn compile_to_asm<'a>(instructions: Vec<Instruction>) -> (Program, Vec<(Stri
 /// * `labels` - Vec<(String, Program<'a>)>
 ///
 /// return: asm string
-pub fn compile_to_binary(program: Program, labels: Vec<(String, Program)>) -> String {
+pub fn compile_to_binary(labels: Vec<(String, Program)>) -> String {
     let mut builder = Builder::new();
-    builder.program = program;
     builder.labels = labels;
-    let mut x86builder = X86Builder::new(builder);
+    let mut x86builder = X86Builder::new(builder, true);
 
     x86builder.compile();
-
-    let asm = x86builder.build();
-
-    asm
+    x86builder.build()
 }
 
 
@@ -135,9 +131,9 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
     if check_program(ast.clone(), input, file_name) {
         let ir =  compile_to_bytecode(ast);
 
-        let program = compile_to_asm(ir);
+        let (_, labels) = compile_to_asm(ir);
 
-        compile_to_binary(program.0, program.1)
+        compile_to_binary(labels)
     } else {
         String::new()
     }

@@ -9,3 +9,4 @@ description = "A Simple Asm Compiler in Popper Lang"
 [dependencies]
 popper_asm = { path = "../popper_asm" }
 popper_sbc = { path = "../popper_sbc" }
+popper_builtin = { path = "../popper_builtin" }

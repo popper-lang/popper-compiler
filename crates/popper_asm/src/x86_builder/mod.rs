@@ -9,19 +9,28 @@ use crate::builder::{Assembly, Builder};
 
 pub struct  X86Builder {
     builder: Builder,
-    pub x86_asm: String
+    pub x86_asm: String,
+    is_global_program: bool
 }
 
 
 
 impl X86Builder {
-    pub fn new(builder: Builder) -> Self {
+    pub fn new(builder: Builder, is_global_program: bool) -> Self {
         Self {
             builder,
-            x86_asm: "".to_string()
+            x86_asm: "".to_string(),
+            is_global_program
         }
     }
 
+    pub fn write_header(&mut self) {
+        self.x86_asm = r#"
+.section	__TEXT,__text,regular,pure_instructions
+.intel_syntax noprefix
+.globl	_main
+"#.to_owned() + self.x86_asm.as_str();
+    }
     pub fn register_to_str(&self, reg: Register) -> String {
         match reg {
             Register::R1 => "eax".to_string(),
@@ -175,7 +184,7 @@ impl X86Builder {
 
             let mut builder = Builder::new();
             builder.program = label.1.clone();
-            let mut x86builder = X86Builder::new(builder);
+            let mut x86builder = X86Builder::new(builder, false);
             x86builder.compile();
 
             let mut str = x86builder.build();
@@ -186,7 +195,10 @@ impl X86Builder {
         }
 
     }
-    pub fn build(&self) -> String {
+    pub fn build(&mut self) -> String {
+        if self.is_global_program {
+            self.write_header();
+        }
         self.x86_asm.clone()
     }
 

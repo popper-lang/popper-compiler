@@ -96,5 +96,9 @@ impl Environment {
         self.variables.iter().map(|v| v.name.clone()).collect()
     }
 
+    pub fn exist(&self, name: String) -> bool {
+        self.variables.iter().filter(|x| x.name == name).count() > 0
+    }
+
 }
 

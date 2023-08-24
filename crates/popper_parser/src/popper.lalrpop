@@ -173,7 +173,7 @@ IfElse: Statement = {
 
 
 CallSyntax: (Ident, Vec<Expression>) = {
-     <t:Ident> "(" <args:Comma<Term>> ")" => {
+     <t:Ident> "(" <args:Comma<Expr>> ")" => {
         (t, args)
     }
 }

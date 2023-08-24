@@ -5,6 +5,7 @@ use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
+use popper_builtin::builtins;
 
 #[derive(Clone)]
 pub struct StmtAnalyzer {
@@ -14,6 +15,20 @@ pub struct StmtAnalyzer {
 
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
+        let builtins = builtins();
+        let mut env= env.clone();
+
+        for builtin in builtins {
+            if ! env.exist(builtin.lang_name()) {
+                let var = VariableFlag::new(builtin.lang_name(),
+                                            SymbolFlags::new(Span::new(0, 0))
+                                                .add_flag(
+                                                    Flag::Value(builtin.to_value_flag())
+                                                ).clone(), ScopeFlag::Global, false, Span::new(0, 0));
+
+                env.add_variable(var);
+            }
+        }
         Self { env , current_scope: ScopeFlag::Global }
     }
 }

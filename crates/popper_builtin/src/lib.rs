@@ -52,7 +52,7 @@ pub type Builtins = Vec<Box<dyn Builtin>>;
 fn builtin_print() -> BuiltinFunctionFromCStdLib {
     BuiltinFunctionFromCStdLib {
         lang_name: "print".to_string(),
-        c_name: "printf".to_string(),
+        c_name: "_printf".to_string(),
         argument_type: vec![TypeKind::String],
         ret_type: TypeKind::Unit
     }
@@ -106,7 +106,8 @@ impl Builtin for BuiltinFunctionFromCStdLib {
 
     fn call(&self) -> Program {
         vec![
-            Assembly::Call(self.c_name.clone())
+            Assembly::Call(self.c_name.clone()),
+            Assembly::Ret
         ]
     }
 
