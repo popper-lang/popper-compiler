@@ -27,7 +27,8 @@ pub type Program = Vec<Assembly>;
 #[derive(Clone)]
 pub struct Builder {
     pub program: Program,
-    pub labels: Vec<(String, Program)>
+    pub labels: Vec<(String, Program)>,
+    section: Vec<Section>
 }
 
 impl Builder {
