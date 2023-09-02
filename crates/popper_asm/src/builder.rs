@@ -1,5 +1,6 @@
 use crate::register::Register;
 use crate::asm_value::AsmValue;
+use crate::section::Section;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Assembly {
@@ -36,7 +37,8 @@ impl Builder {
     pub fn new() -> Self {
         Self {
             program: vec![],
-            labels: vec![]
+            labels: vec![],
+            section: vec![]
         }
     }
 

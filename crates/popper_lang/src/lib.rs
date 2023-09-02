@@ -8,6 +8,7 @@ use popper_error::generate_color;
 use popper_sbc::compile_to_bytecode
     as compile_to_bytecode_sbc;
 use popper_sbc::instr::Instruction;
+use popper_sbc::debug::debug_instructions;
 
 use popper_sac::bytecode_compiler::Compiler;
 use popper_asm::builder::{Builder, Program};
@@ -130,7 +131,7 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
     };
     if check_program(ast.clone(), input, file_name) {
         let ir =  compile_to_bytecode(ast);
-
+        println!("{}", debug_instructions(ir.as_slice()));
         let (_, labels) = compile_to_asm(ir);
 
         compile_to_binary(labels)
