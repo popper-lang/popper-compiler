@@ -6,7 +6,14 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.5", features = ["derive", "color"] }
-popper_compiler = { path = "crates/popper_compiler" }
+popper_semantic_analyzer = { path = "crates/popper_semantic_analyzer" }
+popper_parser = { path = "crates/popper_parser" }
+popper_ast = { path = "crates/popper_ast" }
+popper_sac = { path = "crates/popper_sac" }
+popper_common = { path = "crates/popper_common" }
+popper_error = { path = "crates/popper_error" }
+popper_asm = { git = "https://github.com/popper-lang/popper-asm.git" }
+
 
 
 

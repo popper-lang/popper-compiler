@@ -16,7 +16,7 @@ use popper_asm::{
 ///
 /// return: `Option<Vec<Statement>>`
 pub fn get_ast(input: &str, file: &str) -> Option<Vec<Statement>> {
-   parse(input, file)
+    parse(input, file)
 }
 
 
