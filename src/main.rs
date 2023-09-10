@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
-use popper_lang::check_program;
-use popper_lang::get_ast;
-use popper_lang::popper_compile;
+use popper_compiler::check_program;
+use popper_compiler::get_ast;
+use popper_compiler::popper_compile;
 
 #[derive(Parser)]
 /// Popper is a programming language

@@ -1,11 +1,13 @@
 [package]
-name = "popper-lang"
+name = "popper-compiler"
 version = "0.1.0"
 edition = "2021"
 
 
 [dependencies]
 clap = { version = "4.3.5", features = ["derive", "color"] }
-popper_lang = { path = "crates/popper_lang" }
+popper_compiler = { path = "crates/popper_compiler" }
+
+
 
 

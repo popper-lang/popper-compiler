@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 popper_ast = { path = "../popper_ast" }
-popper_asm = { path = "../popper_asm" }
+popper_asm = { git = "https://github.com/popper-lang/popper-asm.git" }
 popper_flag = { path = "../popper_flag" }
 popper_error = { path = "../popper_error" }
 

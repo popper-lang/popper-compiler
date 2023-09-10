@@ -1,3 +1,0 @@
-
-mod test_register;
-

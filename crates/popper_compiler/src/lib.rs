@@ -1,19 +1,12 @@
 use popper_parser::parser::parse;
 use popper_ast::Statement;
-
 use popper_semantic_analyzer::analyze;
-
 use popper_error::generate_color;
-
-use popper_sbc::compile_to_bytecode
-    as compile_to_bytecode_sbc;
-use popper_sbc::instr::Instruction;
-use popper_sbc::debug::debug_instructions;
-
-use popper_sac::bytecode_compiler::Compiler;
-use popper_asm::builder::{Builder, Program};
-use popper_asm::x86_builder::X86Builder;
-
+use popper_sac::compiler::Compiler;
+use popper_asm::{
+    ast::Program,
+    machine_code::MachineCodeCompiler
+};
 
 ///
 /// get_ast is used to get ast from input
@@ -65,16 +58,6 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 }
 
-///
-/// compile_to_bytecode is used to compile ast to bytecode
-/// # Arguments
-/// * `ast` - ast
-///
-/// return: `Vec<Instruction>`
-///
-pub fn compile_to_bytecode(ast: Vec<Statement>) -> Vec<Instruction> {
-    compile_to_bytecode_sbc(ast)
-}
 
 /// compile_to_asm is used to compile bytecode to asm
 ///
@@ -85,11 +68,11 @@ pub fn compile_to_bytecode(ast: Vec<Statement>) -> Vec<Instruction> {
 ///
 /// `Program<'a>` is used to store asm
 /// `Vec<(String, Program<'a>)>` are all the labels of asm: `Vec<(<name of label>, <content of label>)>`
-pub fn compile_to_asm<'a>(instructions: Vec<Instruction>) -> (Program, Vec<(String, Program)>) {
-    let mut compiler = Compiler::new(instructions).clone();
+pub fn compile_to_asm<'a>(stmts: Vec<Statement>) -> Program {
+    let mut compiler = Compiler::new(stmts);
 
     compiler.compile();
-    compiler.build()
+    compiler.asm
 
 }
 
@@ -101,13 +84,10 @@ pub fn compile_to_asm<'a>(instructions: Vec<Instruction>) -> (Program, Vec<(Stri
 /// * `labels` - Vec<(String, Program<'a>)>
 ///
 /// return: asm string
-pub fn compile_to_binary(labels: Vec<(String, Program)>) -> String {
-    let mut builder = Builder::new();
-    builder.labels = labels;
-    let mut x86builder = X86Builder::new(builder, true);
-
-    x86builder.compile();
-    x86builder.build()
+pub fn compile_to_binary(program: Program) -> String {
+    let mut machine_code_compiler = MachineCodeCompiler::new(program);
+    let m = machine_code_compiler.compile();
+    format!("{:b}", m)
 }
 
 
@@ -130,11 +110,8 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
         }
     };
     if check_program(ast.clone(), input, file_name) {
-        let ir =  compile_to_bytecode(ast);
-        println!("{}", debug_instructions(ir.as_slice()));
-        let (_, labels) = compile_to_asm(ir);
-
-        compile_to_binary(labels)
+        let ir =  compile_to_asm(ast);
+        compile_to_binary(ir)
     } else {
         String::new()
     }

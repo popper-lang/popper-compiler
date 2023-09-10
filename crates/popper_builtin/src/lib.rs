@@ -2,9 +2,7 @@
 
 use std::string::ToString;
 use popper_ast::{Span, TypeKind};
-use popper_asm::asm_value::AsmValue;
-use popper_asm::builder::{Assembly, Program};
-use popper_asm::register::Register;
+use popper_asm::ast::{Program, Register, Command, Label, MemoryFetching, Call, Add, Expr};
 use popper_flag::{SymbolFlags, ValueFlag};
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, typemismatch::TypeMismatch,  Error};
 
@@ -61,10 +59,13 @@ fn builtin_print() -> BuiltinFunctionFromCStdLib {
 fn builtin_sum() -> CustomBuiltin {
     CustomBuiltin {
         lang_name: "sum".to_string(),
-        program: vec![
-            Assembly::IAdd(Register::R1, Box::new(AsmValue::Register(Register::R2))),
-            Assembly::Ret
-        ],
+        program: Program::new(vec![
+            Label::new("sum".to_string(), vec![
+                Command::Add(
+                    Add(MemoryFetching::Register(Register::R1), Expr::Memory(MemoryFetching::Register(Register::R2)))
+                )
+            ]) // TODO: add ret program
+        ]),
         preload_asm: None,
         argument_type: vec![TypeKind::Int, TypeKind::Int],
         ret_type: TypeKind::Int
@@ -97,7 +98,7 @@ impl Builtin for BuiltinFunctionFromCStdLib {
         self.clone().ret_type
     }
     fn load(&self) -> Program {
-        vec![] // return nothing because C builtin is by default loaded
+        Program::new(vec![]) // return nothing because C builtin is by default loaded
     }
 
     fn check(&self, arguments: Vec<SymbolFlags>, span: Span) -> Result<(), Box<dyn Error>> {
@@ -105,10 +106,20 @@ impl Builtin for BuiltinFunctionFromCStdLib {
     }
 
     fn call(&self) -> Program {
-        vec![
-            Assembly::Call(self.c_name.clone()),
-            Assembly::Ret
-        ]
+        Program::new(
+            vec![
+                Label::new(
+                    self.lang_name.clone(),
+                    vec![
+                        Command::Call(
+                            Call(
+                                self.c_name.clone()
+                            )
+                        )
+                    ]
+                )
+            ]
+        )
     }
 
     fn lang_name(&self) -> String {
@@ -126,7 +137,7 @@ impl Builtin for CustomBuiltin {
     }
 
     fn load(&self) -> Program {
-        vec![]
+        Program::new(vec![])
     }
 
     fn check(&self, arguments: Vec<SymbolFlags>, span: Span) -> Result<(), Box<dyn Error>> {

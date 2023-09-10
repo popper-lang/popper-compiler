@@ -1,5 +1,5 @@
 [package]
-name = "popper_lang"
+name = "popper_compiler"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,11 +9,10 @@ edition = "2021"
 popper_semantic_analyzer = { path = "../popper_semantic_analyzer" }
 popper_parser = { path = "../popper_parser" }
 popper_ast = { path = "../popper_ast" }
-popper_sbc = { path = "../popper_sbc" }
 popper_sac = { path = "../popper_sac" }
-popper_asm = { path = "../popper_asm" }
 popper_common = { path = "../popper_common" }
 popper_error = { path = "../popper_error" }
+popper_asm = { git = "https://github.com/popper-lang/popper-asm.git" }
 lazy_static = "1.4.0"
 
 [profile.release]
