@@ -28,6 +28,8 @@ enum Commands {
     Compile {
         /// The name of the file to compile
         filename: String,
+        #[arg(short, long)]
+        debug: bool
     },
 }
 
@@ -63,10 +65,11 @@ fn main() {
                 }
             }
         }
-        Commands::Compile { filename } => {
+        Commands::Compile { filename, debug } => {
             let body = std::fs::read_to_string(filename).unwrap();
-            let ir = popper_compile(body.as_str(), filename);
+            let ir = popper_compile(body.as_str(), filename, debug.clone());
+
             println!("{}", ir);
-        }
+        },
     }
 }

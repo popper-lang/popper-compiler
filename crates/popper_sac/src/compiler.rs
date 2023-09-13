@@ -3,7 +3,7 @@ use popper_ast::{
     BinOp,
     BinOpKind,
     Block,
-    Call,
+    Call as AstCall,
     Constant,
     Expression,
     Function,
@@ -27,11 +27,14 @@ use popper_asm::ast::{
 use popper_asm::ast::Program;
 use popper_asm::ast::{
     Mov,
+    Call,
     Add,
     Sub,
     Mul,
     Div
 };
+
+use popper_builtin::builtins;
 
 pub struct Compiler {
     pub stack: Vec<Expr>,
@@ -44,12 +47,21 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn new(program: Vec<Statement>) -> Self {
+        let mut labels = vec![];
+        for builtin in builtins() {
+            labels.push(
+                Label::new(
+                    builtin.lang_name(),
+                    builtin.call()
+                )
+            );
+        }
         Self {
             stack: Vec::new(),
             env: Default::default(),
             program,
-            asm: Program::new(vec![]),
-            current_label: Label::new("_main".to_string(), vec![]),
+            asm: Program::new(labels.clone()),
+            current_label: Label::new("main".to_string(), vec![]),
             register_index: 0
         }
     }
@@ -161,6 +173,7 @@ impl ExprVisitor for Compiler {
 
     }
 
+
     fn visit_unary_op(&mut self, _unary_op: UnaryOp) -> Result<Self::Output, Self::Error> {
         todo!()
     }
@@ -169,8 +182,24 @@ impl ExprVisitor for Compiler {
         todo!()
     }
 
-    fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_call(&mut self, call: AstCall) -> Result<Self::Output, Self::Error> {
+        let label = self.asm.labels.clone().into_iter().find(|x| x.name == call.name).unwrap();
+        let reg_state = self.register_index;
+        self.register_index = 0;
+        for args in call.arguments {
+            self.visit_expr(args);
+        }
+
+        self.register_index = reg_state;
+
+        self.current_label.program.push(
+            Command::Call(
+                Call(label.name.clone())
+            )
+        );
+
+        Ok(())
+
     }
 
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {

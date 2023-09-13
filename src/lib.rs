@@ -100,7 +100,7 @@ pub fn compile_to_binary(program: Program) -> String {
 ///
 /// return: asm string
 ///
-pub fn popper_compile(input: &str, file_name: &str) -> String {
+pub fn popper_compile(input: &str, file_name: &str, debug: bool) -> String {
     let ast = get_ast(input, file_name);
     let ast = match ast {
         Some(ast) => ast,
@@ -111,7 +111,11 @@ pub fn popper_compile(input: &str, file_name: &str) -> String {
     };
     if check_program(ast.clone(), input, file_name) {
         let ir =  compile_to_asm(ast);
-        compile_to_binary(ir)
+        if debug {
+            format!("{:#?}", ir)
+        } else {
+            compile_to_binary(ir)
+        }
     } else {
         String::new()
     }

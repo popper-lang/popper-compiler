@@ -2,7 +2,7 @@
 
 use std::string::ToString;
 use popper_ast::{Span, TypeKind};
-use popper_asm::ast::{Program, Register, Command, Label, MemoryFetching, Call, Add, Expr};
+use popper_asm::ast::{Register, Command, MemoryFetching, Mov, Add, Expr};
 use popper_flag::{SymbolFlags, ValueFlag};
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, typemismatch::TypeMismatch,  Error};
 
@@ -11,10 +11,10 @@ pub trait Builtin {
     fn args_type(&self) -> Vec<TypeKind>;
     fn ret_type(&self) -> TypeKind;
 
-    fn load(&self) -> Program;
+    fn load(&self) -> Vec<Command>;
 
     fn check(&self, arguments: Vec<SymbolFlags>, span: Span) -> Result<(), Box<dyn Error>>;
-    fn call(&self) -> Program;
+    fn call(&self) -> Vec<Command>;
 
     fn lang_name(&self) -> String;
 
@@ -27,19 +27,13 @@ pub trait Builtin {
 
 
 }
-#[derive(Clone)]
-struct BuiltinFunctionFromCStdLib {
-    lang_name: String,
-    c_name: String,
-    argument_type: Vec<TypeKind>,
-    ret_type: TypeKind
-}
+
 
 #[derive(Clone)]
 struct CustomBuiltin {
     lang_name: String,
-    program: Program,
-    preload_asm: Option<Program>,
+    program: Vec<Command>,
+    preload_asm: Option<Vec<Command>>,
     argument_type: Vec<TypeKind>,
     ret_type: TypeKind
 }
@@ -47,28 +41,33 @@ struct CustomBuiltin {
 pub type Builtins = Vec<Box<dyn Builtin>>;
 
 
-fn builtin_print() -> BuiltinFunctionFromCStdLib {
-    BuiltinFunctionFromCStdLib {
-        lang_name: "print".to_string(),
-        c_name: "_printf".to_string(),
-        argument_type: vec![TypeKind::String],
-        ret_type: TypeKind::Unit
-    }
-}
-
 fn builtin_sum() -> CustomBuiltin {
     CustomBuiltin {
         lang_name: "sum".to_string(),
-        program: Program::new(vec![
-            Label::new("sum".to_string(), vec![
-                Command::Add(
-                    Add(MemoryFetching::Register(Register::R1), Expr::Memory(MemoryFetching::Register(Register::R2)))
-                )
-            ]) // TODO: add ret program
-        ]),
+        program: vec![
+            Command::Add(
+                Add(MemoryFetching::Register(Register::R1), Expr::Memory(MemoryFetching::Register(Register::R2)))
+            )
+        ],
         preload_asm: None,
         argument_type: vec![TypeKind::Int, TypeKind::Int],
         ret_type: TypeKind::Int
+    }
+}
+
+fn builtin_print() -> CustomBuiltin {
+    CustomBuiltin {
+        lang_name: "print".to_string(),
+        program: vec![
+            Command::Mov(
+                Mov(MemoryFetching::Addr(500), Expr::Memory(
+                    MemoryFetching::Register(Register::R1)
+                ))
+            )
+        ],
+        preload_asm: None,
+        argument_type: vec![TypeKind::Int],
+        ret_type: TypeKind::Unit
     }
 }
 
@@ -89,43 +88,6 @@ pub fn get_builtin(lang_name: &str, builtins: Builtins) -> Option<Box<dyn Builti
         .find(|elt| elt.lang_name() == lang_name)
 }
 
-impl Builtin for BuiltinFunctionFromCStdLib {
-    fn args_type(&self) -> Vec<TypeKind> {
-        self.clone().argument_type
-    }
-
-    fn ret_type(&self) -> TypeKind {
-        self.clone().ret_type
-    }
-    fn load(&self) -> Program {
-        Program::new(vec![]) // return nothing because C builtin is by default loaded
-    }
-
-    fn check(&self, arguments: Vec<SymbolFlags>, span: Span) -> Result<(), Box<dyn Error>> {
-        global_check(arguments, span, self.clone().argument_type)
-    }
-
-    fn call(&self) -> Program {
-        Program::new(
-            vec![
-                Label::new(
-                    self.lang_name.clone(),
-                    vec![
-                        Command::Call(
-                            Call(
-                                self.c_name.clone()
-                            )
-                        )
-                    ]
-                )
-            ]
-        )
-    }
-
-    fn lang_name(&self) -> String {
-        self.lang_name.clone()
-    }
-}
 
 impl Builtin for CustomBuiltin {
     fn args_type(&self) -> Vec<TypeKind> {
@@ -136,15 +98,15 @@ impl Builtin for CustomBuiltin {
         self.clone().ret_type
     }
 
-    fn load(&self) -> Program {
-        Program::new(vec![])
+    fn load(&self) -> Vec<Command> {
+        vec![]
     }
 
     fn check(&self, arguments: Vec<SymbolFlags>, span: Span) -> Result<(), Box<dyn Error>> {
         global_check(arguments, span, self.clone().argument_type)
     }
 
-    fn call(&self) -> Program {
+    fn call(&self) -> Vec<Command> {
         self.clone().program
     }
 
