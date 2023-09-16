@@ -42,7 +42,7 @@ struct CustomBuiltin {
 pub type Builtins = Vec<Box<dyn Builtin>>;
 
 
-fn builtin_sum() -> CustomBuiltin {
+fn builtin_sum() -> impl Builtin {
     CustomBuiltin {
         lang_name: "sum".to_string(),
         program: vec![
@@ -56,7 +56,7 @@ fn builtin_sum() -> CustomBuiltin {
     }
 }
 
-fn builtin_print() -> CustomBuiltin {
+fn builtin_print() -> impl Builtin {
     CustomBuiltin {
         lang_name: "print".to_string(),
         program: vec![
@@ -73,14 +73,14 @@ fn builtin_print() -> CustomBuiltin {
 }
 
 pub fn builtins() -> Builtins {
-    dbg!(vec![
+    vec![
         Box::new(
             builtin_print()
         ),
         Box::new(
             builtin_sum()
         )
-    ])
+    ]
 }
 
 pub fn get_builtin(lang_name: &str, builtins: Builtins) -> Option<Box<dyn Builtin>> {
