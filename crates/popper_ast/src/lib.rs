@@ -21,7 +21,6 @@ pub use basic_stmt::*;
 pub use types::*;
 pub use function::*;
 
-
 #[cfg(feature = "serde")]
 pub fn get_ast_from_json_file(file: &str) -> Vec<Statement> {
     let file = std::fs::read_to_string(file).unwrap();

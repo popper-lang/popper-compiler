@@ -6,6 +6,7 @@ use popper_asm::ast::{Register, Command, MemoryFetching, Mov, Add, Expr};
 use popper_flag::{SymbolFlags, ValueFlag};
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, typemismatch::TypeMismatch,  Error};
 
+
 pub trait Builtin {
 
     fn args_type(&self) -> Vec<TypeKind>;
@@ -72,14 +73,14 @@ fn builtin_print() -> CustomBuiltin {
 }
 
 pub fn builtins() -> Builtins {
-    vec![
+    dbg!(vec![
         Box::new(
             builtin_print()
         ),
         Box::new(
             builtin_sum()
         )
-    ]
+    ])
 }
 
 pub fn get_builtin(lang_name: &str, builtins: Builtins) -> Option<Box<dyn Builtin>> {
