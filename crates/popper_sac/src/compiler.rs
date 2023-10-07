@@ -31,7 +31,8 @@ use popper_asm::ast::{
     Add,
     Sub,
     Mul,
-    Div
+    Div,
+    Ret
 };
 
 use popper_builtin::builtins;
@@ -99,7 +100,8 @@ impl Compiler {
         for stmt in self.program.clone() {
             self.visit_stmt(stmt);
         }
-        self.asm.labels.push(self.current_label.clone());
+        self.current_label.program.push(Command::Ret(Ret));
+        self.asm.labels.insert(0, self.current_label.clone());
     }
 
 }
@@ -197,7 +199,6 @@ impl ExprVisitor for Compiler {
                 Call(label.name.clone())
             )
         );
-
         Ok(())
 
     }

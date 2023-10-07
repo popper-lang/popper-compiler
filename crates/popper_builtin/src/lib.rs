@@ -2,7 +2,7 @@
 
 use std::string::ToString;
 use popper_ast::{Span, TypeKind};
-use popper_asm::ast::{Register, Command, MemoryFetching, Mov, Add, Expr};
+use popper_asm::ast::{Register, Command, MemoryFetching, Mov, Add, Expr, Ret};
 use popper_flag::{SymbolFlags, ValueFlag};
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, typemismatch::TypeMismatch,  Error};
 
@@ -64,7 +64,8 @@ fn builtin_print() -> impl Builtin {
                 Mov(MemoryFetching::Addr(500), Expr::Memory(
                     MemoryFetching::Register(Register::R1)
                 ))
-            )
+            ),
+            Command::Ret(Ret)
         ],
         preload_asm: None,
         argument_type: vec![TypeKind::Int],

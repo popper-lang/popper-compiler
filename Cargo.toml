@@ -15,6 +15,11 @@ popper_error = { path = "crates/popper_error" }
 popper_asm = { git = "https://github.com/popper-lang/popper-asm.git" }
 
 
+[patch."https://github.com/popper-lang/popper-asm.git"]
+popper_asm = { path = "../popper-asm" }
+
+
+
 
 
 
