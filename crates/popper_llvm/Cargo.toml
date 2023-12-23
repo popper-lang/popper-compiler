@@ -1,0 +1,13 @@
+[package]
+name = "popper_llvm"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", features = [
+    "llvm16-0",
+] }
+
+popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"]}
+lazy_static = "1.4.0"

@@ -25,4 +25,8 @@ impl LetStmt {
             span,
         }
     }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }

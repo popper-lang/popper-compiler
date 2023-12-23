@@ -6,6 +6,8 @@ use crate::If;
 use crate::IfElse;
 use crate::Function;
 use crate::Return;
+use crate::Span;
+
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -19,4 +21,19 @@ pub enum Statement {
     IfElse(IfElse),
     Function(Function),
     Return(Return),
+}
+
+impl Statement {
+    pub fn span(&self) -> Span {
+        match self {
+            Statement::Expression(expr) => expr.span(),
+            Statement::While(while_stmt) => while_stmt.span(),
+            Statement::Block(block) => block.span(),
+            Statement::Let(let_stmt) => let_stmt.span(),
+            Statement::If(if_stmt) => if_stmt.span(),
+            Statement::IfElse(if_else_stmt) => if_else_stmt.span(),
+            Statement::Function(fn_stmt) => fn_stmt.span(),
+            Statement::Return(ret_stmt) => ret_stmt.span()
+        }
+    }
 }

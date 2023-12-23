@@ -1,0 +1,10 @@
+[package]
+name = "popper_interpreter"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+popper_ast = { path = "../popper_ast", features = ["extra-trait", "visitor"] }
+lazy_static = "1.4.0"
+

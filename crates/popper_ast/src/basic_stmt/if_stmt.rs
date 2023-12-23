@@ -16,6 +16,10 @@ impl If {
     pub fn new(span: Span, condition: Expression, body: Statement) -> Self {
         Self { span, condition, body: Box::new(body) }
     }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -32,5 +36,9 @@ pub struct IfElse {
 impl IfElse {
     pub fn new(span: Span, condition: Expression, body: Statement, else_body: Statement) -> Self {
         Self { span, condition, body: Box::new(body), else_body: Box::new(else_body) }
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
     }
 }

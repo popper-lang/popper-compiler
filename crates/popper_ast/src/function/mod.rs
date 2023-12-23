@@ -31,4 +31,8 @@ impl Function {
             span
         }
     }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
 }

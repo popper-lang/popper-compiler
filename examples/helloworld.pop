@@ -1,0 +1,4 @@
+func main(b : int) : int {
+    let a: int  = 9;
+}
+

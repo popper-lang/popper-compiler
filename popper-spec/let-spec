@@ -23,10 +23,10 @@ Add
 
 IR 3th version: Extended Bytecode
 
-LOAD_CONST 7
+LoadConst 7
 LET (-4, ESP)
 FETCH (-4, ESP)
-LOAD_CONST (EBX, 3)
+LoadConst (EBX, 3)
 ADD
 
 IR 4th version: PRE-ASM 
