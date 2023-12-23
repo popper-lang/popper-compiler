@@ -2,11 +2,8 @@ use popper_parser::parser::parse;
 use popper_ast::Statement;
 use popper_semantic_analyzer::analyze;
 use popper_error::generate_color;
-use popper_asm::{
-    ast::Program,
-    machine_code::MachineCodeCompiler
-};
-use popper_llvm::{Context, LLVMEnv};
+use popper_llvm::Context;
+use popper_llvm::compiler::llvm_env::LLVMEnv;
 
 ///
 /// get_ast is used to get ast from input
@@ -60,7 +57,7 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     let context = Context::create();
-    let mut compiler = popper_llvm::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
+    let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
     let res = compiler.compile(ast);
 
     return res
