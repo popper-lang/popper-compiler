@@ -13,4 +13,11 @@ impl<'ctx> PopPointer<'ctx> {
             value
         }
     }
+
+    pub fn from_value(value: PointerValue<'ctx>) -> Self {
+        PopPointer {
+            ty: value.get_type(),
+            value
+        }
+    }
 }

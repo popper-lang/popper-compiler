@@ -1,5 +1,4 @@
 func main(b: int) : int {
-    let a: int = 9 + 8;
-    let b: int = a;
+    print(3);
 }
 

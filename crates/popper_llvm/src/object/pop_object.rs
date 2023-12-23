@@ -1,5 +1,5 @@
-use inkwell::types::{FloatType, IntType, PointerType};
-use inkwell::values::{BasicValueEnum, FloatValue, IntValue, PointerValue};
+use inkwell::types::{FloatType, FunctionType, IntType, PointerType};
+use inkwell::values::{BasicValueEnum, FloatValue, FunctionValue, IntValue, PointerValue};
 use inkwell::context::Context;
 use crate::object::pop_string::PopString;
 
@@ -8,7 +8,8 @@ pub enum PopObject<'a> {
     Bool(IntType<'a>, IntValue<'a>),
     Float(FloatType<'a>, FloatValue<'a>),
     String(PopString<'a>),
-    Ptr(PointerType<'a>, PointerValue<'a>)
+    Ptr(PointerType<'a>, PointerValue<'a>),
+    Function(FunctionType<'a>, FunctionValue<'a>)
 }
 
 impl<'a> PopObject<'a> {
@@ -36,6 +37,14 @@ impl<'a> PopObject<'a> {
             PopString::from_string(context, string)
         )
     }
+
+    pub fn new_ptr(context: &'a Context, ptr: PointerValue<'a>) -> Self {
+        PopObject::Ptr(ptr.get_type(), ptr)
+    }
+
+    pub fn new_function(context: &'a Context, func: FunctionValue<'a>) -> Self {
+        PopObject::Function(func.get_type(), func)
+    }
     
     pub fn from_basic_value_enum(basic_enum: BasicValueEnum<'a>) -> Self {
         match basic_enum {
@@ -46,14 +55,14 @@ impl<'a> PopObject<'a> {
             _ => panic!("Unknown type")
         }
     }
-
     pub fn to_basic_value_enum(&self) -> BasicValueEnum {
         match self {
             PopObject::Int(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Bool(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Float(_, float) => BasicValueEnum::FloatValue(*float),
             PopObject::String(string) => BasicValueEnum::ArrayValue(string.array_value),
-            PopObject::Ptr(_, ptr) => BasicValueEnum::PointerValue(*ptr)
+            PopObject::Ptr(_, ptr) => BasicValueEnum::PointerValue(*ptr),
+            _ => panic!("Unknown type")
         }
     }
 }

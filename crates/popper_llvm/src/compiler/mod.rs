@@ -1,3 +1,4 @@
+use inkwell::AddressSpace;
 use inkwell::module::Module;
 use inkwell::context::Context;
 use inkwell::builder::Builder;
@@ -10,7 +11,8 @@ use crate::object::pop_pointer::PopPointer;
 use crate::object::pop_string::PopString;
 use crate::object::pop_type::PopType;
 
-pub mod llvm_env;mod constants;
+pub mod llvm_env;
+mod constants;
 mod exprs;
 mod stmts;
 
@@ -41,6 +43,31 @@ impl<'ctx> LLVMCompiler<'ctx> {
             current_function,
             filename
         }
+    }
+
+    pub fn register_builtin(&mut self) {
+        let i32_type = self.context.i32_type();
+        let i8_type = self.context.i8_type();
+
+        let printf_type = i32_type.fn_type(&[i8_type.ptr_type(Default::default()).into()], true);
+        let printf_func = self.module.add_function("printf", printf_type, None);
+        let sign = i32_type.fn_type(&[i32_type.into()], false);
+
+
+        let func = self.module.add_function(
+            "print",
+            sign,
+            None,
+        );
+
+        self.env.set("print".to_string(), PopPointer::from_value(func.as_global_value().as_pointer_value()));
+
+        let basic_block = self.context.append_basic_block(func, "entry");
+        let arg_value = func.get_first_param().unwrap();
+        let format_string = self.context.const_string("%d\n".to_string().into_bytes().as_slice(), true);
+        self.builder.position_at_end(basic_block);
+        self.builder.build_call(printf_func, &[format_string.into(), arg_value.into()], "printf_call");
+        self.builder.build_return(None);
     }
 
 

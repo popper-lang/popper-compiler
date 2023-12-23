@@ -1,3 +1,4 @@
+use inkwell::values::{BasicMetadataValueEnum, BasicValueEnum};
 use crate::compiler::LLVMCompiler;
 use crate::object::pop_object::PopObject;
 use popper_ast::Constant;
@@ -6,6 +7,7 @@ use popper_ast::ParenGroup;
 use popper_ast::BinOpKind;
 use popper_ast::Block;
 use popper_ast::Expression;
+use popper_ast::Call;
 
 
 impl<'ctx> LLVMCompiler<'ctx> {
@@ -44,11 +46,23 @@ impl<'ctx> LLVMCompiler<'ctx> {
         }
     }
 
+    pub fn compile_call(&self, call: Call) -> PopObject {
+        let func = self.module.get_function(call.name.as_str()).unwrap();
+        let mut args = vec![];
+        for arg in call.arguments {
+            args.push(self.compile_expr(arg));
+        }
+        let args: Vec<BasicMetadataValueEnum> = args.iter().map(|arg| arg.to_basic_value_enum().into()).collect();
+        let ret = self.builder.build_call(func, args.as_slice(), "call").unwrap();
+        PopObject::new_int(self.context, 3)
+    }
+
     pub fn compile_expr(&self, expr: Expression) -> PopObject {
         match expr {
             Expression::Constant(constant) => self.compile_constant(constant),
             Expression::Group(paren_group) => self.compile_paren_group(paren_group),
             Expression::BinOp(binop) => self.compile_bin_op(binop),
+            Expression::Call(call) => self.compile_call(call),
 
             _ => todo!("Expression not implemented")
         }
