@@ -1,0 +1,9 @@
+{
+  "name": "io",
+  "langage": ["llvm"],
+  "env": {
+    "print": "print.ll",
+    "input": "input.ll",
+    "read_file": "read_file.ll",
+  }
+}

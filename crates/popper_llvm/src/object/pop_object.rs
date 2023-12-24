@@ -38,11 +38,11 @@ impl<'a> PopObject<'a> {
         )
     }
 
-    pub fn new_ptr(context: &'a Context, ptr: PointerValue<'a>) -> Self {
+    pub fn new_ptr(_context: &'a Context, ptr: PointerValue<'a>) -> Self {
         PopObject::Ptr(ptr.get_type(), ptr)
     }
 
-    pub fn new_function(context: &'a Context, func: FunctionValue<'a>) -> Self {
+    pub fn new_function(_context: &'a Context, func: FunctionValue<'a>) -> Self {
         PopObject::Function(func.get_type(), func)
     }
     

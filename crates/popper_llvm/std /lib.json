@@ -1,0 +1,10 @@
+{
+  "info": {
+    "name": "std",
+    "version": "1.0",
+    "author": "NightProg",
+  },
+  "module_type": "internal",
+  "langage_type": ["llvm", "rust"],
+  "submodules": ["io", "math"]
+}

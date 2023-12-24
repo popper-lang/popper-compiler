@@ -2,7 +2,8 @@
 
 mod object;
 pub mod compiler;
+mod modules;
 
-use std::any::Any;
+
 pub use inkwell::context::Context;
-use popper_ast::visitor::{ExprVisitor, StmtVisitor};
+

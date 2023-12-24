@@ -1,5 +1,5 @@
 use crate::compiler::LLVMCompiler;
-use crate::object::pop_object::PopObject;
+
 use crate::object::pop_type::PopType;
 use inkwell::types::BasicMetadataTypeEnum;
 

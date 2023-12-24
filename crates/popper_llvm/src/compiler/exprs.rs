@@ -1,11 +1,11 @@
-use inkwell::values::{BasicMetadataValueEnum, BasicValueEnum};
+use inkwell::values::{BasicMetadataValueEnum};
 use crate::compiler::LLVMCompiler;
 use crate::object::pop_object::PopObject;
-use popper_ast::Constant;
+
 use popper_ast::BinOp;
 use popper_ast::ParenGroup;
 use popper_ast::BinOpKind;
-use popper_ast::Block;
+
 use popper_ast::Expression;
 use popper_ast::Call;
 
@@ -53,7 +53,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
             args.push(self.compile_expr(arg));
         }
         let args: Vec<BasicMetadataValueEnum> = args.iter().map(|arg| arg.to_basic_value_enum().into()).collect();
-        let ret = self.builder.build_call(func, args.as_slice(), "call").unwrap();
+        let _ret = self.builder.build_call(func, args.as_slice(), "call").unwrap();
         PopObject::new_int(self.context, 3)
     }
 

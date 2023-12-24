@@ -3,13 +3,14 @@ use inkwell::module::Module;
 use inkwell::context::Context;
 use inkwell::builder::Builder;
 use inkwell::basic_block::BasicBlock;
-use inkwell::types::BasicMetadataTypeEnum;
+use inkwell::values::{BasicValueEnum, IntValue};
+
 use llvm_env::LLVMEnv;
-use popper_ast::{BinOp, BinOpKind, Block, Constant, Expression, LetStmt, ParenGroup, Statement};
-use crate::object::pop_object::PopObject;
+use popper_ast::{Statement};
+
 use crate::object::pop_pointer::PopPointer;
-use crate::object::pop_string::PopString;
-use crate::object::pop_type::PopType;
+
+
 
 pub mod llvm_env;
 mod constants;
@@ -49,7 +50,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let i32_type = self.context.i32_type();
         let i8_type = self.context.i8_type();
 
-        let printf_type = i32_type.fn_type(&[i8_type.ptr_type(Default::default()).into()], true);
+        let printf_type = i32_type.fn_type(&[i8_type.array_type(4).into()], true);
         let printf_func = self.module.add_function("printf", printf_type, None);
         let sign = i32_type.fn_type(&[i32_type.into()], false);
 
@@ -67,7 +68,13 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let format_string = self.context.const_string("%d\n".to_string().into_bytes().as_slice(), true);
         self.builder.position_at_end(basic_block);
         self.builder.build_call(printf_func, &[format_string.into(), arg_value.into()], "printf_call");
-        self.builder.build_return(None);
+        self.builder.build_return(
+            Some(
+                &BasicValueEnum::IntValue(
+                    self.context.i32_type().const_int(0, false)
+                )
+            )
+        );
     }
 
 
@@ -95,6 +102,11 @@ impl<'ctx> LLVMCompiler<'ctx> {
     // }
 
     pub fn build(&self) -> String {
+        self.builder.build_return(
+            Some(&BasicValueEnum::IntValue(
+                self.context.i32_type().const_int(0, false)
+            ))
+        );
         self.module.print_to_string().to_string()
     }
 
