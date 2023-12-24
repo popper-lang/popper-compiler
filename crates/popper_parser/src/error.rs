@@ -5,12 +5,12 @@ use ariadne::{Report, Source, ReportKind, Label};
 use ariadne::Fmt;
 
 /// parser errpr type implemented with lalrpop error
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ParserErrorType<'a>(pub ParseError<usize, Token<'a>, &'static str>);
 
 
 /// PopperLang Parser error
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ParserError<'a> {
     pub error: ParserErrorType<'a>,
     pub span: popper_ast::Span,

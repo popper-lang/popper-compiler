@@ -1,8 +1,6 @@
 use inkwell::context::Context;
-use inkwell::module::Module;
 use inkwell::types::{BasicType, FunctionType};
-use inkwell::values::{FunctionValue, IntValue, PointerValue};
-use std::ptr;
+
 
 fn main() {
     let context = Context::create();

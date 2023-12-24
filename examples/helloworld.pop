@@ -1,4 +1,10 @@
-func main(b: int) : int {
-    print(3);
+
+func add(a: int, b: int) : int {
+    let c: int  = a + b;
 }
+
+func main(a: int) : int {
+    add(4, 1);
+}
+
 

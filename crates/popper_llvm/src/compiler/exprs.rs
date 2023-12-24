@@ -28,6 +28,16 @@ impl<'ctx> LLVMCompiler<'ctx> {
                     (PopObject::Float(_, v1), PopObject::Float(_, v2)) => {
                         PopObject::Float(v1.get_type(), self.builder.build_float_add(v1, v2, "add").unwrap())
                     },
+                    (PopObject::Ptr(_, v1), PopObject::Int(_, v2)) => {
+                        PopObject::Ptr(v1.get_type(), self.builder.build_int_add(v1, v2.const_to_pointer(v1.get_type()), "add").unwrap())
+                    },
+                    (PopObject::Int(_, v1), PopObject::Ptr(_, v2)) => {
+                        PopObject::Ptr(v2.get_type(), self.builder.build_int_add(v1.const_to_pointer(v2.get_type()), v2, "add").unwrap())
+                    },
+                    (PopObject::Ptr(_, v1), PopObject::Ptr(_, v2)) => {
+                        PopObject::Ptr(v1.get_type(), self.builder.build_int_add(v1, v2, "add").unwrap())
+                    },
+
                     _ => todo!("BinOp not implemented")
                 }
             },

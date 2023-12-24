@@ -58,7 +58,6 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     let context = Context::create();
     let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
-    compiler.register_builtin();
     let res = compiler.compile(ast);
 
     return res

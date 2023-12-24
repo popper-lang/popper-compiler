@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Display;
 use popper_ast::{Type, TypeKind};
 
@@ -10,7 +11,8 @@ pub enum ValueFlag {
     Boolean,
     None,
     Array(Box<ValueFlag>),
-    Function(Vec<ValueFlag>, Box<ValueFlag>)
+    Function(Vec<ValueFlag>, Box<ValueFlag>),
+    Module(HashMap<String, String>)
 }
 
 impl Display for ValueFlag {
@@ -31,7 +33,8 @@ impl Display for ValueFlag {
                 args_string.pop();
                 args_string.pop();
                 write!(f, "func({}): {}", args_string, returntype.to_string())
-            }
+            },
+            ValueFlag::Module(hash) => write!(f, "module({:?})", hash)
         }
     }
 }

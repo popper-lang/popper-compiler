@@ -45,7 +45,8 @@ pub enum TypeKind {
     /// `char`
     Char,
     /// `string`
-    String
+    String,
+
 }
 
 impl ToString for TypeKind {

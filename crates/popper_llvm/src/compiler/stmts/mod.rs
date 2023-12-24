@@ -1,6 +1,7 @@
 mod let_stmt;
 mod block_stmt;
 mod function_stmt;
+mod import_stmt;
 
 use crate::compiler::LLVMCompiler;
 use popper_ast::Statement;
@@ -20,7 +21,8 @@ impl<'ctx> LLVMCompiler<'ctx> {
                 self.compile_block(block);
             },
             Statement::Function(func) => self.compile_function(func),
-            _ => todo!("Statement not implemented")
+            Statement::Import(import_stmt) => self.compile_import_stmt(import_stmt),
+            e => todo!("Statement not implemented: {:?}", e)
         }
     }
 

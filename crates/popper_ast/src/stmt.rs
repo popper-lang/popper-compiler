@@ -7,6 +7,7 @@ use crate::IfElse;
 use crate::Function;
 use crate::Return;
 use crate::Span;
+use crate::ImportStmt;
 
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -21,6 +22,7 @@ pub enum Statement {
     IfElse(IfElse),
     Function(Function),
     Return(Return),
+    Import(ImportStmt),
 }
 
 impl Statement {
@@ -33,7 +35,8 @@ impl Statement {
             Statement::If(if_stmt) => if_stmt.span(),
             Statement::IfElse(if_else_stmt) => if_else_stmt.span(),
             Statement::Function(fn_stmt) => fn_stmt.span(),
-            Statement::Return(ret_stmt) => ret_stmt.span()
+            Statement::Return(ret_stmt) => ret_stmt.span(),
+            Statement::Import(import_stmt) => import_stmt.span(),
         }
     }
 }

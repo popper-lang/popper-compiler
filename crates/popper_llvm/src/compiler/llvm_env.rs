@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::object::pop_pointer::PopPointer;
 
+#[derive(Debug)]
 pub struct LLVMEnv<'ctx> {
     var: HashMap<String, PopPointer<'ctx>>
 }

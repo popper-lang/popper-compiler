@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use popper_ast::*;
 
-use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error};
+use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, modulenotfound::ModuleNotFound, Error};
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
 use popper_builtin::builtins;
+use popper_module::{StdModuleLoader, stmt_path_to_path, ModuleLoader};
 
 #[derive(Clone)]
 pub struct StmtAnalyzer {
@@ -15,20 +16,7 @@ pub struct StmtAnalyzer {
 
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
-        let builtins = builtins();
         let mut env= env.clone();
-
-        for builtin in builtins {
-            if ! env.exist(builtin.lang_name()) {
-                let var = VariableFlag::new(builtin.lang_name(),
-                                            SymbolFlags::new(Span::new(0, 0))
-                                                .add_flag(
-                                                    Flag::Value(builtin.to_value_flag())
-                                                ).clone(), ScopeFlag::Global, false, Span::new(0, 0));
-
-                env.add_variable(var);
-            }
-        }
         Self { env , current_scope: ScopeFlag::Global }
     }
 }
@@ -216,6 +204,49 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(SymbolFlags::new(return_expr.span))
     }
 
+    fn visit_import(&mut self, import: ImportStmt) -> Result<Self::Output, Self::Error> {
+        let module_name = &import.path.segments.first().unwrap().name;
+
+        if module_name == "stdlib" {
+            StdModuleLoader.sign_fn(import.path.clone())
+                .into_iter()
+                .for_each(|fn_sign| {
+                    let fn_name = fn_sign.name.clone();
+                    let args: HashMap<String, ValueFlag> = fn_sign.arguments.args.iter().map(|arg| {
+                        let expr_analyser = ExprAnalyzer::new(self.env.clone());
+                        (arg.name.clone(), expr_analyser.get_type(arg.ty.clone()))
+                    }).collect();
+
+                    let return_type = {
+                        let expr_analyser = ExprAnalyzer::new(self.env.clone());
+                        Box::new(expr_analyser.get_type(fn_sign.returntype.clone()))
+                    };
+
+                    let value_flag = ValueFlag::Function(args.values().cloned().collect(), return_type);
+                    let mut flag = SymbolFlags::new(import.span);
+                    flag.add_flag(Flag::Value(value_flag));
+
+                    let variable = VariableFlag::new(
+                        fn_name,
+                        flag.clone(),
+                        self.current_scope.clone(),
+                        false,
+                        import.span
+                    );
+
+                    self.env.add_variable(variable);
+
+
+                });
+            Ok(SymbolFlags::new(import.span))
+        } else {
+            todo!("importing from other modules is not supported yet")
+        }
+
+
+
+    }
+
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
             Statement::Expression(expr) => self.visit_expr_stmt(expr),
@@ -225,7 +256,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
             Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
             Statement::Function(fn_stmt) => self.visit_function(fn_stmt),
-            Statement::Return(ret_stmt) => self.visit_return(ret_stmt)
+            Statement::Return(ret_stmt) => self.visit_return(ret_stmt),
+            Statement::Import(import) => self.visit_import(import),
         }
     }
 

@@ -1,6 +1,7 @@
 use inkwell::types::PointerType;
 use inkwell::values::PointerValue;
 
+#[derive(Debug)]
 pub struct PopPointer<'ctx> {
     pub(crate) ty: PointerType<'ctx>,
     pub(crate) value: PointerValue<'ctx>

@@ -2,13 +2,15 @@ pub mod alreadyexist;
 pub mod diff_length_of_argument;
 pub mod namenotfound;
 pub mod typemismatch;
+pub mod modulenotfound;
 
 use ariadne::{Color, Source};
+use std::fmt::Debug;
 
 pub type ColorConfig = std::collections::HashMap<String, Color>;
 
 /// error trait for `Popper Lang`, all error in `Popper-Lang` will implement this trait
-pub trait Error {
+pub trait Error: Debug {
     fn report(&self,
               color: ColorConfig,
               source: &str,

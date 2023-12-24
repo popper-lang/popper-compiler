@@ -1,20 +1,24 @@
 ; ModuleID = 'examples/helloworld.pop'
 source_filename = "examples/helloworld.pop"
 
-@format_string = private constant [4 x i8] c"%d\0A\00"
-
-declare i32 @printf(i8*, ...)
-
-define i32 @print(i32 %0) {
+define i32 @add(i32 %0, i32 %1) {
 entry:
-  %printf_call = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @format_string, i32 0, i32 0), i32 %0)
-  
-  ret i32 0
+  %alloca = alloca i32, align 4
+  store i32 %0, ptr %alloca, align 4
+  %alloca1 = alloca i32, align 4
+  store i32 %1, ptr %alloca1, align 4
+  %load = load ptr, ptr %alloca, align 8
+  %load2 = load ptr, ptr %alloca1, align 8
+  %add = add ptr %load, %load2
+  %let_c = alloca i32, align 4
+  store ptr %add, ptr %let_c, align 8
 }
 
 define i32 @main(i32 %0) {
 entry:
-  %call = call i32 @print(i32 99)
+  %alloca = alloca i32, align 4
+  store i32 %0, ptr %alloca, align 4
+  %call = call i32 @add(i32 4, i32 1)
   ret i32 0
 }
 

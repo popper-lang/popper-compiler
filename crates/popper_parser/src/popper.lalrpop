@@ -21,6 +21,8 @@ use popper_ast::Arguments;
 use popper_ast::Function;
 use popper_ast::Call;
 use popper_ast::Return;
+use popper_ast::PathImport;
+use popper_ast::ImportStmt;
 
 grammar<'a>;
 
@@ -271,6 +273,43 @@ Function: Statement = {
     }
 }
 
+PathStmt: Vec<Ident> = {
+    <t:Ident> "." <ts:PathStmt> => {
+        let mut vec = vec![t];
+        vec.extend(ts);
+        vec
+    },
+    <t:Ident> => vec![t]
+}
+
+Path: PathImport = {
+    <t:Span<PathStmt>> => {
+        PathImport::new(
+            t.0,
+            t.1
+        )
+    }
+}
+
+ImportStmt: PathImport = {
+    "import" <t:Path>  => {
+        t
+    }
+}
+
+Import : Statement = {
+    <t:Span<ImportStmt>> ";" => {
+        Statement::Import(
+            ImportStmt::new(
+                t.0,
+                t.1
+            )
+        )
+    }
+}
+
+
+
 Ident: Ident = {
     <t:Span<Chars>> => {
         Ident::new(
@@ -335,6 +374,7 @@ Statement: Statement = {
     If,
     Function,
     Return,
+    Import,
     <e:Expr> ";" =>  Statement::Expression(e)
 }
 
