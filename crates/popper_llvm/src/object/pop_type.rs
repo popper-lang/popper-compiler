@@ -2,6 +2,8 @@ use inkwell::context::Context;
 use inkwell::types::{BasicMetadataTypeEnum, BasicTypeEnum};
 use popper_ast::TypeKind;
 
+
+#[derive(Debug, Clone, Copy)]
 pub enum PopType {
     Int,
     Float,

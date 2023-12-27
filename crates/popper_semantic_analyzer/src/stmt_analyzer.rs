@@ -5,8 +5,8 @@ use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, modul
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
-use popper_builtin::builtins;
-use popper_module::{StdModuleLoader, stmt_path_to_path, ModuleLoader};
+use popper_module::{load_builtins, BuiltinFunctions};
+
 
 #[derive(Clone)]
 pub struct StmtAnalyzer {
@@ -18,6 +18,31 @@ impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
         let mut env= env.clone();
         Self { env , current_scope: ScopeFlag::Global }
+    }
+
+    pub fn init_builtins(&mut self) {
+        let builtins = load_builtins();
+
+        for builtin in builtins {
+            let sign_fn = builtin.sign_fn();
+            let args: Vec<ValueFlag> = sign_fn
+                .arguments
+                .args
+                .iter()
+                .map(|x| {
+                    let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                    expr_analyzer.get_type(x.ty.clone())
+                })
+                .collect();
+
+            let return_type = {
+                let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                expr_analyzer.get_type(sign_fn.returntype.clone())
+            };
+
+            let var = VariableFlag::new(sign_fn.name, SymbolFlags::new(sign_fn.span).set_function(args, return_type).clone(), ScopeFlag::Global, false, Default::default());
+            self.env.add_variable(var);
+        }
     }
 }
 
@@ -205,46 +230,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_import(&mut self, import: ImportStmt) -> Result<Self::Output, Self::Error> {
-        let module_name = &import.path.segments.first().unwrap().name;
-
-        if module_name == "stdlib" {
-            StdModuleLoader.sign_fn(import.path.clone())
-                .into_iter()
-                .for_each(|fn_sign| {
-                    let fn_name = fn_sign.name.clone();
-                    let args: HashMap<String, ValueFlag> = fn_sign.arguments.args.iter().map(|arg| {
-                        let expr_analyser = ExprAnalyzer::new(self.env.clone());
-                        (arg.name.clone(), expr_analyser.get_type(arg.ty.clone()))
-                    }).collect();
-
-                    let return_type = {
-                        let expr_analyser = ExprAnalyzer::new(self.env.clone());
-                        Box::new(expr_analyser.get_type(fn_sign.returntype.clone()))
-                    };
-
-                    let value_flag = ValueFlag::Function(args.values().cloned().collect(), return_type);
-                    let mut flag = SymbolFlags::new(import.span);
-                    flag.add_flag(Flag::Value(value_flag));
-
-                    let variable = VariableFlag::new(
-                        fn_name,
-                        flag.clone(),
-                        self.current_scope.clone(),
-                        false,
-                        import.span
-                    );
-
-                    self.env.add_variable(variable);
-
-
-                });
-            Ok(SymbolFlags::new(import.span))
-        } else {
-            todo!("importing from other modules is not supported yet")
-        }
-
-
-
+        todo!()
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {

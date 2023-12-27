@@ -1,3 +1,4 @@
+use inkwell::values::{BasicValue, BasicValueEnum};
 use crate::compiler::LLVMCompiler;
 
 use popper_ast::Constant;
@@ -18,11 +19,9 @@ impl<'ctx> LLVMCompiler<'ctx> {
         PopObject::Float(ty, float_value)
     }
 
-    pub fn compile_string(&self, value: String) -> PopObject {
-        let cstring = std::ffi::CString::new(value).expect("Cast failed");
-        let bytes: &[u8] = cstring.as_bytes_with_nul();
-        let array_value = self.context.const_string(bytes, false);
-        PopObject::String(PopString::from_array_value(array_value))
+    pub unsafe fn compile_string(&self, value: String) -> PopObject {
+        let global = self.builder.build_global_string(value.as_str(), ".str").unwrap();
+        PopObject::String(PopString::new(global))
     }
 
     pub fn compile_bool(&self, value: bool) -> PopObject {
@@ -35,14 +34,12 @@ impl<'ctx> LLVMCompiler<'ctx> {
         match constant {
             Constant::Int(int) => self.compile_int(int.value as i32),
             Constant::Float(float) => self.compile_float(float.value as f32),
-            Constant::StringLiteral(string) => self.compile_string(string.value),
+            Constant::StringLiteral(string) => unsafe { self.compile_string(string.value) } ,
             Constant::Bool(boolean) => self.compile_bool(boolean.value),
             Constant::Ident(ident) => {
-                let ptr = self.env.get(ident.name).unwrap();
-                let ptr = ptr.value;
-                let ty = ptr.get_type();
-                let val = self.builder.build_load(ty, ptr, "load").unwrap();
-                PopObject::from_basic_value_enum(val)
+                let obj = self.env.get(ident.name).unwrap();
+
+                obj.clone()
             },
             _ => todo!("Constant not implemented")
         }

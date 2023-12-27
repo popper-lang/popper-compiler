@@ -1,10 +1,12 @@
 
 func add(a: int, b: int) : int {
-    let c: int  = a + b;
+    let c: int = a + b;
+    return c;
 }
 
 func main(a: int) : int {
     add(4, 1);
+    print("Hello World");
 }
 
 

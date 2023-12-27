@@ -1,8 +1,10 @@
-use inkwell::types::{FloatType, FunctionType, IntType, PointerType};
-use inkwell::values::{BasicValueEnum, FloatValue, FunctionValue, IntValue, PointerValue};
+use inkwell::builder::Builder;
+use inkwell::types::{BasicTypeEnum, FloatType, FunctionType, IntType, PointerType};
+use inkwell::values::{BasicValue, BasicValueEnum, FloatValue, FunctionValue, IntValue, PointerValue};
 use inkwell::context::Context;
 use crate::object::pop_string::PopString;
 
+#[derive(Debug, Clone)]
 pub enum PopObject<'a> {
     Int(IntType<'a>, IntValue<'a>),
     Bool(IntType<'a>, IntValue<'a>),
@@ -32,13 +34,7 @@ impl<'a> PopObject<'a> {
         PopObject::Float(ty, val)
     }
 
-    pub fn new_string(context: &'a Context, string: String) -> Self {
-        PopObject::String(
-            PopString::from_string(context, string)
-        )
-    }
-
-    pub fn new_ptr(_context: &'a Context, ptr: PointerValue<'a>) -> Self {
+    pub fn new_ptr(ptr: PointerValue<'a>) -> Self {
         PopObject::Ptr(ptr.get_type(), ptr)
     }
 
@@ -50,9 +46,8 @@ impl<'a> PopObject<'a> {
         match basic_enum {
             BasicValueEnum::IntValue(int) => PopObject::Int(int.get_type(), int),
             BasicValueEnum::FloatValue(float) => PopObject::Float(float.get_type(), float),
-            BasicValueEnum::ArrayValue(string) => PopObject::String(PopString::from_array_value(string)),
             BasicValueEnum::PointerValue(ptr) => PopObject::Ptr(ptr.get_type(), ptr),
-            _ => panic!("Unknown type")
+            _ => panic!("Unknown type(from_basic_value_enum)")
         }
     }
     pub fn to_basic_value_enum(&self) -> BasicValueEnum {
@@ -60,8 +55,28 @@ impl<'a> PopObject<'a> {
             PopObject::Int(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Bool(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Float(_, float) => BasicValueEnum::FloatValue(*float),
-            PopObject::String(string) => BasicValueEnum::ArrayValue(string.array_value),
+            PopObject::String(string) => string.global_value.as_basic_value_enum(),
             PopObject::Ptr(_, ptr) => BasicValueEnum::PointerValue(*ptr),
+            _ => panic!("Unknown type(to_basic_value_enum)")
+        }
+    }
+
+    pub fn into_safe_obj(&self, builder: &Builder<'a>) -> PopObject<'a> {
+        if let PopObject::Ptr(ty, ptr) = self {
+            PopObject::from_basic_value_enum(builder.build_load(*ty, *ptr,  "load")
+                .unwrap()
+                .into())
+        } else {
+            self.clone()
+        }
+    }
+
+    pub fn get_type(&self) -> BasicTypeEnum {
+        match self {
+            PopObject::Int(ty, _) => BasicTypeEnum::IntType(*ty),
+            PopObject::Bool(ty, _) => BasicTypeEnum::IntType(*ty),
+            PopObject::Float(ty, _) => BasicTypeEnum::FloatType(*ty),
+            PopObject::Ptr(ty, _) => BasicTypeEnum::PointerType(*ty),
             _ => panic!("Unknown type")
         }
     }

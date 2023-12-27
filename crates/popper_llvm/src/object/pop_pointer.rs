@@ -1,5 +1,5 @@
 use inkwell::types::PointerType;
-use inkwell::values::PointerValue;
+use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
 
 #[derive(Debug)]
 pub struct PopPointer<'ctx> {
@@ -21,4 +21,9 @@ impl<'ctx> PopPointer<'ctx> {
             value
         }
     }
+
+    pub fn get_type(&self) -> PointerType<'ctx> {
+        self.ty
+    }
+
 }

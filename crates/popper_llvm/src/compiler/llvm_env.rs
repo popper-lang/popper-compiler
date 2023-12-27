@@ -1,9 +1,10 @@
 use std::collections::HashMap;
+use crate::object::pop_object::PopObject;
 use crate::object::pop_pointer::PopPointer;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LLVMEnv<'ctx> {
-    var: HashMap<String, PopPointer<'ctx>>
+    var: HashMap<String, PopObject<'ctx>>
 }
 
 impl<'ctx> LLVMEnv<'ctx> {
@@ -13,11 +14,11 @@ impl<'ctx> LLVMEnv<'ctx> {
         }
     }
 
-    pub fn get(&self, name: String) -> Option<&PopPointer> {
+    pub fn get(&self, name: String) -> Option<&PopObject> {
         self.var.get(&name)
     }
 
-    pub fn set(&mut self, name: String, ptr: PopPointer<'ctx>) {
-        self.var.insert(name, ptr);
+    pub fn set(&mut self, name: String, obj: PopObject<'ctx>) {
+        self.var.insert(name, obj);
     }
 }
