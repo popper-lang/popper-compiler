@@ -5,7 +5,7 @@ use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, modul
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
-use popper_module::{load_builtins, BuiltinFunctions};
+use popper_builtins::{load_builtins, BuiltinFunctions};
 
 
 #[derive(Clone)]

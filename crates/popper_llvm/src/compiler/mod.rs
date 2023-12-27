@@ -13,7 +13,6 @@ use popper_ast::{Statement};
 use crate::object::pop_object::PopObject;
 
 use crate::object::pop_pointer::PopPointer;
-use popper_module::BUILTINS_NAMES;
 
 
 pub mod llvm_env;
@@ -30,7 +29,6 @@ pub struct LLVMCompiler<'ctx> {
     module: Module<'ctx>,
     current_basic_block: Option<BasicBlock<'ctx>>,
     current_function: &'ctx str,
-    builtins_name: Vec<&'ctx str>,
     filename: &'ctx str,
 }
 
@@ -41,7 +39,6 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let module = context.create_module(filename);
         let current_basic_block = None;
         let current_function = "main";
-        let builtins_name = BUILTINS_NAMES.iter().map(|x| *x).collect();
 
 
         LLVMCompiler {
@@ -52,7 +49,6 @@ impl<'ctx> LLVMCompiler<'ctx> {
             current_basic_block,
             current_function,
             filename,
-            builtins_name,
         }
     }
 
