@@ -12,7 +12,6 @@ popper_ast = { path = "crates/popper_ast" }
 popper_llvm = { path = "crates/popper_llvm" }
 popper_common = { path = "crates/popper_common" }
 popper_error = { path = "crates/popper_error" }
-popper_asm = { git = "https://github.com/popper-lang/popper-asm.git" }
 
 
 [patch."https://github.com/popper-lang/popper-asm.git"]

@@ -1,0 +1,15 @@
+@nix { "action": "setPhase", "phase": "unpackPhase" }
+Running phase: unpackPhase
+unpacking source archive /nix/store/ai576gjihplm0zcy2ivfnxzlw6v67rsl-source
+source root is source
+@nix { "action": "setPhase", "phase": "patchPhase" }
+Running phase: patchPhase
+@nix { "action": "setPhase", "phase": "configurePhase" }
+Running phase: configurePhase
+no configure script, doing nothing
+@nix { "action": "setPhase", "phase": "buildPhase" }
+Running phase: buildPhase
+no Makefile or custom buildPhase, doing nothing
+@nix { "action": "setPhase", "phase": "installPhase" }
+Running phase: installPhase
+[31m[1merror: (B[mcould not create home directory: '/homeless-shelter/.rustup': Read-only file system (os error 30)
