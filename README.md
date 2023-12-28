@@ -1,21 +1,24 @@
-# Popper Compiler
-le Popper Compiler est un outil qui compile le source code de Popper-lang en Machine Code Popper
 
-# Installation
-To use Popper, you must first install the Popper compiler. You can do this by cloning the official Github repository and installing from the sources.
+# The Popper Language
 
-```bash
-git clone https://github.com/popper-lang/popper-lang.git
-cd popper-lang
-cargo build --release
-```
+Popper Language is a language created by NightProg. It's easy to use and doesn't require much knowledge.
 
-# Todo
- * ✅ Lexer & Parser (with help of the library [lalrpop](https://github.com/lalrpop/lalrpop) )
- * ✅ Semantical Analizer (Work-in-progress)
- * ✅ SAC ( Simple Asm Compiler using [Popper-asm](https://github.com/popper-lang/popper-asm) )
-Actually all step are  complet
+## Badges
 
-# Info
-if you want information how this langage work you can read [STEP.md](STEP.md)
 
+[![Language](https://img.shields.io/badge/Langage-Rust-blue?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org)
+
+[![Stars](https://img.shields.io/github/stars/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/stargazers)
+
+[![Fork](https://img.shields.io/github/forks/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/forks) 
+
+[![Issue](https://img.shields.io/github/issues/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/issues)
+
+[![Pull Request](https://img.shields.io/github/issues-pr/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/pulls)
+
+[![License](https://img.shields.io/github/license/popper-lang/popper-compiler.svg?style=for-the-badge&logo=gnu)](https://www.gnu.org/licenses/gpl-3.0.html)
+
+
+## Stats
+
+![Stats](https://starchart.cc/popper-lang/popper-compiler.svg)
