@@ -1,15 +1,6 @@
-
-
-
-func main(a: int) : int {
-    let d: string 5 = "hello";
-    let k: string 5 = "world";
-    let x: string 3 = "hie";
-    print(d);
-    print(k);
-    print(x);
-    let k: int = print("Hello World");
-    return 2 + 1;
+func main(a: int): int {
+	print("Hello, World!");
+	print("Foo");
+	print("Br");
+	return 0;
 }
-
-
