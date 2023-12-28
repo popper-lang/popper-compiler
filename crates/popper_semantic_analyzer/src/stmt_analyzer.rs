@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use popper_ast::*;
 
-use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, modulenotfound::ModuleNotFound, Error};
+use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error};
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
-use popper_builtins::{load_builtins, BuiltinFunctions};
+use popper_builtins::load_builtins;
 
 
 #[derive(Clone)]
@@ -16,7 +16,6 @@ pub struct StmtAnalyzer {
 
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
-        let mut env= env.clone();
         Self { env , current_scope: ScopeFlag::Global }
     }
 
@@ -229,7 +228,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(SymbolFlags::new(return_expr.span))
     }
 
-    fn visit_import(&mut self, import: ImportStmt) -> Result<Self::Output, Self::Error> {
+    fn visit_import(&mut self, _import: ImportStmt) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 

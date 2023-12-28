@@ -77,7 +77,7 @@ impl ExprVisitor for ExprAnalyzer {
                     None => {
                          let name_candidates = self.env.get_all_variables_name();
 
-                        let similar_name = find_similar_name(name_candidates.as_slice().clone(), ident.name.as_str());
+                        let similar_name = find_similar_name(name_candidates.as_slice(), ident.name.as_str());
 
                         Err(
                             Box::new(
@@ -202,8 +202,7 @@ impl ExprVisitor for ExprAnalyzer {
             },
             None => {
                 let name_candidates = self.env.get_all_variables_name();
-
-                let similar_name = find_similar_name(name_candidates.as_slice().clone(), call.name.as_str());
+                let similar_name = find_similar_name(name_candidates.as_slice(), call.name.as_str());
 
                 Err(
                     Box::new(
