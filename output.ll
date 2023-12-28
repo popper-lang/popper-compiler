@@ -38,14 +38,16 @@ entry:
   store [6 x i8] c"world\00", ptr %let_k, align 1
   %let_x = alloca [4 x i8], align 1
   store [4 x i8] c"hie\00", ptr %let_x, align 1
-  %call = call i32 @print(ptr %let_d)
-  %call1 = call i32 @print(ptr %let_k)
-  %call2 = call i32 @print(ptr %let_x)
+  %call_print_ = call i32 @print(ptr %let_d)
+  %call_print_1 = call i32 @print(ptr %let_k)
+  %call_print_2 = call i32 @print(ptr %let_x)
   %string_literal = alloca [12 x i8], align 1
   store [12 x i8] c"Hello World\00", ptr %string_literal, align 1
-  %call3 = call i32 @print(ptr %string_literal)
-  %return = alloca i32, align 4
-  store i32 0, ptr %return, align 4
+  %call_print_3 = call i32 @print(ptr %string_literal)
+  %let_k4 = alloca i32, align 4
+  store i32 %call_print_3, ptr %let_k4, align 4
+  %return = alloca ptr, align 8
+  store i32 3, ptr %return, align 4
   ret ptr %return
 }
 

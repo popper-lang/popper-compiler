@@ -71,8 +71,8 @@ impl<'ctx> LLVMCompiler<'ctx> {
                 arg.into()
             })
             .collect();
-        let _ret = self.builder.build_call(func, args.as_slice(), "call").unwrap();
-        PopObject::new_int(self.context, 3)
+        let ret = self.builder.build_call(func, args.as_slice(), format!("call_{}_", call.name).as_str()).unwrap();
+        PopObject::from_basic_value_enum(ret.try_as_basic_value().left().unwrap())
     }
 
     pub fn compile_expr(&self, expr: Expression) -> PopObject {

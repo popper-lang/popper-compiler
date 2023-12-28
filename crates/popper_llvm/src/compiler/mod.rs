@@ -64,17 +64,6 @@ impl<'ctx> LLVMCompiler<'ctx> {
     }
 
     pub fn build(&self) -> String {
-        self.builder.build_return(
-            Some(&BasicValueEnum::PointerValue({
-                let i32_type = self.context.i32_type();
-                let zero = i32_type.const_int(0, false);
-                let ptr = self.builder.build_alloca(i32_type, "return").unwrap();
-                self.builder.build_store(ptr, zero);
-                ptr
-            }
-
-            ))
-        );
         self.module.print_to_string().to_string()
     }
 

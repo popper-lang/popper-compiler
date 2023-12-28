@@ -55,7 +55,7 @@ impl<'ctx> BuiltinFunctions<'ctx> for Print {
                 ],
                 Default::default()
             ),
-            Type::new(Default::default(), TypeKind::Unit, Vec::new()),
+            Type::new(Default::default(), TypeKind::Int, Vec::new()),
             vec![],
             Default::default()
         )
