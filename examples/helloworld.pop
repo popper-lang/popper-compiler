@@ -1,11 +1,13 @@
 
-func add(a: int, b: int) : int {
-    let c: int = a + b;
-    return c;
-}
+
 
 func main(a: int) : int {
-    add(4, 1);
+    let d: string 5 = "hello";
+    let k: string 5 = "world";
+    let x: string 3 = "hie";
+    print(d);
+    print(k);
+    print(x);
     print("Hello World");
 }
 

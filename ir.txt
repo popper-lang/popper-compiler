@@ -1,0 +1,14 @@
+
+
+func add(a: int, b: int): int {
+    return a + b
+}
+
+@from core.stable.int @type int_32 @as int;
+
+@from core.stable.functions @type functions_ar;
+
+@define functions_ar<(int, int), int> $add {
+    local $0 = %0 + %1;
+    ret $0;
+}

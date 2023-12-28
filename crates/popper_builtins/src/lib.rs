@@ -30,7 +30,7 @@ impl<'ctx> BuiltinFunctions<'ctx> for Print {
         let i32_zero = i32_type.const_int(0, false);
         let i8_type = context.i8_type();
         let fmt_string = builder.build_global_string_ptr("%s\n", "fmt").unwrap();
-        let ptr = builder.build_alloca(i8_type.ptr_type(AddressSpace::from(u16::MAX)), "ptr").unwrap();
+        let ptr = builder.build_alloca(i8_type.ptr_type(Default::default()), "ptr").unwrap();
         builder.build_store(ptr, function.get_nth_param(0).unwrap()).unwrap();
         let _ = builder.build_call(
             module.get_function("printf").unwrap(),
@@ -49,7 +49,7 @@ impl<'ctx> BuiltinFunctions<'ctx> for Print {
             Arguments::new(
                 vec![
                     Argument::new("string".to_string(),
-                                  Type::new(Default::default(), TypeKind::String, Default::default()),
+                                  Type::new(Default::default(), TypeKind::String(u32::MAX), Default::default()),
                                     Default::default()
                     )
                 ],

@@ -98,10 +98,14 @@ GenericTypes: (Type, Vec<Type>) = {
     }
 }
 
+StringType: TypeKind = {
+    "string"  <t:Num> => TypeKind::String(t as u32)
+}
+
 Types: Type = {
     <int:Span<"int">> => Type::new(int.0, TypeKind::Int, vec![]),
     <bool:Span<"bool">> => Type::new(bool.0, TypeKind::Bool, vec![]),
-    <str:Span<"string">> => Type::new(str.0, TypeKind::String, vec![]),
+    <str:Span<StringType>> => Type::new(str.0, str.1, vec![]),
     <unit:Span<"unit">> => Type::new(unit.0, TypeKind::Unit, vec![]),
     <generic:Span<GenericTypes>> => {
         Type::new(generic.0, generic.1.0.type_kind, generic.1.1)

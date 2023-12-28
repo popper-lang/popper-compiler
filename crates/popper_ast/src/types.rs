@@ -45,7 +45,7 @@ pub enum TypeKind {
     /// `char`
     Char,
     /// `string`
-    String,
+    String(u32), // u32: size of string
 
 }
 
@@ -86,7 +86,8 @@ impl ToString for TypeKind {
             TypeKind::Float => String::from("float"),
             TypeKind::Bool => String::from("bool"),
             TypeKind::Char => String::from("char"),
-            TypeKind::String => String::from("string")
+            TypeKind::String(len) => format!("string:{}", len),
         }
     }
 }
+

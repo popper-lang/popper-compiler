@@ -3,11 +3,11 @@ use std::fmt::Display;
 use popper_ast::{Type, TypeKind};
 
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub enum ValueFlag {
     Integer,
     Float,
-    String,
+    String(u32),
     Boolean,
     None,
     Array(Box<ValueFlag>),
@@ -20,7 +20,7 @@ impl Display for ValueFlag {
         match self {
             ValueFlag::Integer => write!(f, "int"),
             ValueFlag::Float => write!(f, "float"),
-            ValueFlag::String => write!(f, "string"),
+            ValueFlag::String(len) => write!(f, "string:{}", len),
             ValueFlag::Boolean => write!(f, "bool"),
             ValueFlag::None => write!(f, "unit"),
             ValueFlag::Array(t) => write!(f, "[{}]", t.to_string()),
@@ -42,7 +42,7 @@ impl Display for ValueFlag {
 impl ValueFlag {
     pub fn from_ty_kind(ty: TypeKind) -> Self {
         match ty {
-            TypeKind::String => ValueFlag::String,
+            TypeKind::String(len) => ValueFlag::String(len),
             TypeKind::Bool => ValueFlag::Boolean,
             TypeKind::Int => ValueFlag::Integer,
             TypeKind::Unit => ValueFlag::None,
@@ -64,5 +64,23 @@ impl ValueFlag {
 
     pub fn from_ty(ty: Type) -> Self {
         Self::from_ty_kind(ty.type_kind)
+    }
+}
+
+impl PartialEq for ValueFlag {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ValueFlag::Integer, ValueFlag::Integer) => true,
+            (ValueFlag::Float, ValueFlag::Float) => true,
+            (ValueFlag::String(len1), ValueFlag::String(len2)) => true,
+            (ValueFlag::Boolean, ValueFlag::Boolean) => true,
+            (ValueFlag::None, ValueFlag::None) => true,
+            (ValueFlag::Array(ty1), ValueFlag::Array(ty2)) => ty1 == ty2,
+            (ValueFlag::Function(args1, ret1), ValueFlag::Function(args2, ret2)) => {
+                args1 == args2 && ret1 == ret2
+            },
+            (ValueFlag::Module(hash1), ValueFlag::Module(hash2)) => hash1 == hash2,
+            _ => false
+        }
     }
 }

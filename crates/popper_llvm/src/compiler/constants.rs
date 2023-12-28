@@ -1,4 +1,4 @@
-use inkwell::values::{BasicValue, BasicValueEnum};
+use inkwell::values::{BasicValue, BasicValueEnum, IntValue};
 use crate::compiler::LLVMCompiler;
 
 use popper_ast::Constant;
@@ -20,8 +20,9 @@ impl<'ctx> LLVMCompiler<'ctx> {
     }
 
     pub unsafe fn compile_string(&self, value: String) -> PopObject {
-        let global = self.builder.build_global_string(value.as_str(), ".str").unwrap();
-        PopObject::String(PopString::new(global))
+        let bytes = value.as_bytes();
+        let value = self.context.const_string(bytes, true);
+        PopObject::String(PopString::new(value.get_type(), value))
     }
 
     pub fn compile_bool(&self, value: bool) -> PopObject {

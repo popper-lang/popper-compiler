@@ -1,5 +1,5 @@
 use inkwell::builder::Builder;
-use inkwell::types::{BasicTypeEnum, FloatType, FunctionType, IntType, PointerType};
+use inkwell::types::{BasicType, BasicTypeEnum, FloatType, FunctionType, IntType, PointerType};
 use inkwell::values::{BasicValue, BasicValueEnum, FloatValue, FunctionValue, IntValue, PointerValue};
 use inkwell::context::Context;
 use crate::object::pop_string::PopString;
@@ -55,7 +55,7 @@ impl<'a> PopObject<'a> {
             PopObject::Int(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Bool(_, int) => BasicValueEnum::IntValue(*int),
             PopObject::Float(_, float) => BasicValueEnum::FloatValue(*float),
-            PopObject::String(string) => string.global_value.as_basic_value_enum(),
+            PopObject::String(string) => string.array_value.as_basic_value_enum(),
             PopObject::Ptr(_, ptr) => BasicValueEnum::PointerValue(*ptr),
             _ => panic!("Unknown type(to_basic_value_enum)")
         }
@@ -71,12 +71,29 @@ impl<'a> PopObject<'a> {
         }
     }
 
-    pub fn get_type(&self) -> BasicTypeEnum {
+    pub fn is_constant_global(&self) -> bool {
         match self {
-            PopObject::Int(ty, _) => BasicTypeEnum::IntType(*ty),
-            PopObject::Bool(ty, _) => BasicTypeEnum::IntType(*ty),
-            PopObject::Float(ty, _) => BasicTypeEnum::FloatType(*ty),
-            PopObject::Ptr(ty, _) => BasicTypeEnum::PointerType(*ty),
+            PopObject::String(_) => true,
+            _ => false
+        }
+    }
+
+    pub fn get_type(self) -> BasicTypeEnum<'a> {
+        match self {
+            PopObject::Int(ty, _) => BasicTypeEnum::IntType(ty),
+            PopObject::Bool(ty, _) => BasicTypeEnum::IntType(ty),
+            PopObject::Float(ty, _) => BasicTypeEnum::FloatType(ty),
+            PopObject::Ptr(ty, _) => BasicTypeEnum::PointerType(ty),
+            PopObject::String(string) => string.array_ty.as_basic_type_enum(),
+            _ => panic!("Unknown type")
+        }
+    }
+
+    pub fn cast_to_ptr(&self, context: &'a Context, builder: &'a Builder<'a>) -> PointerValue<'a> {
+        match self {
+            PopObject::Int(ty, int) => builder.build_int_to_ptr(*int, ty.ptr_type(Default::default()), "int_to_ptr").unwrap(),
+            PopObject::Ptr(_, ptr) => *ptr,
+            PopObject::String(string) => string.cast_to_ptr(context, builder),
             _ => panic!("Unknown type")
         }
     }

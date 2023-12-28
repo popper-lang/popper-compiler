@@ -48,10 +48,10 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_string(&mut self) -> &mut Self {
+    pub fn set_string(&mut self, size: u32) -> &mut Self {
         self.add_flag(
             Flag::Value(
-                ValueFlag::String
+                ValueFlag::String(size)
             )
         );
         self
@@ -129,7 +129,7 @@ impl SymbolFlags {
     }
 
     pub fn is_string(&self) -> bool {
-        self.symbols.iter().any(|s| s == &Flag::Value(ValueFlag::String))
+        self.symbols.iter().any(|s| matches!(s, Flag::Value(ValueFlag::String(_))))
     }
 
     pub fn is_boolean(&self) -> bool {

@@ -26,7 +26,7 @@ impl ExprAnalyzer {
             TypeKind::Bool => ValueFlag::Boolean,
             TypeKind::Float => ValueFlag::Float,
             TypeKind::Int => ValueFlag::Integer,
-            TypeKind::String => ValueFlag::String,
+            TypeKind::String(size) => ValueFlag::String(size),
             TypeKind::Array(ty, _) => ValueFlag::Array(Box::new(self.get_type(*ty))),
             TypeKind::Function(args, returnty) => {
                 let mut args_type = Vec::new();
@@ -59,7 +59,7 @@ impl ExprVisitor for ExprAnalyzer {
             ),
             Constant::StringLiteral(string) => Ok(
                 SymbolFlags::new(string.span())
-                    .set_string()
+                    .set_string(string.value.len() as u32)
                     .clone()
             ),
             Constant::Bool(bool) => Ok(

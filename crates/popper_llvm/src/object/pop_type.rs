@@ -7,7 +7,7 @@ use popper_ast::TypeKind;
 pub enum PopType {
     Int,
     Float,
-    String,
+    String(u32),
     Boolean
 }
 
@@ -16,7 +16,7 @@ impl<'ctx> PopType {
         match string.as_str() {
             "int" => PopType::Int,
             "float" => PopType::Float,
-            "string" => PopType::String,
+            "string" => PopType::String(0),
             "boolean" => PopType::Boolean,
             _ => panic!("Unknown type")
         }
@@ -26,7 +26,7 @@ impl<'ctx> PopType {
         match ty {
             TypeKind::Int => PopType::Int,
             TypeKind::Float => PopType::Float,
-            TypeKind::String => PopType::String,
+            TypeKind::String(len) => PopType::String(len),
             TypeKind::Bool => PopType::Boolean,
             _ => panic!("Unknown type")
         }
@@ -36,8 +36,8 @@ impl<'ctx> PopType {
         match self {
             PopType::Int => BasicTypeEnum::IntType(context.i32_type()),
             PopType::Float => BasicTypeEnum::FloatType(context.f32_type()),
-            PopType::String => {
-                BasicTypeEnum::ArrayType(context.i8_type().array_type(u32::MAX))
+            PopType::String(len) => {
+                BasicTypeEnum::ArrayType(context.i8_type().array_type(len + 1))
             },
             PopType::Boolean => BasicTypeEnum::IntType(context.bool_type())
         }
@@ -47,10 +47,17 @@ impl<'ctx> PopType {
         match self {
             PopType::Int => BasicMetadataTypeEnum::IntType(context.i32_type()),
             PopType::Float => BasicMetadataTypeEnum::FloatType(context.f32_type()),
-            PopType::String => {
-                BasicMetadataTypeEnum::ArrayType(context.i8_type().array_type(u32::MAX))
+            PopType::String(len) => {
+                BasicMetadataTypeEnum::ArrayType(context.i8_type().array_type(len))
             },
             PopType::Boolean => BasicMetadataTypeEnum::IntType(context.bool_type())
+        }
+    }
+
+    pub fn is_global_val_stored(self) -> bool {
+        match self {
+            PopType::String(_) => true,
+            _ => false
         }
     }
 }
