@@ -1,18 +1,20 @@
+#![allow(dead_code)]
+
 use std::path::Path;
-use inkwell::AddressSpace;
+
 use inkwell::module::Module;
 use inkwell::context::Context;
 use inkwell::builder::Builder;
 use inkwell::basic_block::BasicBlock;
 use inkwell::memory_buffer::MemoryBuffer;
-use inkwell::types::FunctionType;
-use inkwell::values::{BasicValueEnum, IntValue, BasicValue, FunctionValue};
+
+
 
 use llvm_env::LLVMEnv;
 use popper_ast::{Statement};
 use crate::object::pop_object::PopObject;
 
-use crate::object::pop_pointer::PopPointer;
+
 
 
 pub mod llvm_env;
@@ -56,7 +58,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let path = Path::new("stdlib");
         path.read_dir().unwrap().for_each(|x| {
             let path = x.unwrap().path();
-            let filename = path.file_name().unwrap().to_str().unwrap();
+            let _filename = path.file_name().unwrap().to_str().unwrap();
             let buffer = MemoryBuffer::create_from_file(&path).unwrap();
             let module = self.context.create_module_from_ir(buffer).unwrap();
             self.module.link_in_module(module).unwrap();

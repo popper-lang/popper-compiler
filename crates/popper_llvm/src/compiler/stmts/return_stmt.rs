@@ -1,5 +1,5 @@
 use inkwell::types::BasicType;
-use inkwell::values::BasicValueEnum;
+
 use crate::compiler::LLVMCompiler;
 use popper_ast::Return;
 use crate::object::pop_object::PopObject;
@@ -13,6 +13,6 @@ impl<'ctx> LLVMCompiler<'ctx> {
         self.builder.build_store(ptr, value.clone().to_basic_value_enum()).expect("Failed to build store");
         self.builder.build_return(
             Some(&ptr)
-        );
+        ).unwrap();
     }
 }

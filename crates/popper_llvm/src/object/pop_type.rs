@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use inkwell::context::Context;
 use inkwell::types::{BasicMetadataTypeEnum, BasicTypeEnum};
 use popper_ast::TypeKind;

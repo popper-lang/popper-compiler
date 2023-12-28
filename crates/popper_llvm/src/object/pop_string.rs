@@ -1,8 +1,8 @@
-use inkwell::values::{PointerValue, UnnamedAddress};
+use inkwell::values::{PointerValue};
 use inkwell::types::ArrayType;
-use inkwell::values::{ArrayValue, BasicValue, GlobalValue};
+use inkwell::values::{ArrayValue, BasicValue};
 use inkwell::context::Context;
-use std::ffi::CString;
+
 use inkwell::builder::Builder;
 
 #[derive(Debug, Clone)]
@@ -25,9 +25,9 @@ impl<'a> PopString<'a> {
     }
 
     pub fn cast_to_ptr(&self, context: &'a Context, builder: &'a Builder<'a>) -> PointerValue<'a> {
-        let array_ty = context.i8_type().array_type(self.array_ty.len() + 1);
+        let _array_ty = context.i8_type().array_type(self.array_ty.len() + 1);
         let global = builder.build_alloca(self.array_ty, "string_literal").unwrap();
-        builder.build_store(global, self.array_value.as_basic_value_enum());
+        builder.build_store(global, self.array_value.as_basic_value_enum()).unwrap();
         global
     }
 }

@@ -72,7 +72,7 @@ impl PartialEq for ValueFlag {
         match (self, other) {
             (ValueFlag::Integer, ValueFlag::Integer) => true,
             (ValueFlag::Float, ValueFlag::Float) => true,
-            (ValueFlag::String(len1), ValueFlag::String(len2)) => true,
+            (ValueFlag::String(_), ValueFlag::String(_)) => true,
             (ValueFlag::Boolean, ValueFlag::Boolean) => true,
             (ValueFlag::None, ValueFlag::None) => true,
             (ValueFlag::Array(ty1), ValueFlag::Array(ty2)) => ty1 == ty2,

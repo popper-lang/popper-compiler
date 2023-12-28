@@ -2,7 +2,7 @@ use crate::compiler::LLVMCompiler;
 use popper_ast::LetStmt;
 use crate::object::pop_object::PopObject;
 use crate::object::pop_type::PopType;
-use crate::object::pop_pointer::PopPointer;
+
 
 
 impl LLVMCompiler<'_> {
@@ -12,7 +12,7 @@ impl LLVMCompiler<'_> {
         let basic_value = value.to_basic_value_enum();
         let ptr = self.builder.build_alloca(ty.to_llvm_type(&self.context), format!("let_{}", let_stmt.name.name).as_str()).unwrap();
         dbg!(&ptr, &basic_value);
-        let mut store = self.builder.build_store(ptr, basic_value).expect("Failed to build store");
+        let _store = self.builder.build_store(ptr, basic_value).expect("Failed to build store");
 
 
         self.env.set(let_stmt.name.name, PopObject::Ptr(ptr.get_type(), ptr));

@@ -1,8 +1,7 @@
-use inkwell::AddressSpace;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue};
+use inkwell::values::{BasicValue, FunctionValue};
 use popper_ast::{Arguments, Function, Argument, Type, TypeKind};
 
 pub trait BuiltinFunctions<'ctx> {

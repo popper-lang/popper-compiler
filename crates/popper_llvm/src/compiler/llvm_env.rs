@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::object::pop_object::PopObject;
-use crate::object::pop_pointer::PopPointer;
+
 
 #[derive(Debug, Clone)]
 pub struct LLVMEnv<'ctx> {

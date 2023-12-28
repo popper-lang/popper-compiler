@@ -1,5 +1,7 @@
+#![allow(dead_code)]
+
 use inkwell::types::PointerType;
-use inkwell::values::{BasicValue, BasicValueEnum, PointerValue};
+use inkwell::values::{PointerValue};
 
 #[derive(Debug)]
 pub struct PopPointer<'ctx> {

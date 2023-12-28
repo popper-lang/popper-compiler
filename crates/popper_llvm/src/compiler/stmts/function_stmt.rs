@@ -2,11 +2,11 @@ use crate::compiler::LLVMCompiler;
 
 use crate::object::pop_type::PopType;
 use inkwell::types::BasicMetadataTypeEnum;
-use inkwell::values::BasicValueEnum;
+
 use inkwell::types::BasicType;
 
 use crate::object::pop_object::PopObject;
-use crate::object::pop_pointer::PopPointer;
+
 
 impl<'ctx> LLVMCompiler<'ctx> {
     pub fn compile_function(&mut self, function: popper_ast::Function) {
@@ -28,7 +28,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let block = self.context.append_basic_block(func, "entry");
 
         self.builder.position_at_end(block);
-        for (i, (arg, stmt_arg)) in func.get_param_iter().into_iter().zip(
+        for (_i, (arg, stmt_arg)) in func.get_param_iter().into_iter().zip(
             function.arguments.args.iter()
         ).enumerate() {
             // get the arg to a pointer
