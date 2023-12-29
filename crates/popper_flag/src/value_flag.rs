@@ -12,6 +12,7 @@ pub enum ValueFlag {
     None,
     Array(Box<ValueFlag>),
     Function(Vec<ValueFlag>, Box<ValueFlag>),
+    Pointer(Box<ValueFlag>),
     Module(HashMap<String, String>)
 }
 
@@ -34,6 +35,9 @@ impl Display for ValueFlag {
                 args_string.pop();
                 write!(f, "func({}): {}", args_string, returntype.to_string())
             },
+            ValueFlag::Pointer(ptr) => {
+                write!(f, "*{}", ptr)
+            }
             ValueFlag::Module(hash) => write!(f, "module({:?})", hash)
         }
     }

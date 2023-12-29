@@ -36,6 +36,9 @@ impl ExprAnalyzer {
                 ValueFlag::Function(args_type, Box::new(self.get_type(*returnty)))
             }
             TypeKind::Unit => ValueFlag::None,
+            TypeKind::Pointer(ptr) => ValueFlag::Pointer(
+                Box::new(self.get_type(*ptr))
+                ),
             _ => unimplemented!()
         }
     }

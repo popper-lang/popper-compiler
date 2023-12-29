@@ -15,6 +15,8 @@ fn main() {
         let llvm_code = compile_to_llvm(ast, file);
         execute_llvm(llvm_code, file.to_string(), "target_popper".to_string());
 
+    } else {
+        println!("Program is not ok");
     }
 
 

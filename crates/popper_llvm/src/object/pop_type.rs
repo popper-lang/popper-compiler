@@ -1,16 +1,17 @@
 #![allow(dead_code)]
 
 use inkwell::context::Context;
-use inkwell::types::{BasicMetadataTypeEnum, BasicTypeEnum};
+use inkwell::types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum};
 use popper_ast::TypeKind;
 
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum PopType {
     Int,
     Float,
     String(u32),
-    Boolean
+    Boolean,
+    Pointer(Box<PopType>)
 }
 
 impl<'ctx> PopType {
@@ -30,6 +31,11 @@ impl<'ctx> PopType {
             TypeKind::Float => PopType::Float,
             TypeKind::String(len) => PopType::String(len),
             TypeKind::Bool => PopType::Boolean,
+            TypeKind::Pointer(ty) => PopType::Pointer(
+                Box::new(
+                    PopType::from_ty_ast(ty.type_kind)
+                )
+            ),
             _ => panic!("Unknown type")
         }
     }
@@ -41,7 +47,12 @@ impl<'ctx> PopType {
             PopType::String(len) => {
                 BasicTypeEnum::ArrayType(context.i8_type().array_type(len + 1))
             },
-            PopType::Boolean => BasicTypeEnum::IntType(context.bool_type())
+            PopType::Boolean => BasicTypeEnum::IntType(context.bool_type()),
+            PopType::Pointer(ty) => {
+                BasicTypeEnum::PointerType(
+                    ty.to_llvm_type(context).ptr_type(Default::default())
+                )
+            }
         }
     }
 
@@ -52,7 +63,10 @@ impl<'ctx> PopType {
             PopType::String(len) => {
                 BasicMetadataTypeEnum::ArrayType(context.i8_type().array_type(len))
             },
-            PopType::Boolean => BasicMetadataTypeEnum::IntType(context.bool_type())
+            PopType::Boolean => BasicMetadataTypeEnum::IntType(context.bool_type()),
+            PopType::Pointer(ty) => BasicMetadataTypeEnum::PointerType(
+                ty.to_llvm_type(context).ptr_type(Default::default())
+            )
         }
     }
 

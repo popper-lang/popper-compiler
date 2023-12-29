@@ -1,6 +1,6 @@
 func main(a: int): int {
 	print("Hello, World!");
 	print("Foo");
-	print("Br");
+	print("Bar");
 	return 0;
 }

@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::process::Output;
 use popper_parser::parser::parse;
 use popper_ast::Statement;
 use popper_semantic_analyzer::analyze;
@@ -58,7 +59,12 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     let context = Context::create();
+    dbg!("BREAK 62");
     let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
+    dbg!("BREAK 64");
+    compiler.load_builtins();
+    dbg!("BREAK 66");
+
     compiler.load_module();
     let res = compiler.compile(ast);
 
@@ -76,10 +82,11 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
     let file_exe = file_name.with_extension("");
 
     if ! target_path.exists() {
-        Command::new("mkdir")
+        detail_output("mkdir", Command::new("mkdir")
             .arg(target_path.clone())
             .output()
-            .expect("failed to execute process");
+            .expect("failed to execute process")
+        );
 
     }
 
@@ -95,35 +102,55 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
     }
     std::fs::write(file_ll_path.clone(), llvm).expect("Cannot write file");
 
-    Command::new("llc")
+    detail_output("llc", Command::new("llc")
         .arg(file_ll_path.clone())
         .arg("-filetype=obj")
         .arg("-o")
         .arg(file_o_path.clone())
         .output()
-        .expect("failed to execute process `llc` ");
+        .expect("failed to execute process `llc` ")
+    );
 
-    Command::new("gcc")
+    let lib_path = target_path.join("libs/");
+    let libs = lib_path.read_dir().unwrap().into_iter().map(|x| {
+        let path = x.unwrap().path().clone();
+        path
+    });
+    detail_output("clang", Command::new("clang")
         .arg(file_o_path.clone())
+        .args(libs)
         .arg("-o")
         .arg(file_exe_path.clone())
         .output()
-        .expect("failed to execute process `gcc` ");
+        .expect("failed to execute process `gcc` ")
+    );
 
-    Command::new("rm")
+
+
+    detail_output("rm o", Command::new("rm")
         .arg(file_o_path.clone())
         .output()
-        .expect("failed to execute process `rm` ");
+        .expect("failed to execute process `rm` ")
+    );
 
-    Command::new("rm")
-        .arg(file_ll_path.clone())
-        .output()
-        .expect("failed to execute process `rm` ");
+    // Command::new("rm")
+    //     .arg(file_ll_path.clone())
+    //     .output()
+    //     .expect("failed to execute process `rm` ");
 
-    Command::new(
+    detail_output("exec", Command::new(
         format!("./{}", file_exe_path.clone().to_str().unwrap())
     )
         .output()
-        .expect("failed to execute process your program ");
+        .expect("failed to execute process your program ")
+    );
 
+}
+
+fn detail_output(name: &str, output: Output) {
+    println!("BREAK");
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    println!("({}) stdout: {}", name, stdout);
+    println!("({}) stderr: {}", name, stderr);
 }
