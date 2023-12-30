@@ -248,7 +248,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_external(&mut self, external: External) -> Result<Self::Output, Self::Error> {
-let mut analyzer = ExprAnalyzer::new(self.env.clone());
+let _analyzer = ExprAnalyzer::new(self.env.clone());
 
         for sign in &external.signs {
             let args: Vec<ValueFlag> = sign

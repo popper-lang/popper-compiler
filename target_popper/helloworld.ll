@@ -1,5 +1,5 @@
-; ModuleID = 'examples/helloworld.pop'
-source_filename = "examples/helloworld.pop"
+; ModuleID = './examples/helloworld.pop'
+source_filename = "./examples/helloworld.pop"
 
 declare i32 @print([1 x i8])
 
