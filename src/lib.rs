@@ -61,9 +61,9 @@ pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     let context = Context::create();
     let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
     compiler.load_builtins();
-    let res = compiler.compile(ast);
+    
 
-    res
+    compiler.compile(ast)
 
 }
 
