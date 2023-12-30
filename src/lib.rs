@@ -38,7 +38,7 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
         }
     }
 
-    if errs.len() == 0 {
+    if errs.is_empty() {
         true
     } else {
         errs
@@ -63,7 +63,7 @@ pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     compiler.load_builtins();
     let res = compiler.compile(ast);
 
-    return res
+    res
 
 }
 
@@ -107,9 +107,9 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
     );
 
     let lib_path = target_path.join("libs/");
-    let libs = lib_path.read_dir().unwrap().into_iter().map(|x| {
-        let path = x.unwrap().path().clone();
-        path
+    let libs = lib_path.read_dir().unwrap().map(|x| {
+        
+        x.unwrap().path().clone()
     });
     detail_output("clang", Command::new("clang")
         .arg(file_o_path.clone())
