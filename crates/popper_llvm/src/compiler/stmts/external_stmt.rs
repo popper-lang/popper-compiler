@@ -9,18 +9,8 @@ use crate::cmd;
 impl<'ctx> LLVMCompiler<'ctx> {
     pub fn compile_external(&self, external: popper_ast::External) {
         for sign in external.signs {
-            let external_popper_var = var("POPPER_EXTERNAL_PATH").unwrap();
-            let external_popper_path = Path::new(
-                external_popper_var
-                    .as_str()
-            );
 
-            let rs_file = external_popper_path.join(format!("{}.rs", sign.name));
-            if ! rs_file.exists() {
-                panic!("External file not found: {:?}", rs_file);
-            }
-
-            let fn_name = sign.name;
+            let fn_name = sign.name.clone();
 
             let fn_args = sign
                 .arguments
@@ -39,6 +29,16 @@ impl<'ctx> LLVMCompiler<'ctx> {
             if let Some(ref external_file) = external.file {
                 self.compile_dylib(external_file.clone());
             } else {
+                let external_popper_var = var("POPPER_EXTERNAL_PATH").unwrap();
+                let external_popper_path = Path::new(
+                    external_popper_var
+                        .as_str()
+                );
+
+                let rs_file = external_popper_path.join(format!("{}.rs", sign.name));
+                if ! rs_file.exists() {
+                    panic!("External file not found: {:?}", rs_file);
+                }
                 self.compile_dylib(rs_file.to_str().unwrap().to_string());
             }
         }

@@ -101,7 +101,13 @@ GenericTypes: (Type, Vec<Type>) = {
 }
 
 StringType: TypeKind = {
-    "string"  <t:Num> => TypeKind::String(t as u32)
+    "string"  <t:Num?> => {
+        if let Some(t) = t {
+            TypeKind::String(t.try_into().unwrap())
+        } else {
+            TypeKind::String(0)
+        }
+    }
 }
 
 Types: Type = {
@@ -181,8 +187,12 @@ IfElse: Statement = {
 
 
 CallSyntax: (Ident, Vec<Expression>) = {
-     <t:Ident> "(" <args:Comma<Expr>> ")" => {
-        (t, args)
+     <t:Ident> "(" <args:Comma<Expr>?> ")" => {
+        if let Some(args) = args {
+            (t, args)
+        } else {
+            (t, vec![])
+        }
     }
 }
 
@@ -250,9 +260,13 @@ ArgumentStmt: Argument = {
 };
 
 Arguments: Arguments = {
-    <args:Span<Comma<ArgumentStmt>>> => {
+    <args:Span<Comma<ArgumentStmt>?>> => {
         Arguments::new(
-            args.1,
+            if let Some(args) = args.1 {
+                args
+            } else {
+                vec![]
+            },
             args.0
         )
     }

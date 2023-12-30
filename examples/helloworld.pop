@@ -1,8 +1,8 @@
-external "stdlib/io.rs" {
-    func print(s: string 1): int
+external {
+    func print(s: string): int
 };
 
-func main(a: int): int {
-    print("Hello, world!\n");
+func main(): int {
+    print("Hello, world!");
 	return 0;
 }
