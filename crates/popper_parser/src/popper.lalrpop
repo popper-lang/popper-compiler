@@ -297,9 +297,9 @@ FunctionSignature: FunctionSign = {
     }
 }
 
-ExternalStmt : Vec<FunctionSign> = {
-    "external" "{" <fs:Span<Comma<FunctionSignature>>>  "}" => {
-        fs.1
+ExternalStmt : (Option<String>, Vec<FunctionSign>) = {
+    "external" <s:Str?> "{" <fs:Span<Comma<FunctionSignature>>>  "}" => {
+        (s, fs.1)
     }
 }
 
@@ -308,7 +308,8 @@ External: Statement = {
         Statement::External(
             External::new(
                 t.0,
-                t.1
+                t.1.0,
+                t.1.1
                 )
         )
     }

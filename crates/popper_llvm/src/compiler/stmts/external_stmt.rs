@@ -36,8 +36,11 @@ impl<'ctx> LLVMCompiler<'ctx> {
 
             let fn_type = fn_return_type.fn_type(&fn_args, false);
             self.module.add_function(fn_name.as_str(), fn_type, None);
-
-            self.compile_dylib(rs_file.to_str().unwrap().to_string());
+            if let Some(ref external_file) = external.file {
+                self.compile_dylib(external_file.clone());
+            } else {
+                self.compile_dylib(rs_file.to_str().unwrap().to_string());
+            }
         }
 
 
