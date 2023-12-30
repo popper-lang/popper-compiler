@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::os::unix::process::CommandExt;
+
 use std::env::var;
 use std::path::Path;
 use std::process::Command;
@@ -9,15 +9,15 @@ use inkwell::module::Module;
 use inkwell::context::Context;
 use inkwell::builder::Builder;
 use inkwell::basic_block::BasicBlock;
-use inkwell::memory_buffer::MemoryBuffer;
-use inkwell::types::{BasicMetadataTypeEnum, BasicType};
+
+
 
 
 use llvm_env::LLVMEnv;
 use popper_ast::{Statement};
-use popper_builtins::{load_builtins};
+
 use crate::object::pop_object::PopObject;
-use crate::object::pop_type::PopType;
+
 use crate::cmd;
 
 pub mod llvm_env;

@@ -4,7 +4,7 @@ use crate::compiler::LLVMCompiler;
 use crate::object::pop_type::PopType;
 use std::env::var;
 use std::path::Path;
-use crate::cmd;
+
 
 impl<'ctx> LLVMCompiler<'ctx> {
     pub fn compile_external(&self, external: popper_ast::External) {
