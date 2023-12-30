@@ -6,6 +6,7 @@ use popper_semantic_analyzer::analyze;
 use popper_error::generate_color;
 use popper_llvm::Context;
 use popper_llvm::compiler::llvm_env::LLVMEnv;
+use popper_llvm::compiler::LLVMCompiler;
 
 ///
 /// get_ast is used to get ast from input
@@ -57,16 +58,14 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 }
 
-pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
+pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str)  {
     let context = Context::create();
-    let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
-
-
-    compiler.compile(ast)
-
+    let mut compiler = LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
+    compiler.compile(ast);
+    execute_llvm(compiler.build(), file_name.to_string(), "target_popper".to_string(), compiler.get_used_cdylib());
 }
 
-pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
+pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib: Vec<String>) {
     use std::process::Command;
 
     let file_name = Path::new(Path::new(&file_name).file_name().unwrap().to_str().unwrap()).to_path_buf();
@@ -105,14 +104,9 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
         .expect("failed to execute process `llc` ")
     );
 
-    let lib_path = target_path.join("libs/");
-    let libs = lib_path.read_dir().unwrap().map(|x| {
-        
-        x.unwrap().path().clone()
-    });
     detail_output("clang", Command::new("clang")
         .arg(file_o_path.clone())
-        .args(libs)
+        .args(cdylib)
         .arg("-o")
         .arg(file_exe_path.clone())
         .output()
@@ -127,10 +121,10 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
         .expect("failed to execute process `rm` ")
     );
 
-    // Command::new("rm")
-    //     .arg(file_ll_path.clone())
-    //     .output()
-    //     .expect("failed to execute process `rm` ");
+    Command::new("rm")
+        .arg(file_ll_path.clone())
+        .output()
+        .expect("failed to execute process `rm` ");
 
     detail_output("exec", Command::new(
         format!("./{}", file_exe_path.clone().to_str().unwrap())

@@ -35,6 +35,7 @@ pub struct LLVMCompiler<'ctx> {
     current_basic_block: Option<BasicBlock<'ctx>>,
     current_function: &'ctx str,
     filename: &'ctx str,
+    used_cdylib: Vec<String>,
 }
 
 impl<'ctx> LLVMCompiler<'ctx> {
@@ -54,10 +55,11 @@ impl<'ctx> LLVMCompiler<'ctx> {
             current_basic_block,
             current_function,
             filename,
+            used_cdylib: Vec::new(),
         }
     }
 
-    pub fn compile_dylib(&self, path: String) {
+    pub fn compile_dylib(&mut self, path: String) {
         let path = Path::new(&path);
         let binding = path.with_extension("dylib");
         let filename = binding.file_name().unwrap().to_str().unwrap();
@@ -70,17 +72,21 @@ impl<'ctx> LLVMCompiler<'ctx> {
         }
 
         cmd!(rustc "--crate-type=dylib" "-o" dylib_path.to_str().unwrap() path.to_str().unwrap());
+        self.used_cdylib.push(dylib_path.to_str().unwrap().to_string());
+    }
+
+    pub fn get_used_cdylib(&self) -> Vec<String> {
+        self.used_cdylib.clone()
     }
 
     pub fn build(&self) -> String {
         self.module.print_to_string().to_string()
     }
 
-    pub fn compile(&mut self, ast: Vec<Statement>) -> String {
+    pub fn compile(&mut self, ast: Vec<Statement>) {
         for stmt in ast {
             self.compile_stmt(stmt);
         }
-        self.build()
     }
 
     pub fn set_env(&mut self, name: String, value: PopObject<'ctx>) {

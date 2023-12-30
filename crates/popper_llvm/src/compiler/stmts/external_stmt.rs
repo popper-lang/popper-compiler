@@ -7,7 +7,7 @@ use std::path::Path;
 
 
 impl<'ctx> LLVMCompiler<'ctx> {
-    pub fn compile_external(&self, external: popper_ast::External) {
+    pub fn compile_external(&mut self, external: popper_ast::External) {
         for sign in external.signs {
 
             let fn_name = sign.name.clone();
