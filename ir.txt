@@ -4,11 +4,34 @@ func add(a: int, b: int): int {
     return a + b
 }
 
-@from core.stable.int @type int_32 @as int;
+use shark::builder::Builder;
+use shark::module::Module;
 
-@from core.stable.functions @type functions_ar;
+let mut builder = Builder::new();
+let mut module = Module::new("test");
+let mut core_int = Module::import("core.stable.int");
+let mut core_functions = Module::import("core.stable.functions");
 
-@define functions_ar<(int, int), int> $add {
-    local $0 = %0 + %1;
-    ret $0;
-}
+core_int.use_only(vec!["op_add"]);
+core_functions.use_only(vec!["call"]);
+
+module.add_module(core_int);
+module.add_module(core_functions);
+let var = Variable::new("add", module.get_type("functions"));
+
+
+
+
+
+add(1, 2)
+
+@from core.stable.int @type int_32  @use_only { op_add };
+
+@from core.stable.functions @type functions @use_only { call };
+
+@define_global functions $add {
+    @define_local int_32 $0 @property { int_32.op_add %0 %1 };
+    @ret_int_32 $0;
+};
+
+functions.call $add 1 2

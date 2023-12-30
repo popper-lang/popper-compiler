@@ -23,6 +23,8 @@ use popper_ast::Call;
 use popper_ast::Return;
 use popper_ast::PathImport;
 use popper_ast::ImportStmt;
+use popper_ast::External;
+use popper_ast::FunctionSign;
 
 grammar<'a>;
 
@@ -277,6 +279,44 @@ Function: Statement = {
     }
 }
 
+FunctionSignatureSyntax: (Ident, Arguments, Type) = {
+    "func" <t:Span<Ident>> <args:Group< "(", Arguments, ")" >> ":" <ty:Types> => {
+        (t.1, args.1, ty)
+    }
+}
+
+
+FunctionSignature: FunctionSign = {
+    <t:Span<FunctionSignatureSyntax>> => {
+        FunctionSign::new(
+            t.0,
+            t.1.0.name,
+            t.1.1,
+            t.1.2
+        )
+    }
+}
+
+ExternalStmt : Vec<FunctionSign> = {
+    "external" "{" <fs:Span<Comma<FunctionSignature>>>  "}" => {
+        fs.1
+    }
+}
+
+External: Statement = {
+    <t:Span<ExternalStmt>> ";" => {
+        Statement::External(
+            External::new(
+                t.0,
+                t.1
+                )
+        )
+    }
+}
+
+
+
+
 PathStmt: Vec<Ident> = {
     <t:Ident> "." <ts:PathStmt> => {
         let mut vec = vec![t];
@@ -371,6 +411,10 @@ Comma<T>: Vec<T> = {
     <t:T> => vec![t]
 }
 
+// ;
+
+
+
 Statement: Statement = {
     BlockStmt,
     While,
@@ -379,6 +423,7 @@ Statement: Statement = {
     Function,
     Return,
     Import,
+    External,
     <e:Expr> ";" =>  Statement::Expression(e)
 }
 

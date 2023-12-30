@@ -34,5 +34,6 @@ pub trait StmtVisitor {
     visit!(visit_function, function => Function);
     visit!(visit_return, return_expr => Return);
     visit!(visit_import, import => ImportStmt);
+    visit!(visit_external, external => External);
 
 }

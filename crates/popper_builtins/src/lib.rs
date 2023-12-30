@@ -1,11 +1,10 @@
-use inkwell::builder::Builder;
-use inkwell::context::Context;
 use popper_ast::{Arguments, Function, Argument, Type, TypeKind};
 
 pub trait BuiltinFunctions<'ctx> {
     fn llvm_fn_sign(&self) -> Function;
     fn sign_fn(&self) -> Function;
 }
+
 
 
 pub struct Print;

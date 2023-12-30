@@ -1,10 +1,12 @@
 mod args;
 mod call;
 mod return_expr;
+pub mod sign;
 
 pub use args::{Arguments, Argument, ArgumentValue};
 pub use call::Call;
 pub use return_expr::Return;
+pub use sign::FunctionSign;
 
 use crate::Type;
 use crate::Span;

@@ -59,13 +59,8 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 pub fn compile_to_llvm(ast: Vec<Statement>, file_name: &str) -> String {
     let context = Context::create();
-    dbg!("BREAK 62");
     let mut compiler = popper_llvm::compiler::LLVMCompiler::new(&context, LLVMEnv::new(), file_name);
-    dbg!("BREAK 64");
     compiler.load_builtins();
-    dbg!("BREAK 66");
-
-    compiler.load_module();
     let res = compiler.compile(ast);
 
     return res
@@ -148,7 +143,6 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String) {
 }
 
 fn detail_output(name: &str, output: Output) {
-    println!("BREAK");
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
     println!("({}) stdout: {}", name, stdout);

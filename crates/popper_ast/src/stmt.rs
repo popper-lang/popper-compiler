@@ -8,6 +8,7 @@ use crate::Function;
 use crate::Return;
 use crate::Span;
 use crate::ImportStmt;
+use crate::External;
 
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -23,6 +24,7 @@ pub enum Statement {
     Function(Function),
     Return(Return),
     Import(ImportStmt),
+    External(External),
 }
 
 impl Statement {
@@ -37,6 +39,7 @@ impl Statement {
             Statement::Function(fn_stmt) => fn_stmt.span(),
             Statement::Return(ret_stmt) => ret_stmt.span(),
             Statement::Import(import_stmt) => import_stmt.span(),
+            Statement::External(external_stmt) => external_stmt.span(),
         }
     }
 }

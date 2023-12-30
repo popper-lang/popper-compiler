@@ -1,6 +1,10 @@
+external {
+    func square(x: int): int,
+    func print(s: string 1): int
+};
+
 func main(a: int): int {
-	print("Hello, World!");
-	print("Foo");
-	print("Bar");
+    print("Hello, world!\n");
+    let b: int = square(4);
 	return 0;
 }

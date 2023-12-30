@@ -243,7 +243,34 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::Function(fn_stmt) => self.visit_function(fn_stmt),
             Statement::Return(ret_stmt) => self.visit_return(ret_stmt),
             Statement::Import(import) => self.visit_import(import),
+            Statement::External(external) => self.visit_external(external),
         }
+    }
+
+    fn visit_external(&mut self, external: External) -> Result<Self::Output, Self::Error> {
+let mut analyzer = ExprAnalyzer::new(self.env.clone());
+
+        for sign in &external.signs {
+            let args: Vec<ValueFlag> = sign
+                .arguments
+                .args
+                .iter()
+                .map(|x| {
+                    let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                    expr_analyzer.get_type(x.ty.clone())
+                })
+                .collect();
+
+            let return_type = {
+                let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                expr_analyzer.get_type(sign.return_type.clone())
+            };
+
+            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type).clone(), ScopeFlag::Global, false, Default::default());
+            self.env.add_variable(var);
+        }
+
+        Ok(SymbolFlags::new(external.span()))
     }
 
 }
