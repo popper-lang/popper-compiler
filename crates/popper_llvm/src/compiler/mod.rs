@@ -57,25 +57,6 @@ impl<'ctx> LLVMCompiler<'ctx> {
         }
     }
 
-    pub fn load_builtins(&mut self) {
-        // let builtins = load_builtins();
-        // for builtin in builtins {
-        //     let function = builtin.llvm_fn_sign();
-        //     let args: Vec<PopType> = function.arguments.args.iter().map(|x| PopType::from_ty_ast(x.ty.type_kind.clone())).collect();
-        //     let ret = PopType::from_ty_ast(function.returntype.type_kind);
-        //     let llvm_type = ret.to_llvm_type(self.context);
-        //     let param_types: Vec<_> = args
-        //         .iter()
-        //         .map(|x| x.clone().to_llvm_type(self.context))
-        //         .map(|x| Into::<BasicMetadataTypeEnum>::into(x))
-        //         .collect();
-        //
-        //     let function_type = llvm_type.fn_type(param_types.as_slice(), false);
-        //     let function_value = self.module.add_function(function.name.as_str(), function_type, None);
-        //
-        // }
-    }
-
     pub fn compile_dylib(&self, path: String) {
         let path = Path::new(&path);
         let binding = path.with_extension("dylib");
