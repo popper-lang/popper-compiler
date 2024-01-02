@@ -15,4 +15,58 @@ Here're some of the project's best features:
 
 <h2>🛠️ Installation Steps:</h2>
 
-<p>1. Install LLVM</p>
+<h3>1. Install LLVM(v16) </h3>
+
+**WARNING** : Use the correct version of llvm otherwise the compiler will not run correctly : LLVM 16.x.x
+
+<h4> For MacOS and Linux </h4>
+you can install llvm with <a href="https://brew.sh/">brew</a> by running this command:
+
+ ```sh
+brew install llvm@16
+```
+
+to set up the llvm prefix you need to run this command :
+```sh
+export LLVM_SYS_160_PREFIX=$("$(brew --prefix llvm@16)"/bin/llvm-config --prefix)
+```
+
+<h4> For Debian based </h4>
+
+You can install llvm with apt:
+```sh
+apt install llvm-16
+```
+
+**NOTE**: All llvm command are with the -16 suffix
+to set up the llvm prefix you need to run this command :
+```sh
+export LLVM_SYS_160_PREFIX=$(llvm-config-16 --prefix)
+```
+
+<h4> Building from source </h4>
+
+You can do there step to install LLVM from source: [llvm getting started](https://releases.llvm.org/16.0.0/docs/GettingStarted.html#overview)
+
+<h3> Installing Rust </h3>
+
+you can look at [rustup](https://rustup.rs/)
+
+<h3> Download the Popper Compiler with git </h3>
+
+```sh
+git clone https://github.com/popper-lang/popper-compiler.git && cd popper-compiler
+```
+<h3> Building Source </h3>
+
+I use [cargo](https://github.com/rust-lang/cargo) as the pkg manager for rust 
+
+```sh
+cargo build --release
+```
+<h3> Copying The binary </h3>
+
+```
+sudo cp target/releases/popper_compiler /bin
+```
+
