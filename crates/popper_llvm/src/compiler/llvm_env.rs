@@ -21,4 +21,7 @@ impl<'ctx> LLVMEnv<'ctx> {
     pub fn set(&mut self, name: String, obj: PopObject<'ctx>) {
         self.var.insert(name, obj);
     }
+    pub fn extend(&mut self, env: LLVMEnv<'ctx>) {
+        self.var.extend(env.var);
+    }
 }

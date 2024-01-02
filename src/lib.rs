@@ -121,10 +121,10 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
         .expect("failed to execute process `rm` ")
     );
 
-    Command::new("rm")
-        .arg(file_ll_path.clone())
-        .output()
-        .expect("failed to execute process `rm` ");
+    // Command::new("rm")
+    //     .arg(file_ll_path.clone())
+    //     .output()
+    //     .expect("failed to execute process `rm` ");
 
     detail_output("exec", Command::new(
         format!("./{}", file_exe_path.clone().to_str().unwrap())

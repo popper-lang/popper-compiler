@@ -5,12 +5,12 @@ use crate::{Span, FunctionSign};
 #[derive(Clone)]
 pub struct External {
     span: Span,
-    pub file: Option<String>,
+    pub file: String,
     pub signs: Vec<FunctionSign>
 }
 
 impl External {
-    pub fn new(span: Span, file: Option<String>, signs: Vec<FunctionSign>) -> Self {
+    pub fn new(span: Span, file: String, signs: Vec<FunctionSign>) -> Self {
         Self { span, file, signs }
     }
 

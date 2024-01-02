@@ -100,5 +100,10 @@ impl Environment {
         self.variables.iter().filter(|x| x.name == name).count() > 0
     }
 
+    pub fn extend(&mut self, other: &mut Environment) -> &mut Self {
+        self.variables.append(&mut other.variables);
+        self
+    }
+
 }
 

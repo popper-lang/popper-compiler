@@ -25,6 +25,8 @@ use popper_ast::PathImport;
 use popper_ast::ImportStmt;
 use popper_ast::External;
 use popper_ast::FunctionSign;
+use popper_common::ast_path_to_path::ast_path_to_path;
+use crate::parser::parse;
 
 grammar<'a>;
 
@@ -311,8 +313,8 @@ FunctionSignature: FunctionSign = {
     }
 }
 
-ExternalStmt : (Option<String>, Vec<FunctionSign>) = {
-    "external" <s:Str?> "{" <fs:Span<Comma<FunctionSignature>>>  "}" => {
+ExternalStmt : (String, Vec<FunctionSign>) = {
+    "external" <s:Str> "{" <fs:Span<Comma<FunctionSignature>>>  "}" => {
         (s, fs.1)
     }
 }
@@ -350,9 +352,12 @@ Path: PathImport = {
     }
 }
 
-ImportStmt: PathImport = {
+ImportStmt: (PathImport, Vec<Statement>) = {
     "import" <t:Path>  => {
-        t
+        let path = ast_path_to_path(t.clone());
+        let content = std::fs::read_to_string(path.clone()).unwrap();
+        let opt = parse(&content, path.to_str().unwrap());
+        (t, opt.unwrap())
     }
 }
 
@@ -361,7 +366,8 @@ Import : Statement = {
         Statement::Import(
             ImportStmt::new(
                 t.0,
-                t.1
+                t.1.0,
+                t.1.1
             )
         )
     }

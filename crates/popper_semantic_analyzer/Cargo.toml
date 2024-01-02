@@ -6,8 +6,8 @@ description = "A semantic analyzer for the Popper programming language."
 
 
 [dependencies]
-popper_ast = { path = "../popper_ast", features = ["visitor"] }
-popper_common = { path = "../popper_common" }
+popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"] }
+popper_common = { path = "../popper_common", features = ["ast_path_to_path"] }
 popper_flag = { path = "../popper_flag" }
 popper_error = { path = "../popper_error" }
 popper_builtins = { path = "../popper_builtins" }

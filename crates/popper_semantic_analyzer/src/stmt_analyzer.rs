@@ -5,6 +5,7 @@ use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
+use popper_error::modulenotfound::ModuleNotFound;
 use popper_builtins::load_builtins;
 
 
@@ -228,8 +229,27 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(SymbolFlags::new(return_expr.span))
     }
 
-    fn visit_import(&mut self, _import: ImportStmt) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_import(&mut self, import: ImportStmt) -> Result<Self::Output, Self::Error> {
+        let path = popper_common::ast_path_to_path::ast_path_to_path(import.path.clone());
+
+        if !path.exists() {
+            return Err(Box::new(
+                ModuleNotFound::new(
+                    import.path.to_string(),
+                    import.path.span()
+                )
+            ))
+        }
+
+        let mut stmt_analyzer = StmtAnalyzer::new(Environment::new());
+
+        for stmt in import.module_stmts.clone() {
+            stmt_analyzer.visit_stmt(stmt)?;
+        }
+
+        self.env.extend(&mut stmt_analyzer.env.clone());
+
+        Ok(SymbolFlags::new(import.span()))
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
@@ -248,7 +268,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_external(&mut self, external: External) -> Result<Self::Output, Self::Error> {
-let _analyzer = ExprAnalyzer::new(self.env.clone());
+        let _analyzer = ExprAnalyzer::new(self.env.clone());
 
         for sign in &external.signs {
             let args: Vec<ValueFlag> = sign

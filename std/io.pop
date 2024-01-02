@@ -1,0 +1,7 @@
+external "core/io.rs" {
+    func println(s: string): int,
+    func print(s: string): int
+};
+
+
+

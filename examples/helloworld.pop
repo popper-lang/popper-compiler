@@ -1,8 +1,6 @@
-external {
-    func print(s: string): int
-};
+import std.io;
 
 func main(): int {
-    print("Hello, world!");
+    println("Hello, world!");
 	return 0;
 }

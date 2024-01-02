@@ -11,3 +11,9 @@ edition = "2021"
 ariadne = "0.2.0"
 colored = "2.1.0"
 lazy_static = "1.4.0"
+popper_ast = { path = "../popper_ast", optional = true }
+sha2 = { version = "0.9.1", optional = true }
+
+[features]
+ast_path_to_path = ["popper_ast"]
+hash = ["sha2"]

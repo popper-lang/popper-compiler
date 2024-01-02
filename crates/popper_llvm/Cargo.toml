@@ -10,8 +10,8 @@ inkwell = { git = "https://github.com/TheDan64/inkwell", branch = "master", feat
 ] }
 
 popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"]}
+popper_common = { path = "../popper_common" , features = ["ast_path_to_path", "hash"]}
 lazy_static = "1.4.0"
 serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.2"
-llvm-ir = { git = "https://github.com/cdisselkoen/llvm-ir.git", branch = "main", features = ["llvm-16"] }
 popper_builtins = { path = "../popper_builtins" }
