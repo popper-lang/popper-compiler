@@ -1,24 +1,17 @@
+<h1 align="center" id="title">Popper-Lang</h1>
 
-# The Popper Language
+<p align="center"><img src="https://img.shields.io/badge/Langage-Rust-blue?style=for-the-badge&amp;logo=rust&amp;logoColor=white" alt="shields"><img src="https://img.shields.io/github/stars/popper-lang/popper-compiler.svg?style=for-the-badge&amp;logo=github" alt="shields"><img src="https://img.shields.io/github/forks/popper-lang/popper-compiler.svg?style=for-the-badge&amp;logo=github" alt="shields"><img src="https://img.shields.io/github/issues/popper-lang/popper-compiler.svg?style=for-the-badge&amp;logo=github" alt="shields"><img src="https://img.shields.io/github/issues-pr/popper-lang/popper-compiler.svg?style=for-the-badge&amp;logo=github" alt="shields"><img src="https://img.shields.io/github/license/popper-lang/popper-compiler.svg?style=for-the-badge&amp;logo=gnu" alt="shields"></p>
 
-Popper Language is a language created by NightProg. It's easy to use and doesn't require much knowledge.
+  
+  
+<h2> 🧐 Features</h2>
 
-## Badges
+Here're some of the project's best features:
 
+*   Easy to use
+*   Fast
+*   Simple code
 
-[![Language](https://img.shields.io/badge/Langage-Rust-blue?style=for-the-badge&logo=rust&logoColor=white)](https://www.rust-lang.org)
+<h2>🛠️ Installation Steps:</h2>
 
-[![Stars](https://img.shields.io/github/stars/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/stargazers)
-
-[![Fork](https://img.shields.io/github/forks/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/forks) 
-
-[![Issue](https://img.shields.io/github/issues/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/issues)
-
-[![Pull Request](https://img.shields.io/github/issues-pr/popper-lang/popper-compiler.svg?style=for-the-badge&logo=github)](https://github.com/popper-lang/popper-compiler/pulls)
-
-[![License](https://img.shields.io/github/license/popper-lang/popper-compiler.svg?style=for-the-badge&logo=gnu)](https://www.gnu.org/licenses/gpl-3.0.html)
-
-
-## Stats
-
-![Stats](https://starchart.cc/popper-lang/popper-compiler.svg)
+<p>1. Install LLVM</p>
