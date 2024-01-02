@@ -4,6 +4,7 @@
 
 ## Table Of Content (TOC)
  - [🧐 Features](https://github.com/popper-lang/popper-compiler#feature)
+ - [🛠️ Installation Steps](https://github.com/popper-lang/popper-compiler#installation)
   
 <h2 id="feature"> 🧐 Features</h2>
 
@@ -13,7 +14,7 @@ Here're some of the project's best features:
 *   Fast
 *   Simple code
 
-<h2>🛠️ Installation Steps:</h2>
+<h2 id="installation">🛠️ Installation Steps:</h2>
 
 <h3>1. Install LLVM(v16) </h3>
 
