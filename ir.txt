@@ -1,37 +1,89 @@
 
 
-func add(a: int, b: int): int {
+
+def add(a, b):
     return a + b
+
+Pyr0
+
+def add(@ctypes::PyObjRef a, @ctypes::PyObjRef b) -> @ctypes::PyObjRef:
+    return a.__add__(b)
+
+Pyr1
+
+@X0 = @ctypes::PyObjRef{ __add__ };
+
+def add(@X0 a, @X0 b) -> @X0:
+    return a.__add__(b)
+
+Pyr2
+
+@X0 = @ctypes::PyObjRef{ __add__ };
+
+define @X0 add (@X0 %a, @X0 %b) {
+    %0 = call @X0 @X0.__add__(@X0 %a, @X0 %b)
+    ret @X0 %0
 }
 
-use shark::builder::Builder;
-use shark::module::Module;
+Pyr3
 
-let mut builder = Builder::new();
-let mut module = Module::new("test");
-let mut core_int = Module::import("core.stable.int");
-let mut core_functions = Module::import("core.stable.functions");
+load_module @ctypes;
+@X0 = unsafe_cast @ctypes::PyInt;
+define @X0 add (@X0 %a, @X0 %b) {
+    %0 = call @X0 @X0.__add__(@X0 %a, @X0 %b)
+    ret @X0 %0
+}
 
-core_int.use_only(vec!["op_add"]);
-core_functions.use_only(vec!["call"]);
+Shark
 
-module.add_module(core_int);
-module.add_module(core_functions);
-let var = Variable::new("add", module.get_type("functions"));
+load_module @ctypes;
+load_module @std;
+@X0 = @ctypes::PyInt;
+
+extern {
+    @X0 PyInt_FromSharkVal(i64);
+    i64 PyInt_AsSharkVal(@X0);
+} from @std::Clang;
+
+define i64 @add(i64 %a, i64 %b) {
+    %0 = call @X0 @PyInt_FromSharkVal(i64 %a)
+    %1 = call @X0 @PyInt_FromSharkVal(i64 %b)
+    %2 = call @X0 @X0.__add__(@X0 %0, @X0 %1)
+    %3 = call i64 @PyInt_AsSharkVal(@X0 %2)
+    ret i64 %3
+}
 
 
 
 
 
-add(1, 2)
 
-@from core.stable.int @type int_32  @use_only { op_add };
 
-@from core.stable.functions @type functions @use_only { call };
 
-@define_global functions $add {
-    @define_local int_32 $0 @property { int_32.op_add %0 %1 };
-    @ret_int_32 $0;
-};
+class PyInt<size = 64, align = 8> {
+    i64 %0 @sized;
 
-functions.call $add 1 2
+    extern "cbind.ext" fromSharkVal(i64 %0) -> PyInt;
+    extern "cbind.ext" asSharkVal() -> i64;
+
+    __add__(PyInt Reg<0>) -> PyInt {
+    _start:
+        extern "cbind.ext" PyInt_Add(PyInt, PyInt) -> PyInt;
+        Reg<1> = PyInt_Add(%0, Reg<0>);
+        ret Reg<1>;
+    _end:
+        free Reg<0>;
+        free Reg<1>;
+        clear Stack;
+    }
+
+
+}
+
+def X0 = PyInt<10>;
+def X1 = PyInt<10>;
+def X2 = PyInt<X0 X1>.__add__(X0, X1);
+def X3 = PyInt<Mul<X0 X1>>.__add__(X0, X2);
+
+
+

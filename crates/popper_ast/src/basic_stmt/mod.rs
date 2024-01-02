@@ -4,6 +4,7 @@ mod let_stmt;
 mod if_stmt;
 mod import_stmt;
 mod external;
+mod for_stmt;
 
 pub use self::while_stmt::While;
 pub use self::block::Block;
