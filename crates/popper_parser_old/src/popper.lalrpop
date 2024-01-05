@@ -25,6 +25,11 @@ use popper_ast::PathImport;
 use popper_ast::ImportStmt;
 use popper_ast::External;
 use popper_ast::FunctionSign;
+use popper_ast::ForStmt;
+use popper_ast::StructStmt;
+use popper_ast::StructField;
+use popper_ast::StructInstance;
+use popper_ast::StructFieldInstance;
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
 
@@ -112,11 +117,18 @@ StringType: TypeKind = {
     }
 }
 
+StructType: TypeKind = {
+    "struct" "{" <fields:Comma<StructField>> "}" => {
+        TypeKind::Struct(fields.iter().map(|f| (f.name.clone(), f.ty.clone())).collect())
+    }
+}
+
 Types: Type = {
     <int:Span<"int">> => Type::new(int.0, TypeKind::Int, vec![]),
     <bool:Span<"bool">> => Type::new(bool.0, TypeKind::Bool, vec![]),
     <str:Span<StringType>> => Type::new(str.0, str.1, vec![]),
     <unit:Span<"unit">> => Type::new(unit.0, TypeKind::Unit, vec![]),
+    <struct_:Span<StructType>> => Type::new(struct_.0, struct_.1, vec![]),
     <generic:Span<GenericTypes>> => {
         Type::new(generic.0, generic.1.0.type_kind, generic.1.1)
     }
@@ -198,6 +210,15 @@ CallSyntax: (Ident, Vec<Expression>) = {
     }
 }
 
+Return: Statement = {
+    Span<("return" Expr? ";")> => {
+        Statement::Return(Return::new(
+            <>.1.1,
+            <>.0
+        ))
+    }
+}
+
 
 
 CallExpr: Expression = {
@@ -213,14 +234,59 @@ CallExpr: Expression = {
     }
 }
 
-Return: Statement = {
-    Span<("return" Expr? ";")> => {
-        Statement::Return(Return::new(
-            <>.1.1,
-            <>.0
-        ))
+StructInstanceSyntax: (Ident, Vec<StructFieldInstance>) = {
+    "init" <t:Ident> "{" <fields:Comma<StructFieldInstance>> "}" => {
+        (t, fields)
     }
 }
+
+StructFieldInstanceSyntax: (Ident, Expression) = {
+    <t:Ident> "=" <expr:Expr> => {
+        (t, expr)
+    }
+}
+
+StructFieldInstance: StructFieldInstance = {
+    <t:Span<StructFieldInstanceSyntax>> => {
+        StructFieldInstance::new(
+            t.1.0.name,
+            t.1.1,
+            t.0
+        )
+    }
+}
+
+StructInstanceExpr: Expression = {
+    <t:Span<StructInstanceSyntax>> => {
+        Expression::StructInstance(
+            StructInstance::new(
+                t.1.0.name,
+                t.1.1,
+                t.0
+            )
+        )
+    }
+}
+
+FieldAccessSyn: (Expression, Ident) = {
+    <e:Expr> "." <t:Ident> => {
+        (e, t)
+    }
+}
+
+FieldAccessExpr: Expression = {
+    <t:Span<FieldAccess>> => {
+        Expression::FieldAccess(
+            FieldAccess::new(
+                t.1,
+                t.1,
+                t.0
+            )
+        )
+    }
+}
+
+
 
 Expr: Expression = {
     BinOp<Expr, OpTerm, Factor>,
@@ -228,15 +294,24 @@ Expr: Expression = {
 };
 
 Factor: Expression = {
-    BinOp<Factor, OpFactor, Call>,
-    Call
+    BinOp<Factor, OpFactor, FieldAccess>,
+    FieldAccess
 };
+
+FieldAccess: Expression = {
+    FieldAccessExpr,
+    Call
+}
 
 Call: Expression = {
     CallExpr,
-    Term
+    StructInstance
 }
 
+StructInstance: Expression = {
+    StructInstanceExpr,
+    Term
+}
 
 Term: Expression = {
     Int,
@@ -331,7 +406,27 @@ External: Statement = {
     }
 }
 
+ForStmt: (Ident, Expression, (Span, Vec<Statement>)) = {
+    "for" <t:Ident> "in" <expr:Expr> <body:Span<Block>> => {
+        (t, expr, body)
+    }
+}
 
+For: Statement = {
+    <t:Span<ForStmt>> => {
+        Statement::For(
+            ForStmt::new(
+                t.1.0,
+                t.1.1,
+                Block::new(
+                    t.1.2.0,
+                    t.1.2.1
+                ),
+                t.0
+            )
+        )
+    }
+}
 
 
 PathStmt: Vec<Ident> = {
@@ -372,6 +467,41 @@ Import : Statement = {
         )
     }
 }
+
+StructCreate: (Ident, Vec<StructField>) = {
+    "struct" <t:Ident> "{" <fields:Comma<StructField>> "}" => {
+        (t, fields)
+    }
+}
+
+StructStmt: Statement = {
+    <t:Span<StructCreate>> => {
+        Statement::Struct(
+            StructStmt::new(
+                t.1.0.name,
+                t.1.1,
+                t.0
+            )
+        )
+    }
+}
+
+StructFieldSyntax: (Ident, Type) = {
+    <t:Ident> "=" <ty:Types> => {
+        (t, ty)
+    }
+}
+
+StructField: StructField = {
+    <t:Span<StructFieldSyntax>> => {
+        StructField::new(
+            t.1.0.name,
+            t.1.1,
+            t.0
+        )
+    }
+}
+
 
 
 
@@ -445,6 +575,8 @@ Statement: Statement = {
     Return,
     Import,
     External,
+    For,
+    StructStmt,
     <e:Expr> ";" =>  Statement::Expression(e)
 }
 
