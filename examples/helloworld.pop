@@ -1,6 +1,5 @@
-import std.io;
 
 func main(): int {
-    println("Hello, world!");
+    let a = 2;
 	return 0;
 }

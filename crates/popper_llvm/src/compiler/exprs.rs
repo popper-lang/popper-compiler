@@ -1,8 +1,8 @@
-use inkwell::values::{BasicMetadataValueEnum, BasicValue};
+use inkwell::values::{BasicMetadataValueEnum, BasicValue, PointerValue};
 use crate::compiler::LLVMCompiler;
 use crate::object::pop_object::PopObject;
 
-use popper_ast::BinOp;
+use popper_ast::{BinOp, Constant, StructFieldAccess};
 use popper_ast::ParenGroup;
 use popper_ast::BinOpKind;
 
@@ -29,14 +29,14 @@ impl<'ctx> LLVMCompiler<'ctx> {
                     (PopObject::Float(_, v1), PopObject::Float(_, v2)) => {
                         PopObject::Float(v1.get_type(), self.builder.build_float_add(v1, v2, "add").unwrap())
                     },
-                    (PopObject::Ptr(_, v1), PopObject::Int(_, v2)) => {
-                        PopObject::Ptr(v1.get_type(), self.builder.build_int_add(v1, v2.const_to_pointer(v1.get_type()), "add").unwrap())
+                    (PopObject::Ptr(v1), PopObject::Int(_, v2)) => {
+                        PopObject::Ptr(self.builder.build_int_add::<PointerValue>(v1.clone().into(), v2.const_to_pointer(v1.get_type()).into(), "add").unwrap().into())
                     },
-                    (PopObject::Int(_, v1), PopObject::Ptr(_, v2)) => {
-                        PopObject::Ptr(v2.get_type(), self.builder.build_int_add(v1.const_to_pointer(v2.get_type()), v2, "add").unwrap())
+                    (PopObject::Int(_, v1), PopObject::Ptr(v2)) => {
+                        PopObject::Ptr(self.builder.build_int_add::<PointerValue>(v1.const_to_pointer(v2.get_type()).into(), v2.into(), "add").unwrap().into())
                     },
-                    (PopObject::Ptr(_, v1), PopObject::Ptr(_, v2)) => {
-                        PopObject::Ptr(v1.get_type(), self.builder.build_int_add(v1, v2, "add").unwrap())
+                    (PopObject::Ptr(v1), PopObject::Ptr(v2)) => {
+                        PopObject::Ptr(self.builder.build_int_add::<PointerValue>(v1.into(), v2.into(), "add").unwrap().into())
                     },
 
                     _ => todo!("BinOp not implemented")
@@ -66,7 +66,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
             args.push(ptr);
         }
         let args: Vec<BasicMetadataValueEnum> = args.iter()
-            .map(|arg| arg.as_basic_value_enum())
+            .map(|arg| arg.value.as_basic_value_enum())
             .map(|arg| {
                 arg.into()
             })
@@ -75,13 +75,23 @@ impl<'ctx> LLVMCompiler<'ctx> {
         PopObject::from_basic_value_enum(ret.try_as_basic_value().left().unwrap())
     }
 
+    pub fn compile_struct_access(&self, struct_field_access: StructFieldAccess) -> PopObject {
+        let var = self.env.get(struct_field_access.name).unwrap();
+
+        let basic_value = var.clone().to_basic_value_enum();
+        let ptr = basic_value.into_pointer_value();
+        PopObject::new_int(self.context, 2)
+
+    }
+
     pub fn compile_expr(&self, expr: Expression) -> PopObject {
         match expr {
             Expression::Constant(constant) => self.compile_constant(constant),
             Expression::Group(paren_group) => self.compile_paren_group(paren_group),
             Expression::BinOp(binop) => self.compile_bin_op(binop),
             Expression::Call(call) => self.compile_call(call),
-
+            Expression::StructInstance(struct_instance) => self.compile_struct_instance(struct_instance),
+            Expression::StructFieldAccess(struct_field_access) => self.compile_struct_access(struct_field_access),
             _ => todo!("Expression not implemented")
         }
     }

@@ -9,7 +9,8 @@ use crate::Return;
 use crate::Span;
 use crate::ImportStmt;
 use crate::External;
-
+use crate::ForStmt;
+use crate::StructStmt;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -25,6 +26,8 @@ pub enum Statement {
     Return(Return),
     Import(ImportStmt),
     External(External),
+    For(ForStmt),
+    Struct(StructStmt),
 }
 
 impl Statement {
@@ -40,6 +43,8 @@ impl Statement {
             Statement::Return(ret_stmt) => ret_stmt.span(),
             Statement::Import(import_stmt) => import_stmt.span(),
             Statement::External(external_stmt) => external_stmt.span(),
+            Statement::For(for_stmt) => for_stmt.span(),
+            Statement::Struct(struct_stmt) => struct_stmt.span,
         }
     }
 }

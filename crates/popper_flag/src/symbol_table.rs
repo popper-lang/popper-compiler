@@ -1,4 +1,5 @@
 use popper_ast::Span;
+use std::collections::HashMap;
 use crate::{Flag, ValueFlag, ScopeFlag, Environment, VariableFlag};
 
 
@@ -85,6 +86,15 @@ impl SymbolFlags {
         self
     }
 
+    pub fn set_struct(&mut self, fields: HashMap<String, ValueFlag>) -> &mut Self {
+        self.add_flag(
+            Flag::Value(
+                ValueFlag::Struct(fields)
+            )
+        );
+        self
+    }
+
     pub fn set_none(&mut self) -> &mut Self {
         self.add_flag(
             Flag::Value(
@@ -142,6 +152,18 @@ impl SymbolFlags {
                 ValueFlag::Array(Box::new(value_flag.clone()))
             )
         )
+    }
+
+    pub fn is_iterable(&self) -> bool {
+        self.symbols.iter().any(|s| {
+            matches!(s, Flag::Value(ValueFlag::Array(_)))
+        })
+    }
+
+    pub fn is_struct(&self) -> bool {
+        self.symbols.iter().any(|s| {
+            matches!(s, Flag::Value(ValueFlag::Struct(_)))
+        })
     }
 
     pub fn get_value(&self) -> Option<ValueFlag> {

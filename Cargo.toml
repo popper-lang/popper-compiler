@@ -1,3 +1,4 @@
+workspace = { members = ["crates/popper_parser"] }
 [package]
 name = "popper_compiler"
 version = "0.1.0"
@@ -7,7 +8,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.3.5", features = ["derive", "color"] }
 popper_semantic_analyzer = { path = "crates/popper_semantic_analyzer" }
-popper_parser = { path = "crates/popper_parser" }
+popper_parser = { path = "crates/popper_parser_old" }
 popper_ast = { path = "crates/popper_ast" }
 popper_llvm = { path = "crates/popper_llvm" }
 popper_common = { path = "crates/popper_common" }

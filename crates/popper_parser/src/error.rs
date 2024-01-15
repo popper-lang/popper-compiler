@@ -15,4 +15,5 @@ pub enum ErrorType {
         expected: String,
         got: String,
     },
+    CanBe(Vec<String>)
 }

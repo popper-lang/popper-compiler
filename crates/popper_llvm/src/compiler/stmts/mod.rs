@@ -4,6 +4,8 @@ mod function_stmt;
 mod import_stmt;
 mod return_stmt;
 mod external_stmt;
+mod for_stmt;
+mod struct_stmt;
 
 use crate::compiler::LLVMCompiler;
 use popper_ast::Statement;
@@ -26,6 +28,8 @@ impl<'ctx> LLVMCompiler<'ctx> {
             Statement::Import(import_stmt) => self.compile_import_stmt(import_stmt),
             Statement::Return(return_stmt) => self.compile_return(return_stmt),
             Statement::External(external_stmt) => self.compile_external(external_stmt),
+            Statement::For(for_stmt) => self.compile_for(for_stmt),
+            Statement::Struct(struct_stmt) => self.compile_struct(struct_stmt),
             e => todo!("Statement not implemented: {:?}", e)
         }
     }

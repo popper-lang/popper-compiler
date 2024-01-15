@@ -1,7 +1,7 @@
 use crate::*;
 
-#[cfg_attr(feature = "serialize", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[derive(Clone)]
 pub struct ForStmt {
     pub it: Ident,
@@ -19,5 +19,9 @@ impl ForStmt {
             body,
             span,
         }
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
     }
 }

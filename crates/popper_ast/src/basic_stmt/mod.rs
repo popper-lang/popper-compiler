@@ -14,3 +14,4 @@ pub use self::if_stmt::IfElse;
 pub use self::import_stmt::ImportStmt;
 pub use self::import_stmt::PathImport;
 pub use self::external::External;
+pub use self::for_stmt::ForStmt;

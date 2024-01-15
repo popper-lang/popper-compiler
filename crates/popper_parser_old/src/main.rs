@@ -36,7 +36,7 @@ fn main() {
         err.report(
             generate_color(),
             body,
-            "<popper_parser/src/main.rs 19:25>"
+            "<popper_parser_old/src/main.rs 19:25>"
         );
     }
 }

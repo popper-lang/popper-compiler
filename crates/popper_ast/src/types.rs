@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::Span;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -46,6 +47,9 @@ pub enum TypeKind {
     Char,
     /// `string`
     String(u32), // u32: size of string
+    Struct(HashMap<String, Type>),
+    /// `struct name
+    StructInstance(String),
 
 }
 
@@ -87,6 +91,14 @@ impl ToString for TypeKind {
             TypeKind::Bool => String::from("bool"),
             TypeKind::Char => String::from("char"),
             TypeKind::String(len) => format!("string:{}", len),
+            TypeKind::Struct(fields) => {
+                let mut fields_str = String::new();
+                for (name, ty) in fields {
+                    fields_str.push_str(&format!("{}: {},", name, ty.type_kind.to_string()));
+                }
+                format!("struct {{{}}}", fields_str)
+            }
+            TypeKind::StructInstance(name) => format!("struct {}", name),
         }
     }
 }

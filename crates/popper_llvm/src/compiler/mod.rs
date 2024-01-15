@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 
+use std::collections::HashMap;
 use std::env::var;
 use std::path::Path;
 use inkwell::module::Module;
@@ -31,6 +32,7 @@ pub struct LLVMCompiler<'ctx> {
     current_function: &'ctx str,
     filename: &'ctx str,
     used_cdylib: Vec<String>,
+    structs: HashMap<String, HashMap<String, u8>>, // struct name -> field name -> index
 }
 
 impl<'ctx> LLVMCompiler<'ctx> {
@@ -51,6 +53,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
             current_function,
             filename,
             used_cdylib: Vec::new(),
+            structs: HashMap::new(),
         }
     }
 
@@ -90,6 +93,7 @@ impl<'ctx> LLVMCompiler<'ctx> {
         if ! lib_path.exists() {
             cmd!(mkdir "-p" popper_target_path.to_str().unwrap());
         }
+        dbg!(dylib_path.to_str().unwrap());
 
         cmd!(llc "-filetype=obj" "-o" dylib_path.to_str().unwrap() path.to_str().unwrap());
         self.used_cdylib.push(dylib_path.to_str().unwrap().to_string());

@@ -3,6 +3,7 @@ pub mod diff_length_of_argument;
 pub mod namenotfound;
 pub mod typemismatch;
 pub mod modulenotfound;
+pub mod fieldnotfound;
 
 use ariadne::{Color, Source};
 use std::fmt::Debug;

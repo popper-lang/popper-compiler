@@ -1,6 +1,11 @@
 
 
 use super::*;
+use super::If as IfKeyword;
+use super::While as WhileKeyword;
+use super::Return as ReturnKeyword;
+use super::External as ExternalKeyword;
+use popper_ast::*;
 
 #[test]
 fn test_lt() {
@@ -126,8 +131,8 @@ fn test_let() {
 #[test]
 fn test_if() {
     let mut cursor = Cursor::new("if".chars());
-    let got = If::parse(&mut cursor).unwrap();
-    let expected = If {
+    let got = IfKeyword::parse(&mut cursor).unwrap();
+    let expected = IfKeyword {
         span: Span::new(0, 2),
     };
     assert_eq!(got, expected);
@@ -146,8 +151,8 @@ fn test_else() {
 #[test]
 fn test_while() {
     let mut cursor = Cursor::new("while".chars());
-    let got = While::parse(&mut cursor).unwrap();
-    let expected = While {
+    let got = WhileKeyword::parse(&mut cursor).unwrap();
+    let expected = WhileKeyword {
         span: Span::new(0, 5),
     };
     assert_eq!(got, expected);
@@ -176,8 +181,8 @@ fn test_func() {
 #[test]
 fn test_return() {
     let mut cursor = Cursor::new("return".chars());
-    let got = Return::parse(&mut cursor).unwrap();
-    let expected = Return {
+    let got = ReturnKeyword::parse(&mut cursor).unwrap();
+    let expected = ReturnKeyword {
         span: Span::new(0, 6),
     };
     assert_eq!(got, expected);
@@ -196,9 +201,33 @@ fn test_import() {
 #[test]
 fn test_exportal() {
     let mut cursor = Cursor::new("external".chars());
-    let got = External::parse(&mut cursor).unwrap();
-    let expected = External {
+    let got = ExternalKeyword::parse(&mut cursor).unwrap();
+    let expected = ExternalKeyword {
         span: Span::new(0, 8),
     };
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_string_literal() {
+    let mut cursor = Cursor::new("\"hello\"".chars());
+    let got = StringLiteral::parse(&mut cursor).unwrap();
+    let expected = StringLiteral::new(Span::new(0, 7), "hello".to_string());
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_ident() {
+    let mut cursor = Cursor::new("hello".chars());
+    let got = Ident::parse(&mut cursor).unwrap();
+    let expected = Ident::new(Span::new(0, 5), "hello".to_string());
+    assert_eq!(got, expected);
+}
+
+#[test]
+fn test_int() {
+    let mut cursor = Cursor::new("123".chars());
+    let got = Int::parse(&mut cursor).unwrap();
+    let expected = Int::new(Span::new(0, 3), 123);
     assert_eq!(got, expected);
 }

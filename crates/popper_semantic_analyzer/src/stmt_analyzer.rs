@@ -63,7 +63,6 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         if let Some(ref ty) = let_stmt.r#type {
             let r: ValueFlag = ValueFlag::from_ty(ty.clone());
             let x = value.get_value().unwrap();
-
             if r != x {
                 return Err(
                     Box::new(
@@ -264,6 +263,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::Return(ret_stmt) => self.visit_return(ret_stmt),
             Statement::Import(import) => self.visit_import(import),
             Statement::External(external) => self.visit_external(external),
+            Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
+            Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
         }
     }
 
@@ -292,6 +293,37 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
         Ok(SymbolFlags::new(external.span()))
     }
+
+    fn visit_for_stmt(&mut self, _for_stmt: ForStmt) -> Result<Self::Output, Self::Error> {
+        todo!()
+    }
+
+    fn visit_struct_stmt(&mut self, struct_stmt: StructStmt) -> Result<Self::Output, Self::Error> {
+        if self.env.exist(struct_stmt.name.clone()) {
+            let s = self.env.get_variable(struct_stmt.name.as_str()).unwrap();
+            let err = AlreadyExist::new(s.span, (struct_stmt.name, struct_stmt.span));
+            return Err(Box::new(err));
+        }
+        let field: HashMap<_, _> = struct_stmt.fields.iter().map(|field| {
+            let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+            let ty = expr_analyzer.get_type(field.ty.clone());
+            (field.name.clone(), ty)
+        }).collect();
+
+        let symbol_flag = SymbolFlags::new(struct_stmt.span).set_struct(field).clone();
+        let variable = VariableFlag::new(
+            struct_stmt.name.clone(),
+            symbol_flag,
+            self.current_scope.clone(),
+            false,
+            struct_stmt.span
+        );
+
+        self.env.add_variable(variable);
+
+        Ok(SymbolFlags::new(struct_stmt.span))
+    }
+
 
 }
 

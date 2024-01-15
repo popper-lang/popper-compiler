@@ -1,17 +1,33 @@
 #[cfg(test)]
 mod test;
+mod ident;
+mod strings;
+mod int;
 
 use popper_ast::Span;
 use crate::parse::Parser;
 use crate::error::Error;
 use crate::cursor::Cursor;
+use crate::expect::Expect;
 
 macro_rules! tokens {
     ($($name:ident($c:ident) $b:block),*) => {
         $(
-        #[derive(Debug, Clone, PartialEq)]
+        #[derive(Debug, Clone, Default, PartialEq)]
         pub struct $name {
             pub span: Span,
+        }
+
+        impl $name {
+            pub fn new(span: Span) -> Self {
+                Self {
+                    span,
+                }
+            }
+
+            pub fn zero() -> Self {
+                Self::new(Default::default())
+            }
         }
 
         impl<I> Parser<I> for $name
@@ -22,6 +38,14 @@ macro_rules! tokens {
                 Ok($name {
                     span: $c.end_recording(),
                 })
+            }
+        }
+
+        impl<I> Expect<I> for $name
+        where I: Iterator<Item = char> + Clone {
+            fn expect(&self, cursor: &mut Cursor<I>) -> Result<Self, Error> {
+                let res = Self::parse(cursor)?;
+                Ok(res)
             }
         }
 
@@ -44,20 +68,16 @@ tokens![
         cursor.expect('>')?;
     },
     Le(cursor) {
-        cursor.expect('<')?;
-        cursor.expect('=')?;
+        cursor.expect("<=")?;
     },
     Ge(cursor) {
-        cursor.expect('>')?;
-        cursor.expect('=')?;
+        cursor.expect(">=")?;
     },
     Eq(cursor) {
-        cursor.expect('=')?;
-        cursor.expect('=')?;
+        cursor.expect("==")?;
     },
     Ne(cursor) {
-        cursor.expect('!')?;
-        cursor.expect('=')?;
+        cursor.expect("!=")?;
     },
     Plus(cursor) {
         cursor.expect('+')?;
@@ -73,72 +93,40 @@ tokens![
     },
     Percent(cursor) {
         cursor.expect('%')?;
+    },
+    Space(cursor) {
+        cursor.expect(' ')?;
     }
 ];
 
 // keyword
 tokens![
     Let(cursor) {
-        cursor.expect('l')?;
-        cursor.expect('e')?;
-        cursor.expect('t')?;
+        cursor.expect("let")?;
     },
     Struct(cursor) {
-        cursor.expect('s')?;
-        cursor.expect('t')?;
-        cursor.expect('r')?;
-        cursor.expect('u')?;
-        cursor.expect('c')?;
-        cursor.expect('t')?;
+        cursor.expect("struct")?;
     },
     Func(cursor) {
-        cursor.expect('f')?;
-        cursor.expect('u')?;
-        cursor.expect('n')?;
-        cursor.expect('c')?;
+        cursor.expect("func")?;
     },
     Return(cursor) {
-        cursor.expect('r')?;
-        cursor.expect('e')?;
-        cursor.expect('t')?;
-        cursor.expect('u')?;
-        cursor.expect('r')?;
-        cursor.expect('n')?;
+        cursor.expect("return")?;
     },
     If(cursor) {
-        cursor.expect('i')?;
-        cursor.expect('f')?;
+        cursor.expect("if")?;
     },
     Else(cursor) {
-        cursor.expect('e')?;
-        cursor.expect('l')?;
-        cursor.expect('s')?;
-        cursor.expect('e')?;
+        cursor.expect("else")?;
     },
     While(cursor) {
-        cursor.expect('w')?;
-        cursor.expect('h')?;
-        cursor.expect('i')?;
-        cursor.expect('l')?;
-        cursor.expect('e')?;
+        cursor.expect("while")?;
     },
     Import(cursor) {
-        cursor.expect('i')?;
-        cursor.expect('m')?;
-        cursor.expect('p')?;
-        cursor.expect('o')?;
-        cursor.expect('r')?;
-        cursor.expect('t')?;
+        cursor.expect("import")?;
     },
     External(cursor) {
-        cursor.expect('e')?;
-        cursor.expect('x')?;
-        cursor.expect('t')?;
-        cursor.expect('e')?;
-        cursor.expect('r')?;
-        cursor.expect('n')?;
-        cursor.expect('a')?;
-        cursor.expect('l')?;
+        cursor.expect("external")?;
     }
 ];
 

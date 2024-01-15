@@ -30,6 +30,8 @@ use popper_ast::StructStmt;
 use popper_ast::StructField;
 use popper_ast::StructInstance;
 use popper_ast::StructFieldInstance;
+use popper_ast::StructFieldAccess;
+
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
 
@@ -196,10 +198,6 @@ IfElse: Statement = {
 }
 
 
-
-
-
-
 CallSyntax: (Ident, Vec<Expression>) = {
      <t:Ident> "(" <args:Comma<Expr>?> ")" => {
         if let Some(args) = args {
@@ -268,18 +266,18 @@ StructInstanceExpr: Expression = {
     }
 }
 
-FieldAccessSyn: (Expression, Ident) = {
-    <e:Expr> "." <t:Ident> => {
+FieldAccessSyn: (Ident, Ident) = {
+    <e:Ident> "." <t:Ident> => {
         (e, t)
     }
 }
 
 FieldAccessExpr: Expression = {
-    <t:Span<FieldAccess>> => {
-        Expression::FieldAccess(
-            FieldAccess::new(
-                t.1,
-                t.1,
+    <t:Span<FieldAccessSyn>> => {
+        Expression::StructFieldAccess(
+            StructFieldAccess::new(
+                t.1.0.name,
+                t.1.1.name,
                 t.0
             )
         )
@@ -294,17 +292,18 @@ Expr: Expression = {
 };
 
 Factor: Expression = {
-    BinOp<Factor, OpFactor, FieldAccess>,
-    FieldAccess
+    BinOp<Factor, OpFactor, Call>,
+    Call
 };
 
-FieldAccess: Expression = {
-    FieldAccessExpr,
-    Call
-}
 
 Call: Expression = {
     CallExpr,
+    FieldAccess
+}
+
+FieldAccess: Expression = {
+    FieldAccessExpr,
     StructInstance
 }
 

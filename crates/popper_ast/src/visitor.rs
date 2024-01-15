@@ -17,6 +17,8 @@ pub trait ExprVisitor {
     visit!(visit_group, group => ParenGroup );
     visit!(visit_expr, expr => Expression );
     visit!(visit_call, call => Call);
+    visit!(visit_struct_instance, struct_instance => StructInstance);
+    visit!(visit_struct_field_access, struct_field_access => StructFieldAccess);
 }
 
 /// stmt visitor
@@ -35,5 +37,7 @@ pub trait StmtVisitor {
     visit!(visit_return, return_expr => Return);
     visit!(visit_import, import => ImportStmt);
     visit!(visit_external, external => External);
+    visit!(visit_for_stmt, for_stmt => ForStmt);
+    visit!(visit_struct_stmt, struct_stmt => StructStmt);
 
 }

@@ -6,8 +6,7 @@ use popper_flag::{Environment, SymbolFlags, ValueFlag};
 use popper_ast::visitor::ExprVisitor;
 use popper_error::Error;
 use popper_common::name_similarity::find_similar_name;
-
-
+use popper_error::fieldnotfound::FieldNotFound;
 
 
 #[derive(Clone)]
@@ -220,6 +219,125 @@ impl ExprVisitor for ExprAnalyzer {
         }
     }
 
+    fn visit_struct_instance(&mut self, struct_instance: StructInstance) -> Result<Self::Output, Self::Error> {
+        if ! self.env.exist(struct_instance.name.clone()) {
+            let name_candidates = self.env.get_all_variables_name();
+            let similar_name = find_similar_name(name_candidates.as_slice(), struct_instance.name.as_str());
+
+            return Err(
+                Box::new(
+                    NameNotFound::new(
+                        (struct_instance.span, struct_instance.name.clone()),
+                        similar_name.cloned()
+                    )
+
+                )
+            );
+        }
+
+        let struct_model = self.env.get_variable(struct_instance.name.as_str()).unwrap();
+        let struct_model_value = struct_model.value.get_value().unwrap();
+        if let ValueFlag::Struct(ref fields) = struct_model_value {
+            let mut sorted_fields = fields.iter().collect::<Vec<_>>();
+            sorted_fields.sort_by(|a, b| a.0.cmp(&b.0));
+            let mut fields_s = Vec::new();
+
+            for field in struct_instance.fields {
+                fields_s.push(
+                    (
+                        field.name.clone(),
+                        self.visit_expr(field.value)?.get_value().unwrap()
+                    )
+                )
+            }
+
+            fields_s.sort_by(|a, b| a.0.cmp(&b.0));
+
+
+            if fields.len() != fields_s.len() {
+                return Err(
+                    Box::new(
+                        DiffLengthOfArgument::new(fields.len(), fields_s.len(), struct_instance.span)
+                    )
+                );
+            }
+
+            for (field_get, field_model) in fields_s.iter().zip(sorted_fields) {
+                if field_get.0 != *field_model.0 {
+                    return Err(
+                        Box::new(
+                            FieldNotFound::new(
+                                field_get.0.clone(),
+                                struct_instance.span,
+                                None
+                            )
+                        )
+                    );
+                }
+
+                if field_get.1 != *field_model.1 {
+                    return Err(
+                        Box::new(
+                            TypeMismatch::new(
+                                (struct_instance.span, field_model.1.to_string()),
+                                (struct_instance.span, field_get.1.to_string())
+                            )
+                        )
+                    );
+                }
+
+
+
+            }
+
+            return Ok(SymbolFlags::new(struct_instance.span).set_value(struct_model_value).clone());
+        } else {
+            Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (struct_instance.span, "struct".to_string()),
+                        (struct_instance.span, struct_model_value.to_string())
+                    )
+                )
+            )
+        }
+
+
+    }
+
+    fn visit_struct_field_access(&mut self, struct_field_access: StructFieldAccess) -> Result<Self::Output, Self::Error> {
+        let struct_model = self.env.get_variable(struct_field_access.name.as_str()).unwrap();
+        let struct_model_value = struct_model.value.get_value().unwrap();
+        if let ValueFlag::Struct(ref fields) = struct_model_value {
+            match fields.get(&struct_field_access.field) {
+                Some(flag) => Ok(SymbolFlags::new(struct_field_access.span).set_value(flag.clone()).clone()),
+                None => {
+                    let field_candidates = fields.keys().cloned().collect::<Vec<_>>();
+                    let similar_name = find_similar_name(field_candidates.as_slice(), struct_field_access.field.as_str());
+
+                    Err(
+                        Box::new(
+                            FieldNotFound::new(
+                                struct_field_access.field.clone(),
+                                struct_field_access.span,
+                                similar_name.cloned()
+                            )
+                        )
+                    )
+                }
+            }
+        } else {
+            Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (struct_field_access.span, "struct".to_string()),
+                        (struct_field_access.span, struct_model_value.to_string())
+                    )
+                )
+            )
+        }
+    }
+
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
         match expr {
             Expression::Constant(constant) => self.visit_constant(constant),
@@ -227,6 +345,8 @@ impl ExprVisitor for ExprAnalyzer {
             Expression::UnaryOp(unary_op) => self.visit_unary_op(unary_op),
             Expression::Group(group) => self.visit_group(group),
             Expression::Call(call) => self.visit_call(call),
+            Expression::StructInstance(struct_instance) => self.visit_struct_instance(struct_instance),
+            Expression::StructFieldAccess(struct_field_access) => self.visit_struct_field_access(struct_field_access),
         }
     }
 
