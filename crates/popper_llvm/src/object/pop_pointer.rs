@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use inkwell::context::Context;
 use inkwell::types::PointerType;
 use inkwell::values::PointerValue;
 

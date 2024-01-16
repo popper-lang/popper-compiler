@@ -638,13 +638,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "popper_parser_new"
-version = "0.1.0"
-dependencies = [
- "popper_ast",
-]
-
-[[package]]
 name = "popper_semantic_analyzer"
 version = "0.1.0"
 dependencies = [

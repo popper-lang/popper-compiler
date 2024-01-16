@@ -2,7 +2,7 @@ use inkwell::values::{BasicMetadataValueEnum, BasicValue, PointerValue};
 use crate::compiler::LLVMCompiler;
 use crate::object::pop_object::PopObject;
 
-use popper_ast::{BinOp, Constant, StructFieldAccess};
+use popper_ast::{BinOp, StructFieldAccess};
 use popper_ast::ParenGroup;
 use popper_ast::BinOpKind;
 
@@ -79,8 +79,8 @@ impl<'ctx> LLVMCompiler<'ctx> {
         let var = self.env.get(struct_field_access.name).unwrap();
 
         let basic_value = var.clone().to_basic_value_enum();
-        let ptr = basic_value.into_pointer_value();
-        PopObject::new_int(self.context, 2)
+        let _ptr = basic_value.into_pointer_value();
+        todo!()
 
     }
 
