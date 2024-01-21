@@ -1,4 +1,4 @@
-workspace = { members = [ "crates/popper_llvm","crates/popper_parser"] }
+workspace = { members = [ "crates/popper_llvm", "crates/popper_mir","crates/popper_parser"] }
 [package]
 name = "popper_compiler"
 version = "0.1.0"
@@ -11,6 +11,7 @@ popper_semantic_analyzer = { path = "crates/popper_semantic_analyzer" }
 popper_parser = { path = "crates/popper_parser" }
 popper_ast = { path = "crates/popper_ast" }
 popper_codegen = { path = "crates/popper_codegen" }
+popper_mir = { path = "crates/popper_mir" }
 popper_common = { path = "crates/popper_common" }
 popper_error = { path = "crates/popper_error" }
 

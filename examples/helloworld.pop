@@ -1,5 +1,9 @@
 
+func add(a: int, b: int): int {
+    return a + b;
+}
+
 func main(): int {
-    let a = 2;
-	return 0;
+    let a: int = add(1, 2);
+	return a + 1;
 }

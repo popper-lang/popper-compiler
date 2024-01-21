@@ -1,12 +1,4 @@
-
-
 mod object;
-pub mod compiler;
-
-
-pub use inkwell::context::Context;
-
-
 
 #[macro_export]
 // a command macro

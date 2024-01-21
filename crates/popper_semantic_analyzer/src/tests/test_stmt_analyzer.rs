@@ -4,7 +4,6 @@ use crate::stmt_analyzer::StmtAnalyzer;
 use popper_ast::get_ast_from_json_file;
 use popper_ast::Span;
 use popper_flag::SymbolFlags;
-use popper_common::error::generate_color;
 
 
 #[cfg(test)]

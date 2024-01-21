@@ -621,6 +621,7 @@ dependencies = [
  "popper_codegen",
  "popper_common",
  "popper_error",
+ "popper_mir",
  "popper_parser",
  "popper_semantic_analyzer",
 ]
@@ -647,6 +648,13 @@ name = "popper_llvm"
 version = "0.1.0"
 dependencies = [
  "llvm-sys 170.0.1",
+]
+
+[[package]]
+name = "popper_mir"
+version = "0.1.0"
+dependencies = [
+ "popper_ast",
 ]
 
 [[package]]
