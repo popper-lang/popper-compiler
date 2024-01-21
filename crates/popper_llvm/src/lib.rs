@@ -1,25 +1,11 @@
+#![allow(dead_code)]
+#![allow(unused_macros)]
 
-
-mod object;
-pub mod compiler;
-
-
-pub use inkwell::context::Context;
-
-
-
-#[macro_export]
-// a command macro
-macro_rules! cmd {
-    ($cmd:ident) => {
-        std::process::Command::new(stringify!($cmd))
-        .output()
-        .expect("failed to execute process")
-    };
-    ($cmd:ident $($arg:expr)*) => {
-        std::process::Command::new(stringify!($cmd))
-            .args(&[$($arg),*])
-            .output()
-            .expect("failed to execute process")
-    };
-}
+pub mod context;
+pub mod module;
+pub mod util;
+pub mod types;
+pub mod value;
+pub mod basic_block;
+pub mod builder;
+pub mod execution_engine;
