@@ -39,7 +39,7 @@ impl MirCompiler {
         match ty.type_kind {
             TypeKind::Int => MirType::Int,
             TypeKind::Float => MirType::Float,
-            TypeKind::String(_) => MirType::String,
+            TypeKind::String(e) => MirType::String(e as usize),
             TypeKind::Bool => MirType::Bool,
             TypeKind::Unit => MirType::Void,
             _ => unimplemented!()
@@ -82,6 +82,10 @@ impl MirCompiler {
 
 
         Ok(var)
+    }
+
+    pub fn get_module(&self) -> Module {
+        self.ir.clone()
     }
 }
 

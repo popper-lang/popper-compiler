@@ -1,12 +1,11 @@
 use std::fmt::Debug;
 use llvm_sys::prelude::LLVMTypeRef;
-use llvm_sys::core::{
-    LLVMGetElementType,
-    LLVMArrayType2 as LLVMArrayType,
-    LLVMGetArrayLength2 as LLVMGetArrayLength
-};
+use llvm_sys::core::{LLVMGetElementType, LLVMArrayType2 as LLVMArrayType, LLVMGetArrayLength2 as LLVMGetArrayLength, LLVMConstString};
 
 use crate::types::{Type, TypeEnum};
+use crate::types::function_types::FunctionType;
+use crate::value::array_value::ArrayValue;
+use crate::value::ValueEnum;
 
 
 #[derive(Clone, Copy)]
@@ -32,6 +31,23 @@ impl ArrayType {
 
     pub fn new_with_llvm_ref(array_type: LLVMTypeRef) -> Self {
         Self { array_type, size: unsafe { LLVMGetArrayLength(array_type) }}
+    }
+
+    pub fn const_array(&self, values: &[ValueEnum]) -> ArrayValue {
+        ArrayValue::new_const(values, *self)
+    }
+
+    pub fn const_string(&self, string: &str) -> ArrayValue {
+        let values = unsafe { LLVMConstString(string.as_ptr() as *const i8, string.len() as u32, 0) };
+        ArrayValue::new_llvm_ref(values)
+    }
+
+    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {
+        FunctionType::new(args, self.to_type_enum(), is_var_args)
+    }
+
+    pub fn to_type_enum(&self) -> TypeEnum {
+        TypeEnum::ArrayType(*self)
     }
 
     pub fn get_size(&self) -> u64 {

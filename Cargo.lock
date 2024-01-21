@@ -593,12 +593,10 @@ name = "popper_codegen"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "popper_ast",
  "popper_builtins",
  "popper_common",
  "popper_llvm",
- "serde",
- "serde_json",
+ "popper_mir",
 ]
 
 [[package]]

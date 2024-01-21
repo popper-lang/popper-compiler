@@ -11,7 +11,7 @@ use crate::types;
 use crate::types::TypeEnum;
 use crate::value::Value;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct FloatValue {
     pub(crate) float_value: LLVMValueRef,
     pub(crate) float_type: types::float_types::FloatType,

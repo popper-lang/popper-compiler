@@ -175,12 +175,22 @@ impl StmtVisitor for MirCompiler {
             .collect::<Vec<String>>()
             .join("/");
 
+        let path = format!("{}.pop", path);
 
+        let path = std::path::Path::new(path.as_str());
+        let filename = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
+
+        let mut compiler = MirCompiler::new(import.module_stmts, path.to_str().unwrap().to_string());
+
+        compiler.compile();
+
+        let module = compiler.get_module();
         self.ir.push(
             Ir::LoadModule(
-                MirString::new(path)
+                module
             )
         );
+
 
         Ok(())
     }

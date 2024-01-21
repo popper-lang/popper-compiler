@@ -1,5 +1,6 @@
 use llvm_sys::prelude::LLVMTypeRef;
-use llvm_sys::core::LLVMPrintTypeToString;
+use llvm_sys::core::{LLVMConstString, LLVMPrintTypeToString};
+
 
 mod metadata;
 pub mod int_types;
@@ -74,6 +75,15 @@ impl TypeEnum {
             TypeEnum::FloatType(t) => t.get_type_ref(),
             TypeEnum::FunctionType(t) => t.get_type_ref(),
             TypeEnum::ArrayType(t) => t.get_type_ref(),
+        }
+    }
+
+    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> function_types::FunctionType {
+        match self {
+            TypeEnum::IntType(t) => t.func(args, is_var_args),
+            TypeEnum::FloatType(t) => t.func(args, is_var_args),
+            TypeEnum::ArrayType(t) => t.func(args, is_var_args),
+            _ => panic!("Cannot create function type from function type"),
         }
     }
 

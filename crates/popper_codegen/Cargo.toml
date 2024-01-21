@@ -6,9 +6,7 @@ edition = "2021"
 
 [dependencies]
 popper_llvm = { path = "../popper_llvm" }
-popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"]}
 popper_common = { path = "../popper_common" , features = ["ast_path_to_path", "hash"]}
+popper_mir = { path = "../popper_mir" }
 lazy_static = "1.4.0"
-serde = { version = "1.0.126", features = ["derive"] }
-serde_json = "1.0.2"
 popper_builtins = { path = "../popper_builtins" }

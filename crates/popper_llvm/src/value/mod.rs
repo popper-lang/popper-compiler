@@ -80,6 +80,7 @@ pub trait Value {
 pub mod int_value;
 pub mod float_value;
 pub mod function_value;
+pub mod array_value;
 
 pub enum ValueEnum {
     IntValue(int_value::IntValue),

@@ -31,7 +31,7 @@ impl MirCompile for Module {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ir {
-    LoadModule(MirString),          // load_module <path>
+    LoadModule(Module),          // load_module <path>
     LoadExternal(MirString),        // load_external <path>
     Declare(Declare),               // declare <name> = args [<args>] ret <ret>
     Function(Function)              // func @<ret> <name>(<args>): <body>
@@ -41,7 +41,7 @@ impl MirCompile for Ir {
     fn compile(&self) -> String {
         match self {
             Ir::LoadModule(path) => {
-                format!("load_module {}", path.compile())
+                format!("{}", path.compile())
             },
             Ir::LoadExternal(path) => {
                 format!("load_external {}", path.compile())
@@ -83,7 +83,7 @@ impl MirCompile for MirString {
 pub enum Type {
     Int,                                // @int
     Float,                              // @float
-    String,                             // @string
+    String(usize),                      // @string <size>
     Bool,                               // @bool
     Void,                               // @void
     Function(Vec<Type>, Box<Type>),     // @function(<args>) <ret>
@@ -99,8 +99,8 @@ impl MirCompile for Type {
             Type::Float => {
                 "@float".to_string()
             },
-            Type::String => {
-                "@string".to_string()
+            Type::String(s) => {
+                format!("@string {}", s)
             },
             Type::Bool => {
                 "@bool".to_string()

@@ -6,7 +6,7 @@ use llvm_sys::core::{
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
 
-use crate::types::int_types;
+use crate::types::{float_types, int_types};
 use crate::module::Module;
 use crate::value::function_value::FunctionValue;
 
@@ -31,11 +31,15 @@ impl Context {
 
     }
 
+    pub fn void_type(&self) -> int_types::IntType {
+        int_types::IntType::new_with_context(0, self.clone())
+    }
+
     pub fn i1_type(&self) -> int_types::IntType {
         int_types::IntType::new_with_context(1, self.clone())
     }
 
-    fn i8_type(&self) -> int_types::IntType {
+    pub fn i8_type(&self) -> int_types::IntType {
         int_types::IntType::new_with_context(8, self.clone())
     }
 
@@ -49,6 +53,10 @@ impl Context {
 
     pub fn i64_type(&self) -> int_types::IntType {
         int_types::IntType::new_with_context(64, self.clone())
+    }
+
+    pub fn float_type(&self) -> float_types::FloatType {
+        float_types::FloatType::new_with_context(*self)
     }
 
     pub fn append_basic_block(&self, name: &str, fn_value: FunctionValue) -> BasicBlock {

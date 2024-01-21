@@ -1,4 +1,5 @@
 mod object;
+mod compiler;
 
 #[macro_export]
 // a command macro

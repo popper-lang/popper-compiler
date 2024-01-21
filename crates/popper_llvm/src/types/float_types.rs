@@ -3,7 +3,8 @@ use llvm_sys::core::{
     LLVMDoubleTypeInContext
 };
 use crate::context::Context;
-use crate::types::Type;
+use crate::types::{Type, TypeEnum};
+use crate::types::function_types::FunctionType;
 
 
 #[derive(Debug, Copy, Clone)]
@@ -19,6 +20,14 @@ impl FloatType {
     pub fn new_with_context(context: Context) -> Self {
         let float_type = unsafe { LLVMDoubleTypeInContext(context.context) };
         Self { float_type }
+    }
+
+    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {
+        FunctionType::new(args, self.to_type_enum(), is_var_args)
+    }
+
+    pub fn to_type_enum(&self) -> TypeEnum {
+        TypeEnum::FloatType(*self)
     }
 
 }

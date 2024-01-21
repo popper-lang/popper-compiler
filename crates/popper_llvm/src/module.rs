@@ -12,6 +12,7 @@ use llvm_sys::core::{
 use llvm_sys::bit_reader::{
     LLVMParseBitcodeInContext2
 };
+use llvm_sys::linker::LLVMLinkModules2;
 
 use crate::context::Context;
 use crate::types::function_types::FunctionType;
@@ -58,6 +59,13 @@ impl Module {
             LLVMModuleCreateWithNameInContext(name.as_ptr(), context.context)
         };
         Self { module, context }
+    }
+
+    pub fn link(&self, other: &Module) {
+        let result = unsafe { LLVMLinkModules2(self.module, other.module) };
+        if result != 0 {
+            panic!("Failed to link modules");
+        }
     }
 
     pub fn get_context(&self) -> Context {

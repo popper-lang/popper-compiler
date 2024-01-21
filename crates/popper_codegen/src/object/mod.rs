@@ -27,4 +27,5 @@ impl PopObject {
             type_enum
         }
     }
+
 }

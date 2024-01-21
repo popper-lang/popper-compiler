@@ -6,6 +6,8 @@ use llvm_sys::core::{
 };
 use crate::context::Context;
 use crate::types::{Type, TypeEnum};
+use crate::types::array_types::ArrayType;
+use crate::types::function_types::FunctionType;
 use crate::value::int_value::IntValue;
 
 macro_rules! impl_into_int_type {
@@ -48,6 +50,13 @@ impl IntType {
 
     pub fn int(&self, value: u32, sign_extend: bool) -> IntValue {
         IntValue::new_const(value, self.clone(), sign_extend)
+    }
+
+    pub fn array(&self, length: u64) -> ArrayType {
+        ArrayType::new(self.to_type_enum(), length)
+    }
+    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {
+        FunctionType::new(args, self.to_type_enum(), is_var_args)
     }
 
     pub fn to_type_enum(self) -> TypeEnum {
