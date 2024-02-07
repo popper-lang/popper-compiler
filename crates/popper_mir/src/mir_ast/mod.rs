@@ -90,6 +90,19 @@ pub enum Type {
     Struct(Vec<Type>)                   // @struct { <fields> }
 }
 
+impl Type {
+    pub fn into_function(self) -> (Vec<Type>, Box<Type>) {
+        match self {
+            Type::Function(args, ret) => {
+                (args, ret)
+            },
+            e => {
+                panic!("Type is not a function: {:?}", e)
+            }
+        }
+    }
+}
+
 impl MirCompile for Type {
     fn compile(&self) -> String {
         match self {
@@ -397,7 +410,7 @@ impl Const {
         match self {
             Const::Int(_) => Type::Int,
             Const::Float(_) => Type::Float,
-            Const::String(_) => Type::String,
+            Const::String(s) => Type::String(s.string.len()),
             Const::Bool(_) => Type::Bool,
             Const::Void => Type::Void
         }
@@ -414,7 +427,7 @@ impl MirCompile for Const {
                 float.compile()
             },
             Const::String(string) => {
-                string.compile()
+                format!("string {}", string.compile())
             },
             Const::Bool(bool) => {
                 bool.compile()

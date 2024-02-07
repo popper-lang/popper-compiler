@@ -26,4 +26,3 @@ impl ScopeFlag {
         matches!(self, ScopeFlag::Block)
     }
 }
-

@@ -1,5 +1,5 @@
-mod object;
-mod compiler;
+pub mod object;
+pub mod compiler;
 
 #[macro_export]
 // a command macro

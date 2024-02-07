@@ -40,10 +40,15 @@ macro_rules! values {
 
 
 use crate::types::{int_types, TypeEnum};
+use crate::value::array_value::ArrayValue;
 
 pub trait Value {
-    fn get_type_ref(&self) -> LLVMTypeRef;
-    fn get_type(&self) -> TypeEnum;
+    fn get_type_ref(&self) -> LLVMTypeRef {
+        unsafe { LLVMTypeOf(self.as_value_ref()) }
+    }
+    fn get_type(&self) -> TypeEnum {
+        self.get_type_ref().into()
+    }
 
     fn as_value_ref(&self) -> LLVMValueRef;
     fn is_null_or_undef(&self) -> bool;
@@ -81,28 +86,46 @@ pub mod int_value;
 pub mod float_value;
 pub mod function_value;
 pub mod array_value;
+pub mod pointer_value;
 
+
+#[derive(Debug, Copy, Clone)]
 pub enum ValueEnum {
     IntValue(int_value::IntValue),
     FloatValue(float_value::FloatValue),
     FunctionValue(function_value::FunctionValue),
+    ArrayValue(ArrayValue),
+    PointerValue(pointer_value::PointerValue),
 }
 
+
 impl ValueEnum {
+
+    pub fn pointer(&self, type_enum: TypeEnum) -> pointer_value::PointerValue {
+        pointer_value::PointerValue::new_constant(*self, type_enum)
+    }
     pub fn get_type(&self) -> TypeEnum {
         match self {
             ValueEnum::IntValue(int_value) => int_value.get_type(),
             ValueEnum::FloatValue(float_value) => float_value.get_type(),
             ValueEnum::FunctionValue(function_value) => function_value.get_type(),
+            ValueEnum::ArrayValue(array_value) => array_value.get_type(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.get_type(),
+        }
+    }
+
+    pub fn print_to_string(&self) -> String {
+        match self {
+            ValueEnum::IntValue(int_value) => int_value.print_to_string(),
+            ValueEnum::FloatValue(float_value) => float_value.print_to_string(),
+            ValueEnum::FunctionValue(function_value) => function_value.print_to_string(),
+            ValueEnum::ArrayValue(array_value) => array_value.print_to_string(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.print_to_string(),
         }
     }
 
     pub fn as_llvm_ref(&self) -> LLVMValueRef {
-        match self {
-            ValueEnum::IntValue(int_value) => int_value.as_value_ref(),
-            ValueEnum::FloatValue(float_value) => float_value.as_value_ref(),
-            ValueEnum::FunctionValue(function_value) => function_value.as_value_ref(),
-        }
+        (*self).into()
     }
 
     pub fn into_int_value(self) -> int_value::IntValue {
@@ -111,6 +134,25 @@ impl ValueEnum {
             _ => panic!("Not an int value"),
         }
     }
+
+    pub fn into_ptr_value(self) -> pointer_value::PointerValue {
+        match self {
+            ValueEnum::PointerValue(ptr_value) => ptr_value,
+            _ => panic!("Not a pointer value"),
+        }
+    }
+
+    pub fn dump(&self) {
+        match self {
+            ValueEnum::IntValue(int_value) => int_value.dump(),
+            ValueEnum::FloatValue(float_value) => float_value.dump(),
+            ValueEnum::FunctionValue(function_value) => function_value.dump(),
+            ValueEnum::ArrayValue(array_value) => array_value.dump(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.dump(),
+        }
+    }
+
+
 }
 
 impl Into<ValueEnum> for LLVMValueRef {
@@ -121,6 +163,8 @@ impl Into<ValueEnum> for LLVMValueRef {
             TypeEnum::IntType(_) => ValueEnum::IntValue(int_value::IntValue::new_llvm_ref(self)),
             TypeEnum::FloatType(_) => ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(self)),
             TypeEnum::FunctionType(_) => ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(self)),
+            TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(ArrayValue::new_llvm_ref(self)),
+            TypeEnum::PointerType(_) => ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self)),
             _ => panic!("Unknown type"),
         }
     }
@@ -132,6 +176,8 @@ impl Into<LLVMValueRef> for ValueEnum {
             ValueEnum::IntValue(int_value) => int_value.as_value_ref(),
             ValueEnum::FloatValue(float_value) => float_value.as_value_ref(),
             ValueEnum::FunctionValue(function_value) => function_value.as_value_ref(),
+            ValueEnum::ArrayValue(array_value) => array_value.as_value_ref(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.as_value_ref(),
         }
     }
 }

@@ -10,7 +10,7 @@ use llvm_sys::core::{
 use crate::types::{int_types, TypeEnum};
 use crate::value::{Value, ValueEnum};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct IntValue {
     pub(crate) int_value: LLVMValueRef,
     pub(crate) int_type: int_types::IntType,

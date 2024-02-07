@@ -13,7 +13,8 @@ pub struct MirCompiler {
     pub(crate) ast: Vec<Statement>,
     pub(crate) ir: Module,
     pub(crate) current_fn: Option<Body>,
-    pub(crate) env: HashMap<String, MirType>,
+    pub(crate) local: HashMap<String, MirType>,
+    pub(crate) global: HashMap<String, MirType>,
     pub(crate) var_id: usize
 }
 
@@ -30,7 +31,8 @@ impl MirCompiler {
             ast,
             ir: Module::new(module_name, vec![]),
             current_fn: None,
-            env: HashMap::new(),
+            local: HashMap::new(),
+            global: HashMap::new(),
             var_id: 0
         }
     }
@@ -51,9 +53,22 @@ impl MirCompiler {
         let ret = self.compile_type(fn_sign.return_type);
         self.ir.push(
             Ir::Declare(
-                Declare::new(fn_sign.name, List::new(args), ret)
+                Declare::new(fn_sign.name.clone(), List::new(args.clone()), ret.clone())
             )
-        )
+        );
+
+        self.global.insert(fn_sign.name, ret);
+
+    }
+
+    pub fn get(&self, name: &str) -> Option<MirType> {
+        if let Some(ty) = self.local.get(name) {
+            return Some(ty.clone());
+        }
+        if let Some(ty) = self.global.get(name) {
+            return Some(ty.clone());
+        }
+        None
     }
 
     pub fn compile(&mut self) -> Module {

@@ -350,9 +350,23 @@ version = "0.2.0"
 source = "git+https://github.com/TheDan64/inkwell?branch=master#0b2cde9394320ab6f097ef10408d663a28d44be3"
 dependencies = [
  "either",
- "inkwell_internals",
+ "inkwell_internals 0.8.0",
  "libc",
  "llvm-sys 160.1.4",
+ "once_cell",
+ "thiserror",
+]
+
+[[package]]
+name = "inkwell"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32bf6d00838475201af3378a4adeca10e92a4a9dccb980dab0b432d9d4f2e514"
+dependencies = [
+ "either",
+ "inkwell_internals 0.9.0",
+ "libc",
+ "llvm-sys 170.0.1",
  "once_cell",
  "thiserror",
 ]
@@ -361,6 +375,17 @@ dependencies = [
 name = "inkwell_internals"
 version = "0.8.0"
 source = "git+https://github.com/TheDan64/inkwell?branch=master#0b2cde9394320ab6f097ef10408d663a28d44be3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "inkwell_internals"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fa4d8d74483041a882adaa9a29f633253a66dde85055f0495c121620ac484b2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -581,7 +606,7 @@ dependencies = [
 name = "popper_builtins"
 version = "0.1.0"
 dependencies = [
- "inkwell",
+ "inkwell 0.2.0",
  "popper_ast",
  "popper_error",
  "serde",
@@ -619,9 +644,12 @@ dependencies = [
  "popper_codegen",
  "popper_common",
  "popper_error",
+ "popper_inkwell",
+ "popper_libc",
  "popper_mir",
  "popper_parser",
  "popper_semantic_analyzer",
+ "serde_json",
 ]
 
 [[package]]
@@ -639,6 +667,23 @@ name = "popper_flag"
 version = "0.1.0"
 dependencies = [
  "popper_ast",
+]
+
+[[package]]
+name = "popper_inkwell"
+version = "0.1.0"
+dependencies = [
+ "inkwell 0.3.0",
+ "popper_common",
+ "popper_mir",
+]
+
+[[package]]
+name = "popper_libc"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "popper_flag",
 ]
 
 [[package]]

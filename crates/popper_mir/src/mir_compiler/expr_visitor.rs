@@ -11,7 +11,7 @@ impl ExprVisitor for MirCompiler {
         Ok(match constant {
             Constant::Ident(ident) => {
                 Value::Variable(
-                    Variable::new(ident.name.clone(), self.env.get(ident.name.as_str()).unwrap().clone())
+                    Variable::new(ident.name.clone(), self.get(ident.name.as_str()).unwrap().clone())
                 )
             },
             Constant::Int(int) => {
@@ -111,8 +111,10 @@ impl ExprVisitor for MirCompiler {
             return Err(());
         }
         let name = call.name.clone();
-        let ty = self.env.get(name.as_str()).unwrap().clone();
-        let out = self.new_var_id(ty.clone())?;
+        let func = self.get(name.as_str()).expect(
+            &format!("Function {} not found", name)
+        ).clone();
+        let out = self.new_var_id(func.clone())?;
         let args = call.arguments.iter().map(|arg| self.visit_expr(arg.clone())).collect::<Result<Vec<Value>, ()>>()?;
 
         let list = List::new(args);
@@ -129,7 +131,7 @@ impl ExprVisitor for MirCompiler {
         );
 
         Ok(Value::Variable(
-            Variable::new(out, ty)
+            Variable::new(out, func)
         ))
     }
 

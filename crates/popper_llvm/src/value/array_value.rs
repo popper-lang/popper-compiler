@@ -1,7 +1,7 @@
 use llvm_sys::core::{LLVMConstArray2, LLVMTypeOf};
-use llvm_sys::prelude::LLVMValueRef;
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use crate::types;
-use crate::value::ValueEnum;
+use crate::value::{Value, ValueEnum};
 
 #[derive(Debug, Copy, Clone)]
 pub struct ArrayValue {
@@ -23,5 +23,38 @@ impl ArrayValue {
 
     pub fn get_value(&self) -> LLVMValueRef {
         self.array_value
+    }
+    pub fn to_value_enum(&self) -> ValueEnum {
+        ValueEnum::ArrayValue(*self)
+    }
+}
+
+impl Value for ArrayValue {
+    fn get_type_ref(&self) -> LLVMTypeRef {
+        todo!()
+    }
+
+    fn get_type(&self) -> types::TypeEnum {
+        types::TypeEnum::ArrayType(self.array_type)
+    }
+
+    fn as_value_ref(&self) -> LLVMValueRef {
+        self.array_value
+    }
+
+    fn is_null_or_undef(&self) -> bool {
+        false
+    }
+
+    fn is_const(&self) -> bool {
+        true
+    }
+
+    fn is_null(&self) -> bool {
+        false
+    }
+
+    fn is_undef(&self) -> bool {
+        false
     }
 }

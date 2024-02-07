@@ -50,13 +50,18 @@ impl FunctionValue {
         }
     }
 
-    pub fn get_param_nth(&self, index: u32) -> Option<ValueEnum> {
+    pub fn get_nth_param(&self, index: u32) -> Option<ValueEnum> {
         let param = unsafe { LLVMGetParam(self.function_value, index) };
         if param.is_null() {
             None
         } else {
             Some(param.into())
         }
+    }
+
+    pub fn verify(&self) -> bool {
+        let result = unsafe { llvm_sys::analysis::LLVMVerifyFunction(self.function_value, llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction) };
+        result == 0
     }
 
 }

@@ -1,13 +1,16 @@
 use std::ffi::CString;
-use llvm_sys::prelude::{LLVMBuilderRef, LLVMTypeRef, LLVMValueRef};
-use llvm_sys::core::{LLVMCreateBuilderInContext, LLVMBuildAdd, LLVMPositionBuilderAtEnd, LLVMBuildSub, LLVMBuildMul, LLVMBuildNSWMul, LLVMBuildFDiv, LLVMBuildNSWAdd};
+use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
+use llvm_sys::core::{LLVMBuildAdd, LLVMBuildMul, LLVMBuildFDiv, LLVMConstInt, LLVMBuildNSWAdd, LLVMBuildNSWMul, LLVMBuildSub, LLVMConstIntGetZExtValue, LLVMCreateBuilderInContext, LLVMDumpModule, LLVMDumpValue, LLVMIsAFunction, LLVMIsAGlobalIFunc, LLVMPositionBuilderAtEnd, LLVMPrintValueToString};
 use crate::basic_block::BasicBlock;
 use crate::context::Context;
+use crate::types::TypeEnum;
 use crate::value::function_value::FunctionValue;
 use crate::value::int_value::IntValue;
 use crate::value::{Value, ValueEnum};
+use crate::value::pointer_value::PointerValue;
+use crate::types::Type;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Builder {
     pub(crate) builder: LLVMBuilderRef,
     pub(crate) context: Context,
@@ -61,12 +64,34 @@ impl Builder {
     }
 
     pub fn build_direct_call(&self, function: FunctionValue, args: Vec<LLVMValueRef>, name: CString) -> LLVMValueRef {
-        let mut args = args;
-        unsafe { llvm_sys::core::LLVMBuildCall2(self.builder, function.get_type_ref(), function.as_value_ref(), args.as_mut_ptr(), args.len() as u32, name.as_ptr()) }
+        let i64t = self.context.i64_type().get_type_ref();
+        function.dump();
+        let mut args = unsafe {
+            [LLVMConstInt(i64t, 1, 0), LLVMConstInt(i64t, 1, 0)]
+        };
+        let ty = function.get_type();
+        let length = args.len() as u32;
+        unsafe { llvm_sys::core::LLVMBuildCall2(self.builder, function.get_type_ref(), function.as_value_ref(), args.as_mut_ptr(), length, b"entry\0".as_ptr() as *const _) }
     }
 
     pub fn build_ret(&self, r: ValueEnum) {
         unsafe { llvm_sys::core::LLVMBuildRet(self.builder, r.into()) };
+    }
+
+    pub fn build_alloca(&self, ty: TypeEnum, name: &str) -> PointerValue {
+        let name = CString::new(name).unwrap();
+        let value = unsafe { llvm_sys::core::LLVMBuildAlloca(self.builder, ty.get_type_ref(), name.as_ptr()) };
+        PointerValue::new_llvm_ref(value)
+    }
+
+    pub fn build_store(&self, value: ValueEnum, ptr: PointerValue) {
+        unsafe { llvm_sys::core::LLVMBuildStore(self.builder, value.into(), ptr.get_llvm_ref()) };
+    }
+
+    pub fn build_load(&self, ty: TypeEnum, ptr: PointerValue, name: &str) -> ValueEnum {
+        let name = CString::new(name).unwrap();
+        let value = unsafe { llvm_sys::core::LLVMBuildLoad2(self.builder, ty.get_type_ref(), ptr.get_llvm_ref(), name.as_ptr()) };
+        value.into()
     }
 
     pub fn position_at_end(&mut self, basic_block: BasicBlock) {
@@ -79,5 +104,11 @@ impl Builder {
 
     pub fn set_entry_block(&mut self, basic_block: BasicBlock) {
         self.entry_block = Some(basic_block);
+    }
+}
+
+impl Drop for Builder {
+    fn drop(&mut self) {
+        unsafe { llvm_sys::core::LLVMDisposeBuilder(self.builder) }
     }
 }

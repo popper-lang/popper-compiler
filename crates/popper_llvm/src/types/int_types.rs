@@ -59,6 +59,13 @@ impl IntType {
         FunctionType::new(args, self.to_type_enum(), is_var_args)
     }
 
+    pub fn bool(&self, value: bool) -> IntValue {
+        IntValue::new_const(value as u32, self.clone(), false)
+    }
+    pub fn void(&self) -> IntValue {
+        IntValue::new_const(0, self.clone(), false)
+    }
+
     pub fn to_type_enum(self) -> TypeEnum {
         TypeEnum::IntType(self)
     }

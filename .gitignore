@@ -1,9 +1,11 @@
 /target
 target/
-.idea 
+.idea
 .DS_Store
 examples/ex1/target/
-.* 
+/Cargo.lock
+/target_popper
+
 
 # Added by cargo
 #

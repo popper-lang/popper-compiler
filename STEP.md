@@ -3,13 +3,15 @@
 
 STEP.md is a file that will show and explain the steps of my language. To explain all this, there will be a general and simple example of my language:
 ```
-fun sum(a: int, b: int) -> int {
+import std.io;
+fun sum(a: int, b: int): int {
   return a + b;
 }
-
-let c = sum(3, 4);
-print(c);
-``` 
+func main() {
+    let c: int = sum(3, 4);
+    print(c);
+}
+```
 
 # STEP 1: Lexer and Parser
 
@@ -19,6 +21,10 @@ Here, using the example given above, it would look like this:
 (in pseudo structure)
 ```
   [
+    Import(
+        PathSegment("std", "io"),
+        None
+    ),
     Function(
       Args((a, INT), (b, INT)),
       INT,
@@ -32,23 +38,29 @@ Here, using the example given above, it would look like this:
         )
       ]
    ),
-   Let(
-     "c",
-     Call(
-      Ident("sum"),
-      [
-        Int(3),
-        Int(4)
-      ]
-     )
-   ),
-   Call(
-     Ident("print"),
-     [
-      Ident("c")
-     ]
+   Function(
+        Args(),
+        INT,
+        [
+          Let(
+            "c",
+            Call(
+              Ident("sum"),
+              [
+                Int(3),
+                Int(4)
+              ]
+            )
+          ),
+          Call(
+            Ident("print"),
+            [
+              Ident("c")
+            ]
+          )
+        ]
    )
-  ]
+
 ```
 
 all made by lalrpop
@@ -56,34 +68,38 @@ all made by lalrpop
 # STEP 2: Semantical Analizer
 this program check type and variable ( if this variable exist or not)
 
-# STEP 3: Simple Bytecode Compiler  
+# STEP 3: Compile to Popper MIR
 
-this program will transform the AST into "simple" bytecode:
+this program will transform the AST into a kind of bytecode, called MIR (Mid-level Intermediate Representation)
+
 ```
-0  ARG ("a", INT)
-1  ARG ("b", INT)
-2  LOAD_STR "sum"
-3  DEF_FUNC 5
-4  JMP 9
-5  LOAD_IDENT "a"
-6  LOAD_IDENT "b"
-7  ADD 
-8  RETURN
-9  LOAD_INT 3
-10 LOAD_INT 4
-11 CALL "sum"
-12 LET "c"
-13 LOAD_IDENT "c"
-14 CALL "print"
+module example {
+    load_module "std/io.pop";
+    func sum(a: @int, b: @int) @int {
+        alloc __0, @int;
+        add a, b, __0;
+        ret __0;
+    }
+
+    func main() @int {
+        alloc __1, @int;
+        call sum, [@int 3, @int 4], __1;
+        call print, [@int __1], null;
+        ret 0;
+    }
+}
 ```
 
-# STEP 4: Simple Asm Compiler
+# STEP 4: LLVM Compiler
 
-it will take the bytecode and transform it into a kind of ASM AST:
+transforms this MIR  in LLVM IR
+
+```
+
 
 ```
 [
-  Label("sum_func", [ 
+  Label("sum_func", [
       Mov(EAX, EDI),
       Mov(EBX, ESI),
       Add(EAX, EBX),
@@ -113,7 +129,7 @@ sum_func:
   mov ebx, esi
   add eax, ebx
   ret
-  
+
 main:
   mov edi, 3
   mov esi, 4
@@ -123,6 +139,5 @@ main:
   mov edi, [rnp + 2]
   call _printf
   sub rbp, 2
-  
-```
 
+```

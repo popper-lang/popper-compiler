@@ -7,6 +7,7 @@ pub mod int_types;
 pub mod float_types;
 pub mod function_types;
 pub mod array_types;
+mod pointer_types;
 
 #[macro_export]
 macro_rules! types {
@@ -61,11 +62,13 @@ pub trait Type {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
 pub enum TypeEnum {
     IntType(int_types::IntType),
     FloatType(float_types::FloatType),
     FunctionType(function_types::FunctionType),
     ArrayType(array_types::ArrayType),
+    PointerType(pointer_types::PointerTypes),
 }
 
 impl TypeEnum {
@@ -75,6 +78,7 @@ impl TypeEnum {
             TypeEnum::FloatType(t) => t.get_type_ref(),
             TypeEnum::FunctionType(t) => t.get_type_ref(),
             TypeEnum::ArrayType(t) => t.get_type_ref(),
+            TypeEnum::PointerType(t) => t.get_type_ref(),
         }
     }
 
@@ -83,9 +87,17 @@ impl TypeEnum {
             TypeEnum::IntType(t) => t.func(args, is_var_args),
             TypeEnum::FloatType(t) => t.func(args, is_var_args),
             TypeEnum::ArrayType(t) => t.func(args, is_var_args),
+            TypeEnum::FunctionType(t) => t.func(args, is_var_args),
+            TypeEnum::PointerType(t) => t.func(args, is_var_args),
             _ => panic!("Cannot create function type from function type"),
         }
     }
+
+    pub fn ptr(&self) -> pointer_types::PointerTypes {
+        pointer_types::PointerTypes::new_const(*self)
+    }
+
+
 
 }
 
@@ -105,7 +117,10 @@ impl Into<TypeEnum> for LLVMTypeRef {
             }
             llvm_sys::LLVMTypeKind::LLVMArrayTypeKind => {
                 TypeEnum::ArrayType(array_types::ArrayType::new_with_llvm_ref(self))
-            }
+            },
+            llvm_sys::LLVMTypeKind::LLVMPointerTypeKind => {
+                TypeEnum::PointerType(pointer_types::PointerTypes::new_llvm_ref(self))
+            },
             _ => panic!("Unknown type"),
         }
     }

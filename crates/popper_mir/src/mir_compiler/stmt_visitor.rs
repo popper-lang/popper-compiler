@@ -18,7 +18,7 @@ impl StmtVisitor for MirCompiler {
         }
         let expr = self.visit_expr(let_stmt.value)?;
         let ty = self.compile_type(let_stmt.r#type.unwrap());
-        self.env.insert(let_stmt.name.name.clone(), ty.clone());
+        self.local.insert(let_stmt.name.name.clone(), ty.clone());
         let body = self.current_fn.as_mut().unwrap();
         body.push(
             BodyFn::Alloc(
@@ -115,7 +115,7 @@ impl StmtVisitor for MirCompiler {
             .collect::<Vec<Argument>>();
 
         args.iter().for_each(|arg| {
-            self.env.insert(arg.name.clone(), arg.ty.clone());
+            self.local.insert(arg.name.clone(), arg.ty.clone());
         });
         let ret = self.compile_type(function.returntype);
 
@@ -125,8 +125,8 @@ impl StmtVisitor for MirCompiler {
             self.visit_stmt(stmt)?;
         }
 
-        self.env.clear();
-        self.env.insert(name.clone(), ret.clone());
+        self.local.clear();
+        self.global.insert(name.clone(), ret.clone());
         let function = MirFunction::new(name, Arguments::new(args), ret, self.current_fn.clone().unwrap());
 
         self.current_fn = None;
@@ -178,7 +178,6 @@ impl StmtVisitor for MirCompiler {
         let path = format!("{}.pop", path);
 
         let path = std::path::Path::new(path.as_str());
-        let filename = path.with_extension("").file_name().unwrap().to_str().unwrap().to_string();
 
         let mut compiler = MirCompiler::new(import.module_stmts, path.to_str().unwrap().to_string());
 
@@ -190,6 +189,8 @@ impl StmtVisitor for MirCompiler {
                 module
             )
         );
+
+        self.global.extend(compiler.global.clone());
 
 
         Ok(())

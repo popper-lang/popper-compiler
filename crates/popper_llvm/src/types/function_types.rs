@@ -22,12 +22,20 @@ impl FunctionType {
         Self { function_type }
     }
 
+    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> Self {
+        FunctionType::new(args, self.to_type_enum(), is_var_args)
+    }
+
     pub fn new_with_llvm_ref(function_type: LLVMTypeRef) -> Self {
         Self { function_type }
     }
 
     pub fn get_type_ref(&self) -> LLVMTypeRef {
         self.function_type
+    }
+
+    pub fn to_type_enum(&self) -> TypeEnum {
+        TypeEnum::FunctionType(*self)
     }
 }
 

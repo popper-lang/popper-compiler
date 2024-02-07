@@ -9,7 +9,7 @@ use llvm_sys::core:: {
 };
 use crate::types;
 use crate::types::TypeEnum;
-use crate::value::Value;
+use crate::value::{Value, ValueEnum};
 
 #[derive(Debug, Copy, Clone)]
 pub struct FloatValue {
@@ -31,6 +31,10 @@ impl FloatValue {
     pub fn get_value(&self) -> f64 {
         let double = unsafe { LLVMConstRealGetDouble(self.float_value, &mut 0) };
         double as f64
+    }
+
+    pub fn to_value_enum(&self) -> ValueEnum {
+        ValueEnum::FloatValue(*self)
     }
 }
 

@@ -48,16 +48,19 @@ impl Pretty {
         self.tab();
         match ir {
             Ir::LoadModule(mir_string) => {
-                self.result.push_str(&format!("load_module \"{}\"\n", mir_string));
+                self.result.push_str(&"load_module ".to_string());
+                self.pretty_module(mir_string);
+                self.result.push_str("\n");
             },
             Ir::LoadExternal(mir_string) => {
-                self.result.push_str(&format!("load_external \"{}\"\n", mir_string));
+                self.result.push_str(&format!("load_external {}\n", mir_string));
             },
             Ir::Declare(declare) => {
                 self.result.push_str(&format!("declare {} = args", declare.name));
                 self.pretty_list(declare.args.clone());
-                self.result.push_str("ret");
+                self.result.push_str(" ret");
                 self.pretty_type(declare.ret.clone());
+                self.result.push_str("\n");
             },
             Ir::Function(func) => {
                 self.result.push_str("func ");
