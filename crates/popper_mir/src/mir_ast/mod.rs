@@ -86,6 +86,7 @@ pub enum Type {
     String(usize),                      // @string <size>
     Bool,                               // @bool
     Void,                               // @void
+    List(Box<Type>, usize),                    // @list[<type>: <size>]
     Function(Vec<Type>, Box<Type>),     // @function(<args>) <ret>
     Struct(Vec<Type>)                   // @struct { <fields> }
 }
@@ -120,6 +121,9 @@ impl MirCompile for Type {
             },
             Type::Void => {
                 "@void".to_string()
+            },
+            Type::List(t, size) => {
+                format!("@list[{}: {}]", t.compile(), size)
             },
             Type::Function(args, ret) => {
                 format!("@function({}) {}", args.iter().map(|arg| arg.compile()).collect::<Vec<String>>().join(" "), ret.compile())
@@ -402,6 +406,7 @@ pub enum Const {
     Float(MirFloat),                 // float <value>
     String(MirString),               // string <value>
     Bool(MirBool),                   // bool <value>
+    List(MirList),                   // list <value>
     Void                             // void
 }
 
@@ -411,6 +416,7 @@ impl Const {
             Const::Int(_) => Type::Int,
             Const::Float(_) => Type::Float,
             Const::String(s) => Type::String(s.string.len()),
+            Const::List(l) => l.get_type(),
             Const::Bool(_) => Type::Bool,
             Const::Void => Type::Void
         }
@@ -431,7 +437,10 @@ impl MirCompile for Const {
             },
             Const::Bool(bool) => {
                 bool.compile()
-            }
+            },
+            Const::List(list) => {
+                list.compile()
+            },
             Const::Void => {
                 "void".to_string()
             }
@@ -488,6 +497,42 @@ impl MirBool {
 impl MirCompile for MirBool {
     fn compile(&self) -> String {
         format!("bool {}", self.value)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MirList {
+    pub values: Vec<Value>,
+}
+
+impl MirList {
+    pub fn new(values: Vec<Value>) -> Self {
+        Self { values }
+    }
+
+    pub fn get_type(&self) -> Type {
+        Type::List(
+            Box::new(self.get_minor_type()),
+            self.values.len()
+        )
+    }
+
+    pub fn get_minor_type(&self) -> Type {
+        self.values.first().unwrap().get_type()
+    }
+}
+
+impl MirCompile for MirList {
+    fn compile(&self) -> String {
+        let mut result = String::from("list [");
+        for value in &self.values {
+            result.push_str(&value.compile());
+            result.push_str(", ");
+        }
+        result.pop();
+        result.pop();
+        result.push(']');
+        result
     }
 }
 

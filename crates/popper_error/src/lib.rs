@@ -4,6 +4,7 @@ pub mod namenotfound;
 pub mod typemismatch;
 pub mod modulenotfound;
 pub mod fieldnotfound;
+pub mod typenotspecified;
 
 use ariadne::{Color, Source};
 use std::fmt::Debug;

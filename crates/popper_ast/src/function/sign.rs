@@ -1,7 +1,7 @@
 use crate::{Span, Arguments, Type};
 
 // a function signature :
-// fn printf (a: int, b: int) -> int;
+// func printf (a: int, b: int) -> int;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

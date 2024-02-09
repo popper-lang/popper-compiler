@@ -10,7 +10,7 @@ pub enum ValueFlag {
     String(u32),
     Boolean,
     None,
-    Array(Box<ValueFlag>),
+    List(Box<ValueFlag>, usize),
     Function(Vec<ValueFlag>, Box<ValueFlag>),
     Struct(HashMap<String, ValueFlag>),
     StructInstance(String),
@@ -26,7 +26,7 @@ impl Display for ValueFlag {
             ValueFlag::String(len) => write!(f, "string:{}", len),
             ValueFlag::Boolean => write!(f, "bool"),
             ValueFlag::None => write!(f, "unit"),
-            ValueFlag::Array(t) => write!(f, "[{}]", t.to_string()),
+            ValueFlag::List(t, u) => write!(f, "[{}: {}]", t.to_string(), u),
             ValueFlag::Function(args, returntype) => {
                 let mut args_string = String::new();
                 for arg in args {
@@ -63,10 +63,11 @@ impl ValueFlag {
             TypeKind::Bool => ValueFlag::Boolean,
             TypeKind::Int => ValueFlag::Integer,
             TypeKind::Unit => ValueFlag::None,
-            TypeKind::Array(ty, _) => ValueFlag::Array(
+            TypeKind::List(ty, l) => ValueFlag::List(
                 Box::new(
                     Self::from_ty(*ty)
-                )
+                ),
+                l
             ),
             TypeKind::Function(args, ret) => ValueFlag::Function(args
                 .iter()
@@ -99,6 +100,10 @@ impl ValueFlag {
             _ => None
         }
     }
+
+    pub fn is_same(&self, other: &Self) -> bool {
+        self == other
+    }
 }
 
 impl PartialEq for ValueFlag {
@@ -109,7 +114,7 @@ impl PartialEq for ValueFlag {
             (ValueFlag::String(_), ValueFlag::String(_)) => true,
             (ValueFlag::Boolean, ValueFlag::Boolean) => true,
             (ValueFlag::None, ValueFlag::None) => true,
-            (ValueFlag::Array(ty1), ValueFlag::Array(ty2)) => ty1 == ty2,
+            (ValueFlag::List(ty1, len1), ValueFlag::List(ty2, len2 )) => ty1 == ty2 && len1 == len2,
             (ValueFlag::Function(args1, ret1), ValueFlag::Function(args2, ret2)) => {
                 args1 == args2 && ret1 == ret2
             },

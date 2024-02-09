@@ -51,6 +51,10 @@ impl<'ctx> Compiler<'ctx> {
             MirType::String(l) => self.context.i8_type().array_type(l as u32).as_basic_type_enum(),
             MirType::Void => panic!("Void type not supported yet"),
             MirType::Bool => self.context.bool_type().as_basic_type_enum(),
+            MirType::List(ty, l) => {
+                let llvm_ty = self.mir_type_to_llvm_type(*ty);
+                llvm_ty.array_type(l as u32).as_basic_type_enum()
+            },
             MirType::Struct(fields) => {
                 let mut llvm_fields = vec![];
                 for field in fields {
@@ -251,6 +255,42 @@ impl<'ctx> Compiler<'ctx> {
             },
             Const::Bool(b) => self.context.bool_type().const_int(b.value as u64, false).into(),
             Const::Void => self.context.i64_type().const_zero().as_basic_value_enum(),
+            Const::List(l) => {
+                let list = l.values.iter().map(|v| {
+                    self.compile_value(v)
+                }).collect::<Vec<_>>();
+
+                self.build_array(l.get_minor_type(), list)
+            },
+        }
+    }
+
+    pub fn build_array<'a>(&'a self, ty: MirType, values: Vec<BasicValueEnum<'a>>) -> BasicValueEnum {
+        let val = self.mir_type_to_llvm_type(ty);
+        match val {
+            BasicTypeEnum::IntType(i) => {
+                let values = values.iter().map(|v| {
+                    v.into_int_value()
+                }).collect::<Vec<_>>();
+
+                i.const_array(&values).as_basic_value_enum()
+            },
+            BasicTypeEnum::FloatType(f) => {
+                let values = values.iter().map(|v| {
+                    v.into_float_value()
+                }).collect::<Vec<_>>();
+
+                f.const_array(&values).as_basic_value_enum()
+            },
+            BasicTypeEnum::PointerType(p) => {
+                let values = values.iter().map(|v| {
+                    v.into_pointer_value()
+                }).collect::<Vec<_>>();
+
+                p.const_array(&values).as_basic_value_enum()
+            },
+            _ => todo!()
+
         }
     }
 

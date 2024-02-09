@@ -31,6 +31,7 @@ use popper_ast::StructField;
 use popper_ast::StructInstance;
 use popper_ast::StructFieldInstance;
 use popper_ast::StructFieldAccess;
+use popper_ast::List;
 
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
@@ -125,6 +126,16 @@ StructType: TypeKind = {
     }
 }
 
+ListType: TypeKind = {
+    "[" <t:Types> <n:(":" Num)?> "]" => {
+        if let Some(n) = n {
+            TypeKind::List(Box::new(t), n.1.try_into().unwrap())
+        } else {
+            TypeKind::List(Box::new(t), 0)
+        }
+    }
+}
+
 Types: Type = {
     <int:Span<"int">> => Type::new(int.0, TypeKind::Int, vec![]),
     <bool:Span<"bool">> => Type::new(bool.0, TypeKind::Bool, vec![]),
@@ -133,7 +144,8 @@ Types: Type = {
     <struct_:Span<StructType>> => Type::new(struct_.0, struct_.1, vec![]),
     <generic:Span<GenericTypes>> => {
         Type::new(generic.0, generic.1.0.type_kind, generic.1.1)
-    }
+    },
+    <list:Span<ListType>> => Type::new(list.0, list.1, vec![]),
 
 
 }
@@ -309,8 +321,14 @@ FieldAccess: Expression = {
 
 StructInstance: Expression = {
     StructInstanceExpr,
+    ListExpr
+}
+
+ListExpr: Expression = {
+    List,
     Term
 }
+
 
 Term: Expression = {
     Int,
@@ -546,6 +564,30 @@ String: Expression = {
                                     )
                                 )
                             )
+}
+
+List: Expression = {
+    Group<"[", Comma<Expr>?, "]"> => {
+        if let Some(exprs) = <>.1 {
+            Expression::Constant(
+                Constant::List(
+                    List::new(
+                        <>.0,
+                        exprs
+                    )
+                )
+            )
+        } else {
+            Expression::Constant(
+                Constant::List(
+                    List::new(
+                        <>.0,
+                        vec![]
+                    )
+                )
+            )
+        }
+    }
 }
 
 Span<T>: (Span, T) = {

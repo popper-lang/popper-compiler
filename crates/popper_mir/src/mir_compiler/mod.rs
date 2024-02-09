@@ -44,6 +44,7 @@ impl MirCompiler {
             TypeKind::String(e) => MirType::String(e as usize),
             TypeKind::Bool => MirType::Bool,
             TypeKind::Unit => MirType::Void,
+            TypeKind::List(ty, len) => MirType::List(Box::new(self.compile_type(*ty)), len),
             _ => unimplemented!()
         }
     }

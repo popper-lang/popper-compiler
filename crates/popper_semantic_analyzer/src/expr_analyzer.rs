@@ -1,5 +1,5 @@
 use popper_ast::*;
-use popper_error::{diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound, typemismatch::TypeMismatch};
+use popper_error::{diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound, typemismatch::TypeMismatch, typenotspecified::TypeNotSpecified};
 use popper_flag::{Environment, SymbolFlags, ValueFlag};
 
 
@@ -12,12 +12,17 @@ use popper_error::fieldnotfound::FieldNotFound;
 #[derive(Clone)]
 pub struct ExprAnalyzer {
     env: Environment,
+    let_expected_value: Option<SymbolFlags>
 }
 
 
 impl ExprAnalyzer {
     pub fn new(env: Environment) -> Self {
-        Self { env }
+        Self { env, let_expected_value: None }
+    }
+
+    pub(crate) fn set_let_expected_value(&mut self, value: SymbolFlags) {
+        self.let_expected_value = Some(value);
     }
 
     pub fn get_type(&self, ty: Type) -> ValueFlag {
@@ -26,7 +31,7 @@ impl ExprAnalyzer {
             TypeKind::Float => ValueFlag::Float,
             TypeKind::Int => ValueFlag::Integer,
             TypeKind::String(size) => ValueFlag::String(size),
-            TypeKind::Array(ty, _) => ValueFlag::Array(Box::new(self.get_type(*ty))),
+            TypeKind::List(ty, l) => ValueFlag::List(Box::new(self.get_type(*ty)), l),
             TypeKind::Function(args, returnty) => {
                 let mut args_type = Vec::new();
                 for arg in args {
@@ -93,6 +98,74 @@ impl ExprVisitor for ExprAnalyzer {
                     }
                 }
             },
+            Constant::List(l) => {
+                let mut flags = SymbolFlags::new(l.span());
+                let mut base_value_flag: Option<ValueFlag> = None;
+                let mut base_span: Option<Span> = None;
+                for expr in &l.value {
+                    let flag = self.visit_expr(expr.clone())?;
+                    let value_flag = flag.get_value().unwrap();
+                    if base_value_flag.is_some() && !base_value_flag.as_ref().unwrap().is_same(&value_flag) {
+                        return Err(
+                            Box::new(
+                                TypeMismatch::new(
+                                    (base_span.unwrap(), base_value_flag.clone().unwrap().to_string()),
+                                    (flag.span(), value_flag.to_string())
+                                )
+                            )
+                        )
+                    }
+                    base_value_flag = Some(value_flag);
+                    base_span = Some(flag.span());
+                }
+                if let Some(value_flag) = base_value_flag {
+                    flags.set_list(value_flag, l.value.len());
+                } else {
+                    if let Some(val) = self.let_expected_value.clone() {
+                        if let ValueFlag::List(ty, size) = val.get_value().unwrap() {
+                            if size != l.value.len()  {
+                                return Err(
+                                    Box::new(
+                                        TypeMismatch::new(
+                                            (self.let_expected_value.clone().unwrap().span(), self.let_expected_value
+                                                .clone()
+                                                .unwrap()
+                                                .get_value()
+                                                .unwrap()
+                                                .to_string()
+                                            ),
+                                            (l.span(), format!("[{}: {}]", ty.to_string(), l.value.len()))
+                                        )
+                                    )
+                                );
+                            }
+                            flags.set_list(*ty, size);
+                        } else {
+                            return Err(
+                                Box::new(
+                                    TypeMismatch::new(
+                                        (self.let_expected_value.clone().unwrap().span(), self.let_expected_value
+                                            .clone()
+                                            .unwrap()
+                                            .get_value()
+                                            .unwrap()
+                                            .to_string()
+                                        ),
+                                        (l.span(), format!("list of length {}", l.value.len()))
+                                    )
+                                )
+                            );
+                        }
+                    } else {
+                        return Err(
+                            Box::new(
+                                TypeNotSpecified::new(l.span(), "array".to_string())
+                            )
+                        )
+                    }
+                }
+                Ok(flags)
+            }
             Constant::Null(null) => Ok(
                 SymbolFlags::new(null.span())
                     .set_none()
@@ -352,11 +425,3 @@ impl ExprVisitor for ExprAnalyzer {
 
 
 }
-
-
-
-
-
-
-
-

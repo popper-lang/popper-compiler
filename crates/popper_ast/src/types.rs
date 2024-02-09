@@ -28,7 +28,7 @@ pub enum TypeKind {
     /// `(type,*)`
     Tuple(Vec<Type>),
     /// `[type]`
-    Array(Box<Type>, usize),
+    List(Box<Type>, usize),
     /// `func(type,*) : type`
     Function(Vec<Type>, Box<Type>),
     /// `*type`
@@ -66,7 +66,7 @@ impl ToString for TypeKind {
                         .join(",")
                 )
             ,
-            TypeKind::Array(ty, size) =>
+            TypeKind::List(ty, size) =>
                 format!("[{}:{}]", ty.type_kind.to_string().clone(), size)
             ,
             TypeKind::Function(tys, ret) =>
@@ -102,4 +102,3 @@ impl ToString for TypeKind {
         }
     }
 }
-

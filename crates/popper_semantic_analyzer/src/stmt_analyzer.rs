@@ -58,10 +58,14 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
     fn visit_let_stmt(&mut self, let_stmt: LetStmt) -> Result<Self::Output, Self::Error> {
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
-        let value = analyzer.visit_expr(let_stmt.value.clone())?;
 
-        if let Some(ref ty) = let_stmt.r#type {
+
+        let value = if let Some(ref ty) = let_stmt.r#type {
             let r: ValueFlag = ValueFlag::from_ty(ty.clone());
+            let mut s = SymbolFlags::new(ty.span);
+            s.set_value(r.clone());
+            analyzer.set_let_expected_value(s.clone());
+            let value = analyzer.visit_expr(let_stmt.value.clone())?;
             let x = value.get_value().unwrap();
             if r != x {
                 return Err(
@@ -73,7 +77,11 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                     )
                 )
             }
-        }
+
+            value
+        } else {
+            analyzer.visit_expr(let_stmt.value.clone())?
+        };
 
         let variable = VariableFlag::new(
             let_stmt.name.name,
@@ -170,31 +178,29 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let err = AlreadyExist::new(f.span, (function.name, function.span));
             return Err(Box::new(err));
         }
-        let args: HashMap<String, ValueFlag>  = function.arguments.args.iter().map(|arg| {
-            let expr_analyser = ExprAnalyzer::new(self.env.clone());
-            (arg.name.clone(), expr_analyser.get_type(arg.ty.clone()))
-        }).collect();
+        let mut args = Vec::new();
 
-        let mut stmt_analyser =  StmtAnalyzer::from(self.clone());
-
-        stmt_analyser.current_scope = ScopeFlag::Function;
-
-        for (name, val) in args.clone() {
+        for arg in function.arguments.args {
             let mut symbol_flag = SymbolFlags::new(function.span);
+            let name = arg.name;
+            let val = ExprAnalyzer::new(self.env.clone()).get_type(arg.ty);
             symbol_flag = symbol_flag.add_flag(Flag::Value(val.clone())).clone();
             let variable = VariableFlag::new(
                 name,
                 symbol_flag.clone(),
-                stmt_analyser.current_scope.clone(),
+                self.current_scope.clone(),
                 false,
                 function.span
             );
+            self.env.add_variable(variable);
+            args.push(
+                val
+            )
 
-            stmt_analyser.env.add_variable(variable);
         }
 
         for stmt in function.body {
-            stmt_analyser.visit_stmt(stmt)?;
+            self.visit_stmt(stmt)?;
         }
 
         let return_type = {
@@ -203,10 +209,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         };
 
         let symbol_flag = SymbolFlags::new(function.span)
-            .set_function(args
-                              .values()
-                              .cloned()
-                              .collect(), *return_type)
+            .set_function(args, *return_type)
             .clone()
         ;
 
@@ -326,4 +329,3 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
 
 }
-

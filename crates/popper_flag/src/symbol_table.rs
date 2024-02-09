@@ -67,10 +67,10 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_array(&mut self, value_flag: ValueFlag) -> &mut Self {
+    pub fn set_list(&mut self, value_flag: ValueFlag, size: usize) -> &mut Self {
         self.add_flag(
             Flag::Value(
-                ValueFlag::Array(Box::new(value_flag))
+                ValueFlag::List(Box::new(value_flag), size)
             )
         );
         self
@@ -120,7 +120,7 @@ impl SymbolFlags {
     pub fn get_variable(&self, name: &str) -> Option<&VariableFlag> {
         self.vars.get_variable(name)
     }
-    
+
     pub fn get_function(&self) -> Option<(&Vec<ValueFlag>, &Box<ValueFlag>)> {
         self.symbols.iter().find_map(|s| {
             match s {
@@ -146,17 +146,17 @@ impl SymbolFlags {
         self.symbols.iter().any(|s| s == &Flag::Value(ValueFlag::Boolean))
     }
 
-    pub fn is_array(&self, value_flag: ValueFlag) -> bool {
+    pub fn is_list(&self, value_flag: ValueFlag, length: usize) -> bool {
         self.symbols.iter().any(|s|
             s == &Flag::Value(
-                ValueFlag::Array(Box::new(value_flag.clone()))
+                ValueFlag::List(Box::new(value_flag.clone()), length)
             )
         )
     }
 
     pub fn is_iterable(&self) -> bool {
         self.symbols.iter().any(|s| {
-            matches!(s, Flag::Value(ValueFlag::Array(_)))
+            matches!(s, Flag::Value(ValueFlag::List(_, _)))
         })
     }
 

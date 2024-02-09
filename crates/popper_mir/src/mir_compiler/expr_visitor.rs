@@ -1,6 +1,6 @@
 use popper_ast::{BinOp, BinOpKind, Call, Constant, Expression, ParenGroup, StructFieldAccess, StructInstance, UnaryOp};
 use popper_ast::visitor::ExprVisitor;
-use crate::mir_ast::{Add, BodyFn, Const, List, MirFloat, MirInt, MirString, Value, Variable};
+use crate::mir_ast::{Add, BodyFn, Const, List, MirFloat, MirInt, MirList, MirString, Value, Variable};
 use crate::mir_compiler::MirCompiler;
 
 impl ExprVisitor for MirCompiler {
@@ -38,6 +38,17 @@ impl ExprVisitor for MirCompiler {
                     Const::Void
                 )
             },
+            Constant::List(l) => {
+                Value::Const(
+                    Const::List(
+                        MirList::new(
+                            l.value.iter()
+                                .map(|x| self.visit_expr(x.clone()).unwrap())
+                                .collect()
+                        )
+                    )
+                )
+            }
 
             _ => unimplemented!()
 

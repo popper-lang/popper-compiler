@@ -267,6 +267,9 @@ impl Compiler {
                         let ty = self.context.i8_type();
                         let value = ty.int(0, false);
                         value.to_value_enum()
+                    },
+                    _ => {
+                        unimplemented!()
                     }
                 }
             },

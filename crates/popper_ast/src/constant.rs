@@ -1,4 +1,4 @@
-use crate::span::Span;
+use crate::{span::Span, Expression};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq, Eq, Hash))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -93,6 +93,24 @@ impl Bool {
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
+pub struct List {
+    span: Span,
+    pub value: Vec<Expression>,
+}
+
+impl List {
+    pub fn new(span: Span, value: Vec<Expression>) -> Self {
+        Self { span, value }
+    }
+
+    pub fn span(&self) -> Span {
+        self.span
+    }
+}
+
+#[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone)]
 /// null
 pub struct Null {
     span: Span,
@@ -115,6 +133,7 @@ pub enum Constant {
     Int(Int),
     Float(Float),
     StringLiteral(StringLiteral),
+    List(List),
     Bool(Bool),
     Null(Null),
 }
@@ -128,6 +147,7 @@ impl Constant {
             Self::StringLiteral(string_literal) => string_literal.span,
             Self::Bool(bool) => bool.span,
             Self::Null(null) => null.span,
+            Self::List(list) => list.span()
         }
     }
 }
