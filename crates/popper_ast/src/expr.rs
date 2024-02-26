@@ -5,6 +5,7 @@ use crate::Span;
 use crate::ParenGroup;
 use crate::StructInstance;
 use crate::StructFieldAccess;
+use crate::Index;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -17,6 +18,7 @@ pub enum Expression {
     Call(Call),
     StructInstance(StructInstance),
     StructFieldAccess(StructFieldAccess),
+    Index(Index),
 }
 
 impl Expression {
@@ -29,7 +31,7 @@ impl Expression {
             Expression::Call(c) => c.span,
             Expression::StructInstance(s) => s.span,
             Expression::StructFieldAccess(s) => s.span,
+            Expression::Index(i) => i.span,
         }
     }
 }
-

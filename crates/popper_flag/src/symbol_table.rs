@@ -175,7 +175,14 @@ impl SymbolFlags {
         })
     }
 
-
+    pub fn get_list(&self) -> Option<(ValueFlag, usize)> {
+        self.symbols.iter().find_map(|s| {
+            match s {
+                Flag::Value(ValueFlag::List(v, l)) => Some((*v.clone(), *l)),
+                _ => None
+            }
+        })
+    }
 
     pub fn is_same_value(&self, other: Self) -> bool {
         if self.get_value().is_none() || other.get_value().is_none() {

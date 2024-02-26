@@ -1,5 +1,6 @@
 
 func main(): int {
-    let c: [int: 3] = [3, 4, 5];
+    let c = [3, 4, 5];
+    let d = c:0;
     return 0;
 }

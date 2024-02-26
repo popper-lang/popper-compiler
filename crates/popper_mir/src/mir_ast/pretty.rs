@@ -144,6 +144,13 @@ impl Pretty {
                 self.pretty_value(ret.value);
                 self.result.push_str("\n");
             },
+            BodyFn::Index(index) => {
+                self.result.push_str(&format!("index {}, ", index.res));
+                self.pretty_value(index.list);
+                self.result.push_str(", ");
+                self.pretty_value(index.index);
+                self.result.push_str("\n");
+            }
         }
     }
 

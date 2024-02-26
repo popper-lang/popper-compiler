@@ -10,15 +10,9 @@ popper_ast = { path = "../popper_ast", features = ["visitor", "extra-trait"] }
 popper_common = { path = "../popper_common", features = ["ast_path_to_path"] }
 popper_flag = { path = "../popper_flag" }
 popper_error = { path = "../popper_error" }
-popper_builtins = { path = "../popper_builtins" }
 thiserror = "1.0.40"
 ariadne = "0.2.0"
 
 [dev-dependencies]
 popper_ast = { path = "../popper_ast", features = ["visitor", "serde"] }
 serde_json = "1.0.64"
-
-
-
-
-

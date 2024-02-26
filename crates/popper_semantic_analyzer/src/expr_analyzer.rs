@@ -1,3 +1,4 @@
+
 use popper_ast::*;
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound, typemismatch::TypeMismatch, typenotspecified::TypeNotSpecified};
 use popper_flag::{Environment, SymbolFlags, ValueFlag};
@@ -411,6 +412,41 @@ impl ExprVisitor for ExprAnalyzer {
         }
     }
 
+    fn visit_index(&mut self, index: Index) -> Result<Self::Output,Self::Error> {
+        let res = self.visit_expr(*index.value.clone())?;
+        let ind = self.visit_expr(*index.index.clone())?;
+        let list = res.get_list();
+
+        if let Some(l) = list {
+            if ind.is_integer() {
+                return Ok(
+                    SymbolFlags::new(index.span)
+                        .set_value(l.0)
+                        .clone()
+                )
+            } else {
+                return Err(
+                    Box::new(
+                        TypeMismatch::new(
+                            (index.index.span(), "int".to_string()),
+                            (index.index.span(), ind.get_value().unwrap().to_string())
+                        )
+                    )
+                )
+            }
+        } else {
+            return Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (index.value.span(), "[unknow: unknow]".to_string()),
+                        (index.value.span(), res.get_value().unwrap().to_string())
+                    )
+                )
+            )
+        }
+
+    }
+
     fn visit_expr(&mut self, expr: Expression) -> Result<Self::Output, Self::Error> {
         match expr {
             Expression::Constant(constant) => self.visit_constant(constant),
@@ -420,6 +456,7 @@ impl ExprVisitor for ExprAnalyzer {
             Expression::Call(call) => self.visit_call(call),
             Expression::StructInstance(struct_instance) => self.visit_struct_instance(struct_instance),
             Expression::StructFieldAccess(struct_field_access) => self.visit_struct_field_access(struct_field_access),
+            Expression::Index(index) => self.visit_index(index)
         }
     }
 

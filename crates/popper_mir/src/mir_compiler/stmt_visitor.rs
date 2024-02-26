@@ -16,25 +16,31 @@ impl StmtVisitor for MirCompiler {
         if self.current_fn.is_none() {
             return Err(());
         }
+        let name = let_stmt.name.name.clone();
+        self.let_name = Some(name.clone());
         let expr = self.visit_expr(let_stmt.value)?;
-        let ty = self.compile_type(let_stmt.r#type.unwrap());
-        self.local.insert(let_stmt.name.name.clone(), ty.clone());
-        let body = self.current_fn.as_mut().unwrap();
-        body.push(
-            BodyFn::Alloc(
-                Alloc::new(let_stmt.name.name.clone(), ty)
-            )
-        );
+        self.let_name = None;
+        let ty = expr.get_type();
+        self.local.insert(name.clone(), ty.clone());
+        if !self.is_let_name_used {
+            let current_fn = self.current_fn.as_mut().unwrap();
+            current_fn.push(
+                BodyFn::Alloc(
+                    Alloc::new(name.clone(), ty)
+                )
+            );
 
-        body.push(
-            BodyFn::Store(
-                Store::new(
-                    let_stmt.name.name,
-                    expr
+            current_fn.push(
+                BodyFn::Store(
+                    Store::new(
+                        name,
+                        expr
+                    )
                 )
             )
-        );
-
+        } else {
+            self.is_let_name_used = false
+        }
 
         Ok(())
 

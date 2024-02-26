@@ -32,6 +32,7 @@ use popper_ast::StructInstance;
 use popper_ast::StructFieldInstance;
 use popper_ast::StructFieldAccess;
 use popper_ast::List;
+use popper_ast::Index;
 
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
@@ -296,6 +297,23 @@ FieldAccessExpr: Expression = {
     }
 }
 
+IndexSyntax: (Expression, Expression) = {
+    <t:List> ":" <expr:List> => {
+        (t, expr)
+    }
+}
+
+IndexExpr: Expression = {
+    <t:Span<IndexSyntax>> => {
+        Expression::Index(
+            Index::new(
+                t.1.0,
+                t.1.1,
+                t.0
+            )
+        )
+    }
+}
 
 
 Expr: Expression = {
@@ -305,8 +323,18 @@ Expr: Expression = {
 
 Factor: Expression = {
     BinOp<Factor, OpFactor, Call>,
-    Call
+    Index
 };
+
+Index: Expression = {
+    IndexExpr,
+    List
+}
+
+List: Expression = {
+    ListExpr,
+    Call
+}
 
 
 Call: Expression = {
@@ -321,14 +349,8 @@ FieldAccess: Expression = {
 
 StructInstance: Expression = {
     StructInstanceExpr,
-    ListExpr
-}
-
-ListExpr: Expression = {
-    List,
     Term
 }
-
 
 Term: Expression = {
     Int,
@@ -566,7 +588,7 @@ String: Expression = {
                             )
 }
 
-List: Expression = {
+ListExpr: Expression = {
     Group<"[", Comma<Expr>?, "]"> => {
         if let Some(exprs) = <>.1 {
             Expression::Constant(

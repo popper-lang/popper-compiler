@@ -19,6 +19,7 @@ pub trait ExprVisitor {
     visit!(visit_call, call => Call);
     visit!(visit_struct_instance, struct_instance => StructInstance);
     visit!(visit_struct_field_access, struct_field_access => StructFieldAccess);
+    visit!(visit_index, index => Index);
 }
 
 /// stmt visitor

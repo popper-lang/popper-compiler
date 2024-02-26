@@ -1,6 +1,6 @@
 pub mod pretty;
 
-use std::fmt::Display;
+use std::fmt::{format, Display};
 
 
 pub trait MirCompile {
@@ -99,6 +99,17 @@ impl Type {
             },
             e => {
                 panic!("Type is not a function: {:?}", e)
+            }
+        }
+    }
+
+    pub fn into_list(self) -> Option<(Box<Type>, usize)> {
+        match self {
+            Type::List(t, size) => {
+                Some((t, size))
+            },
+            _ => {
+                None
             }
         }
     }
@@ -252,7 +263,8 @@ pub enum BodyFn {
     Store(Store),                  // store <name>, <value>
     Call(Call),                    // call <name>, [<args>], <ret>
     Return(Return),                // ret <value>
-    Add(Add)                       // add <name>, <value>, <res>
+    Add(Add),                      // add <name>, <value>, <res>
+    Index(Index)                   // index <res>, <list>, <index>
 }
 
 impl MirCompile for BodyFn {
@@ -272,7 +284,8 @@ impl MirCompile for BodyFn {
             },
             BodyFn::Add(add) => {
                 add.compile()
-            }
+            },
+            BodyFn::Index(index) => index.compile()
         }
     }
 }
@@ -369,6 +382,29 @@ impl MirCompile for Add {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Index {
+    pub res: String,
+    pub list: Value,
+    pub index: Value
+}
+
+impl Index {
+    pub fn new(res: String, list: Value, index: Value) -> Self {
+        Self {
+            res,
+            list,
+            index
+        }
+    }
+}
+
+impl MirCompile for Index {
+    fn compile(&self) -> String {
+        format!("index {}, {}, {}", self.res, self.list.compile(), self.index.compile())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Const(Const),                 // const <value>
     Variable(Variable),           // id <name>
@@ -383,6 +419,25 @@ impl Value {
             Value::Variable(variable) => {
                 variable.ty.clone()
             }
+        }
+    }
+
+    pub fn into_array(&self) -> Option<&MirList> {
+        match self {
+            Value::Const(Const::List(l)) => Some(l),
+            _ => None
+        }
+    }
+
+    pub fn get_minor_type(&self) -> Option<Type> {
+        match self {
+            Value::Const(Const::List(l)) => {
+                Some(l.get_minor_type())
+            },
+            Value::Variable(variable) => {
+                variable.ty.clone().into_list().map(|x|  *x.0)
+            },
+            _ => None
         }
     }
 }
@@ -550,7 +605,7 @@ impl Variable {
 
 impl MirCompile for Variable {
     fn compile(&self) -> String {
-        format!("id {} {}", self.ty.compile(), self.name)
+        format!("{} {}", self.ty.compile(), self.name)
     }
 }
 

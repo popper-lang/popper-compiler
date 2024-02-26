@@ -22,6 +22,7 @@ pub struct Compiler<'ctx> {
     mir_module: MirModule,
     used_cdylibs: Vec<String>,
     env: HashMap<String, BasicValueEnum<'ctx>>,
+    can_load: bool,
     string_index: usize
 }
 
@@ -36,7 +37,8 @@ impl<'ctx> Compiler<'ctx> {
             mir_module,
             used_cdylibs: vec![],
             env: HashMap::new(),
-            string_index: 0
+            string_index: 0,
+            can_load: true
         }
     }
 
@@ -217,9 +219,19 @@ impl<'ctx> Compiler<'ctx> {
                 let var = self.get_unloaded_var(a.name.clone()).into_pointer_value();
                 self.builder.build_store(var, val.as_basic_value_enum()).unwrap();
             },
+            BodyFn::Index(i) => {
+                self.can_load = false;
+                dbg!(&i);
+                let minor_type = self.mir_type_to_llvm_type(i.list.get_minor_type().unwrap());
+                let val = self.compile_value(&i.list).into_pointer_value();
+                let ty = val.get_type();
+                let idx = self.compile_value(&i.index).into_int_value();
+                let _ = unsafe {
+                    self.builder.build_gep(minor_type, val, &[idx], &i.res).unwrap()
+                };
 
 
-           _ => todo!()
+            }
         }
     }
 
@@ -234,7 +246,11 @@ impl<'ctx> Compiler<'ctx> {
                 let var = self.env.get(&v.name).unwrap();
                 let ty = self.mir_type_to_llvm_type(v.ty.clone());
                 if var.is_pointer_value() {
-                    self.builder.build_load(ty, var.into_pointer_value(), "load").unwrap()
+                    if self.can_load {
+                        self.builder.build_load(ty, var.into_pointer_value(), "load").unwrap()
+                    } else {
+                        var.clone()
+                    }
                 } else {
                     var.clone()
                 }

@@ -15,7 +15,10 @@ pub struct MirCompiler {
     pub(crate) current_fn: Option<Body>,
     pub(crate) local: HashMap<String, MirType>,
     pub(crate) global: HashMap<String, MirType>,
-    pub(crate) var_id: usize
+    pub(crate) var_id: usize,
+    pub(crate) can_alloc: bool,
+    let_name: Option<String>,
+    is_let_name_used: bool
 }
 
 impl MirCompiler {
@@ -33,7 +36,10 @@ impl MirCompiler {
             current_fn: None,
             local: HashMap::new(),
             global: HashMap::new(),
-            var_id: 0
+            can_alloc: true,
+            var_id: 0,
+            let_name: None,
+            is_let_name_used: false
         }
     }
 
@@ -84,20 +90,48 @@ impl MirCompiler {
             return Err(());
         }
 
-        let var = format!("__{}", self.var_id);
-        self.var_id += 1;
-        let current_fn = self.current_fn.as_mut().unwrap();
-        current_fn.push(
-            BodyFn::Alloc(
-                Alloc::new(
-                    var.clone(),
-                    ty
+        let var = if let Some(let_name) = self.let_name.clone() {
+            self.is_let_name_used = true;
+            let_name
+        } else {
+            let e = format!("__{}", self.var_id);
+            self.var_id += 1;
+            e
+        };
+        if self.can_alloc {
+            let current_fn = self.current_fn.as_mut().unwrap();
+            current_fn.push(
+                BodyFn::Alloc(
+                    Alloc::new(
+                        var.clone(),
+                        ty
+                    )
                 )
-            )
-        );
+            );
+        }
+        Ok(var.clone())
+    }
 
+    pub fn new_var_id_no_alloc(&mut self, ty: MirType) -> Result<String, ()> {
+        self.can_alloc = false;
+        let var = self.new_var_id(ty);
+        self.can_alloc = true;
+        var
+    }
 
-        Ok(var)
+    pub fn get_minor_type_from_list(&self, val: Value) -> Option<MirType> {
+        match val {
+            Value::Variable(v) => {
+                match v.ty {
+                    MirType::List(l, _) => Some(*l),
+                    _ => None
+                }
+            },
+            Value::Const(_) => {
+                val.into_array().map(|x| x.get_minor_type())
+            }
+
+        }
     }
 
     pub fn get_module(&self) -> Module {

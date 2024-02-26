@@ -346,39 +346,16 @@ dependencies = [
 
 [[package]]
 name = "inkwell"
-version = "0.2.0"
-source = "git+https://github.com/TheDan64/inkwell?branch=master#0b2cde9394320ab6f097ef10408d663a28d44be3"
-dependencies = [
- "either",
- "inkwell_internals 0.8.0",
- "libc",
- "llvm-sys 160.1.4",
- "once_cell",
- "thiserror",
-]
-
-[[package]]
-name = "inkwell"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32bf6d00838475201af3378a4adeca10e92a4a9dccb980dab0b432d9d4f2e514"
 dependencies = [
  "either",
- "inkwell_internals 0.9.0",
+ "inkwell_internals",
  "libc",
- "llvm-sys 170.0.1",
+ "llvm-sys",
  "once_cell",
  "thiserror",
-]
-
-[[package]]
-name = "inkwell_internals"
-version = "0.8.0"
-source = "git+https://github.com/TheDan64/inkwell?branch=master#0b2cde9394320ab6f097ef10408d663a28d44be3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -478,19 +455,6 @@ name = "linux-raw-sys"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4cd1a83af159aa67994778be9070f0ae1bd732942279cabb14f86f986a21456"
-
-[[package]]
-name = "llvm-sys"
-version = "160.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49f9888529887dfda6c59e20f0e0727b17e826cd54ae1ddf0d4c83850fa23b69"
-dependencies = [
- "cc",
- "lazy_static",
- "libc",
- "regex",
- "semver",
-]
 
 [[package]]
 name = "llvm-sys"
@@ -603,22 +567,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "popper_builtins"
-version = "0.1.0"
-dependencies = [
- "inkwell 0.2.0",
- "popper_ast",
- "popper_error",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "popper_codegen"
 version = "0.1.0"
 dependencies = [
  "lazy_static",
- "popper_builtins",
  "popper_common",
  "popper_llvm",
  "popper_mir",
@@ -673,7 +625,7 @@ dependencies = [
 name = "popper_inkwell"
 version = "0.1.0"
 dependencies = [
- "inkwell 0.3.0",
+ "inkwell",
  "popper_common",
  "popper_mir",
 ]
@@ -690,7 +642,7 @@ dependencies = [
 name = "popper_llvm"
 version = "0.1.0"
 dependencies = [
- "llvm-sys 170.0.1",
+ "llvm-sys",
 ]
 
 [[package]]
@@ -721,7 +673,6 @@ version = "0.1.0"
 dependencies = [
  "ariadne 0.2.0",
  "popper_ast",
- "popper_builtins",
  "popper_common",
  "popper_error",
  "popper_flag",

@@ -233,7 +233,8 @@ impl Compiler {
                 self.builder.build_store(val, out.value.into_ptr_value());
 
                 out.clone()
-            }
+            },
+            _ => todo!()
         }
     }
 

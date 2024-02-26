@@ -6,7 +6,6 @@ use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, 
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
 use popper_error::modulenotfound::ModuleNotFound;
-use popper_builtins::load_builtins;
 
 
 #[derive(Clone)]
@@ -18,31 +17,6 @@ pub struct StmtAnalyzer {
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
         Self { env , current_scope: ScopeFlag::Global }
-    }
-
-    pub fn init_builtins(&mut self) {
-        let builtins = load_builtins();
-
-        for builtin in builtins {
-            let sign_fn = builtin.sign_fn();
-            let args: Vec<ValueFlag> = sign_fn
-                .arguments
-                .args
-                .iter()
-                .map(|x| {
-                    let expr_analyzer = ExprAnalyzer::new(self.env.clone());
-                    expr_analyzer.get_type(x.ty.clone())
-                })
-                .collect();
-
-            let return_type = {
-                let expr_analyzer = ExprAnalyzer::new(self.env.clone());
-                expr_analyzer.get_type(sign_fn.returntype.clone())
-            };
-
-            let var = VariableFlag::new(sign_fn.name, SymbolFlags::new(sign_fn.span).set_function(args, return_type).clone(), ScopeFlag::Global, false, Default::default());
-            self.env.add_variable(var);
-        }
     }
 }
 

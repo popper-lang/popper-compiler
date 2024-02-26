@@ -14,7 +14,6 @@ pub fn analyze(stmts: Vec<popper_ast::Statement>) -> Vec<Result<(), Box<dyn popp
     use popper_flag::SymbolFlags;
 
     let mut stmt_analyzer = stmt_analyzer::StmtAnalyzer::new(Environment::new());
-    stmt_analyzer.init_builtins();
     let mut res: Vec<Result<SymbolFlags, Box<dyn Error>>> = Vec::new();
     for stmt in stmts {
         res.push(stmt_analyzer.visit_stmt(stmt));
@@ -27,5 +26,3 @@ pub fn analyze(stmts: Vec<popper_ast::Statement>) -> Vec<Result<(), Box<dyn popp
         }
     }).collect()
 }
-
-

@@ -1,6 +1,6 @@
 use popper_ast::{BinOp, BinOpKind, Call, Constant, Expression, ParenGroup, StructFieldAccess, StructInstance, UnaryOp};
 use popper_ast::visitor::ExprVisitor;
-use crate::mir_ast::{Add, BodyFn, Const, List, MirFloat, MirInt, MirList, MirString, Value, Variable};
+use crate::mir_ast::{Add, BodyFn, Const, List, MirFloat, MirInt, MirList, MirString, Value, Variable, Index as MirIndex};
 use crate::mir_compiler::MirCompiler;
 
 impl ExprVisitor for MirCompiler {
@@ -114,6 +114,7 @@ impl ExprVisitor for MirCompiler {
             Expression::StructFieldAccess(struct_field_access) => {
                 self.visit_struct_field_access(struct_field_access)
             },
+            Expression::Index(index) => self.visit_index(index)
         }
     }
 
@@ -144,6 +145,33 @@ impl ExprVisitor for MirCompiler {
         Ok(Value::Variable(
             Variable::new(out, func)
         ))
+    }
+
+    fn visit_index(&mut self, index: popper_ast::Index) -> Result<Self::Output, Self::Error> {
+        if self.current_fn.is_none() {
+            return Err(())
+        }
+
+        let list = self.visit_expr(*index.value)?;
+        let mirlist = self.get_minor_type_from_list(list.clone()).expect("It is not a list");
+        let index = self.visit_expr(*index.index)?;
+
+        let id = self.new_var_id_no_alloc(mirlist.clone())?;
+        let current_fn = self.current_fn.as_mut().unwrap();
+
+        current_fn.push(
+            BodyFn::Index(
+                MirIndex::new(id.clone(), list.clone(), index)
+            )
+        );
+
+        Ok(
+            Value::Variable(
+                Variable::new(id, mirlist)
+            )
+        )
+
+
     }
 
     fn visit_struct_instance(&mut self, struct_instance: StructInstance) -> Result<Self::Output, Self::Error> {
