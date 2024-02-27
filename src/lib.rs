@@ -86,7 +86,7 @@ pub fn compile_to_llvm(mir: Module) -> (String, Compiler) {
     (compiler.build(), compiler)
 }
 
-pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib: Vec<String>) {
+pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib: Vec<String>, debug: bool) {
     use std::process::Command;
 
     let file_name = Path::new(Path::new(&file_name).file_name().unwrap().to_str().unwrap()).to_path_buf();
@@ -99,7 +99,8 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
         detail_output("mkdir", Command::new("mkdir")
             .arg(target_path.clone())
             .output()
-            .expect("failed to execute process")
+            .expect("failed to execute process"),
+        debug
         );
 
     }
@@ -122,7 +123,8 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
         .arg("-o")
         .arg(file_o_path.clone())
         .output()
-        .expect("failed to execute process `llc` ")
+        .expect("failed to execute process `llc` "),
+        debug
     );
 
     detail_output("clang", Command::new("clang")
@@ -131,7 +133,8 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
         .arg("-o")
         .arg(file_exe_path.clone())
         .output()
-        .expect("failed to execute process `gcc` ")
+        .expect("failed to execute process `gcc` "),
+        debug
     );
 
 
@@ -139,7 +142,8 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
     detail_output("rm o", Command::new("rm")
         .arg(file_o_path.clone())
         .output()
-        .expect("failed to execute process `rm` ")
+        .expect("failed to execute process `rm` "),
+        debug
     );
 
     Command::new("rm")
@@ -151,14 +155,25 @@ pub fn execute_llvm(llvm: String, file_name: String, target_path: String, cdylib
         format!("./{}", file_exe_path.clone().to_str().unwrap())
     )
         .output()
-        .expect("failed to execute process your program ")
+        .expect("failed to execute process your program "),
+        debug
     );
 
 }
 
-fn detail_output(name: &str, output: Output) {
+fn detail_output(name: &str, output: Output, debug: bool) {
     let stdout = String::from_utf8(output.stdout).unwrap();
     let stderr = String::from_utf8(output.stderr).unwrap();
-    println!("({}) stdout: {}", name, stdout);
-    println!("({}) stderr: {}", name, stderr);
+    if debug {
+        println!("({}) stdout: {}", name, stdout);
+        println!("({}) stderr: {}", name, stderr);
+    } else {
+        if ! stderr.is_empty() {
+            println!("{}", stderr);
+        } else if ! stdout.is_empty() {
+            println!("{}", stdout);
+        }
+
+    }
+
 }

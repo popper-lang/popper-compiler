@@ -30,7 +30,7 @@ pub enum TypeKind {
     /// `[type]`
     List(Box<Type>, usize),
     /// `func(type,*) : type`
-    Function(Vec<Type>, Box<Type>),
+    Function(Vec<Type>, Box<Type>, bool),
     /// `*type`
     Pointer(Box<Type>),
     /// `&type`
@@ -69,13 +69,14 @@ impl ToString for TypeKind {
             TypeKind::List(ty, size) =>
                 format!("[{}:{}]", ty.type_kind.to_string().clone(), size)
             ,
-            TypeKind::Function(tys, ret) =>
-                format!("func({}): {}",
+            TypeKind::Function(tys, ret, varargs) =>
+                format!("func({}{}): {}",
                         tys
                             .iter()
                             .map(|t| t.type_kind.to_string())
                             .collect::<Vec<String>>()
                             .join(","),
+                        if varargs { "..." } else { "" },
                         ret.type_kind.to_string()
                 )
             ,

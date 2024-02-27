@@ -1,6 +1,6 @@
 use popper_ast::{BinOp, BinOpKind, Call, Constant, Expression, ParenGroup, StructFieldAccess, StructInstance, UnaryOp};
 use popper_ast::visitor::ExprVisitor;
-use crate::mir_ast::{Add, BodyFn, Const, List, MirFloat, MirInt, MirList, MirString, Value, Variable, Index as MirIndex};
+use crate::mir_ast::{Add, BodyFn, Const, Index as MirIndex, List, MirFloat, MirInt, MirList, MirString, VaArg, Value, Variable};
 use crate::mir_compiler::MirCompiler;
 
 impl ExprVisitor for MirCompiler {
@@ -53,6 +53,27 @@ impl ExprVisitor for MirCompiler {
             _ => unimplemented!()
 
         })
+    }
+
+    fn visit_va_arg(&mut self, va_arg: popper_ast::VaArg) -> Result<Self::Output,Self::Error> {
+        let mir_type = self.compile_type(va_arg.ty);
+
+        let out = self.new_var_id_no_alloc(mir_type.clone())?;
+
+        let body = self.current_fn.as_mut().unwrap();
+
+        body.push(
+            BodyFn::VaArg(
+                VaArg::new(
+                    out.clone(),
+                    mir_type.clone()
+                )
+            )
+        );
+
+        Ok(Value::Variable(
+            Variable::new(out, mir_type)
+        ))
     }
 
     fn visit_bin_op(&mut self, bin_op: BinOp) -> Result<Self::Output, Self::Error> {
@@ -114,7 +135,8 @@ impl ExprVisitor for MirCompiler {
             Expression::StructFieldAccess(struct_field_access) => {
                 self.visit_struct_field_access(struct_field_access)
             },
-            Expression::Index(index) => self.visit_index(index)
+            Expression::Index(index) => self.visit_index(index),
+            Expression::VaArg(va_arg) => self.visit_va_arg(va_arg),
         }
     }
 

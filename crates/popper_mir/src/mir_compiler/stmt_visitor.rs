@@ -85,6 +85,9 @@ impl StmtVisitor for MirCompiler {
             Statement::Struct(struct_stmt) => {
                 self.visit_struct_stmt(struct_stmt)
             },
+            Statement::Extern(enum_stmt) => {
+                self.visit_extern(enum_stmt)
+            },
         }
     }
 
@@ -133,7 +136,7 @@ impl StmtVisitor for MirCompiler {
 
         self.local.clear();
         self.global.insert(name.clone(), ret.clone());
-        let function = MirFunction::new(name, Arguments::new(args), ret, self.current_fn.clone().unwrap());
+        let function = MirFunction::new(name, Arguments::new(args), ret,function.is_var_args, self.current_fn.clone().unwrap());
 
         self.current_fn = None;
 
@@ -216,6 +219,14 @@ impl StmtVisitor for MirCompiler {
 
         Ok(())
 
+    }
+
+    fn visit_extern(&mut self,extern_stmt:popper_ast::Extern) -> Result<Self::Output,Self::Error> {
+        for fn_sign in extern_stmt.signs {
+            self.compile_fn_sign(fn_sign);
+        }
+
+        Ok(())
     }
 
     fn visit_for_stmt(&mut self, for_stmt: ForStmt) -> Result<Self::Output, Self::Error> {

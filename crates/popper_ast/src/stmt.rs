@@ -1,4 +1,5 @@
 use crate::Expression;
+use crate::Extern;
 use crate::While;
 use crate::Block;
 use crate::LetStmt;
@@ -26,6 +27,7 @@ pub enum Statement {
     Return(Return),
     Import(ImportStmt),
     External(External),
+    Extern(Extern),
     For(ForStmt),
     Struct(StructStmt),
 }
@@ -45,6 +47,7 @@ impl Statement {
             Statement::External(external_stmt) => external_stmt.span(),
             Statement::For(for_stmt) => for_stmt.span(),
             Statement::Struct(struct_stmt) => struct_stmt.span,
+            Statement::Extern(extern_stmt) => extern_stmt.span(),
         }
     }
 }

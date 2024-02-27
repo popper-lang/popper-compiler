@@ -1,3 +1,4 @@
+use std::fmt::DebugStruct;
 use std::io::Write;
 use popper_compiler::{compile_to_inkwell_llvm, compile_to_llvm, compile_to_mir, execute_llvm, pretty_mir};
 use popper_compiler::get_ast;
@@ -61,6 +62,9 @@ enum Commands {
 
         #[arg(short, long)]
         inkwell: bool,
+
+        #[arg(short, long)]
+        debug: bool
     },
 
     Clean {
@@ -175,7 +179,7 @@ fn main() {
             }
         },
         Commands::Run {
-            file, target, inkwell
+            file, target, inkwell, debug
         } => {
             let string_file = file.to_str().expect("Unable to get a str");
             let content = std::fs::read_to_string(string_file).expect("File not found");
@@ -190,7 +194,7 @@ fn main() {
                         (e.0, e.1.cdylib_used)
                     };
                     let target = target.unwrap_or(std::path::PathBuf::from("./target_popper"));
-                    execute_llvm(res.0, string_file.to_string(), target.to_str().unwrap().to_string(), res.1);
+                    execute_llvm(res.0, string_file.to_string(), target.to_str().unwrap().to_string(), res.1, debug);
                 } else {
                     println!("Program is invalid");
                 }

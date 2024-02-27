@@ -150,18 +150,19 @@ impl MirCompile for Type {
 pub struct Declare {
     pub name: String,
     pub args: List<Type>,
-    pub ret: Type
+    pub ret: Type,
+    pub is_var_args: bool
 }
 
 impl Declare {
-    pub fn new(name: String, args: List<Type>, ret: Type) -> Self {
-        Self { name, args, ret }
+    pub fn new(name: String, args: List<Type>, ret: Type, is_var_args: bool) -> Self {
+        Self { name, args, ret, is_var_args }
     }
 }
 
 impl MirCompile for Declare {
     fn compile(&self) -> String {
-        format!("declare {} = args {} ret {}", self.name, self.args.compile(), self.ret.compile())
+        format!("declare {} = args {} ret {} {}", self.name, self.args.compile(), self.ret.compile(), if self.is_var_args { "..." } else { "" })
     }
 }
 
@@ -187,18 +188,19 @@ pub struct Function {
     pub name: String,
     pub args: Arguments,
     pub ret: Type,
+    pub is_var_args: bool,
     pub body: Body
 }
 
 impl Function {
-    pub fn new(name: String, args: Arguments, ret: Type, body: Body) -> Self {
-        Self { name, args, ret, body }
+    pub fn new(name: String, args: Arguments, ret: Type, is_var_args: bool, body: Body) -> Self {
+        Self { name, args, ret, is_var_args,  body }
     }
 }
 
 impl MirCompile for Function {
     fn compile(&self) -> String {
-        format!("func {} {} {} {{\n\t{}\n}}", self.ret.compile(), self.name, self.args.compile(), self.body.compile())
+        format!("func {} {} {}{}{{\n\t{}\n}}", self.ret.compile(), self.name, self.args.compile(), if self.is_var_args { " ... "} else {" "}, self.body.compile())
     }
 }
 
@@ -264,7 +266,9 @@ pub enum BodyFn {
     Call(Call),                    // call <name>, [<args>], <ret>
     Return(Return),                // ret <value>
     Add(Add),                      // add <name>, <value>, <res>
-    Index(Index)                   // index <res>, <list>, <index>
+    Index(Index),                  // index <res>, <list>, <index>
+    VaArg(VaArg)                   // va_arg <res>, <ty>
+
 }
 
 impl MirCompile for BodyFn {
@@ -285,7 +289,8 @@ impl MirCompile for BodyFn {
             BodyFn::Add(add) => {
                 add.compile()
             },
-            BodyFn::Index(index) => index.compile()
+            BodyFn::Index(index) => index.compile(),
+            BodyFn::VaArg(va_arg) => va_arg.compile()
         }
     }
 }
@@ -401,6 +406,24 @@ impl Index {
 impl MirCompile for Index {
     fn compile(&self) -> String {
         format!("index {}, {}, {}", self.res, self.list.compile(), self.index.compile())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct VaArg {
+    pub res: String,
+    pub ty: Type
+}
+
+impl VaArg {
+    pub fn new(res: String, ty: Type) -> Self {
+        Self { res, ty }
+    }
+}
+
+impl MirCompile for VaArg {
+    fn compile(&self) -> String {
+        format!("va_arg {}, {}", self.res, self.ty.compile())
     }
 }
 

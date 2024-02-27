@@ -150,7 +150,12 @@ impl Pretty {
                 self.result.push_str(", ");
                 self.pretty_value(index.index);
                 self.result.push_str("\n");
-            }
+            },
+            BodyFn::VaArg(va_arg) => {
+                self.result.push_str(&format!("va_arg {}, ", va_arg.res));
+                self.pretty_type(va_arg.ty);
+                self.result.push_str("\n");
+            },
         }
     }
 

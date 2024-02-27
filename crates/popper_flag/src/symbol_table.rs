@@ -76,10 +76,10 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_function(&mut self, args: Vec<ValueFlag>, returnty: ValueFlag) -> &mut Self {
+    pub fn set_function(&mut self, args: Vec<ValueFlag>, returnty: ValueFlag, is_var_args: bool) -> &mut Self {
         self.add_flag(
             Flag::Value(
-                ValueFlag::Function(args, Box::new(returnty))
+                ValueFlag::Function(args, Box::new(returnty), is_var_args)
             )
         );
 
@@ -121,10 +121,10 @@ impl SymbolFlags {
         self.vars.get_variable(name)
     }
 
-    pub fn get_function(&self) -> Option<(&Vec<ValueFlag>, &Box<ValueFlag>)> {
+    pub fn get_function(&self) -> Option<(&Vec<ValueFlag>, &Box<ValueFlag>, bool)> {
         self.symbols.iter().find_map(|s| {
             match s {
-                Flag::Value(ValueFlag::Function(args, ret)) => Some((args, ret)),
+                Flag::Value(ValueFlag::Function(args, ret, var_args)) => Some((args, ret, *var_args)),
                 _ => None
             }
         })

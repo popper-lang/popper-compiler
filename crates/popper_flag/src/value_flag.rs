@@ -11,7 +11,7 @@ pub enum ValueFlag {
     Boolean,
     None,
     List(Box<ValueFlag>, usize),
-    Function(Vec<ValueFlag>, Box<ValueFlag>),
+    Function(Vec<ValueFlag>, Box<ValueFlag>, bool),
     Struct(HashMap<String, ValueFlag>),
     StructInstance(String),
     Pointer(Box<ValueFlag>),
@@ -27,7 +27,7 @@ impl Display for ValueFlag {
             ValueFlag::Boolean => write!(f, "bool"),
             ValueFlag::None => write!(f, "unit"),
             ValueFlag::List(t, u) => write!(f, "[{}: {}]", t.to_string(), u),
-            ValueFlag::Function(args, returntype) => {
+            ValueFlag::Function(args, returntype, is_var_args) => {
                 let mut args_string = String::new();
                 for arg in args {
                     args_string.push_str(&arg.to_string());
@@ -35,6 +35,9 @@ impl Display for ValueFlag {
                 }
                 args_string.pop();
                 args_string.pop();
+                if *is_var_args {
+                    args_string.push_str("...");
+                }
                 write!(f, "func({}): {}", args_string, returntype.to_string())
             },
             ValueFlag::Pointer(ptr) => {
@@ -69,11 +72,13 @@ impl ValueFlag {
                 ),
                 l
             ),
-            TypeKind::Function(args, ret) => ValueFlag::Function(args
-                .iter()
-                .cloned()
-                .map(Self::from_ty).collect(),
-                                                                 Box::new(Self::from_ty(*ret))
+            TypeKind::Function(args, ret, var) => ValueFlag::Function(
+                args
+                    .iter()
+                    .cloned()
+                    .map(Self::from_ty).collect(),
+                Box::new(Self::from_ty(*ret)),
+                var
             ),
             TypeKind::Struct(fields) => {
                 let mut hashmap = HashMap::new();
@@ -115,8 +120,8 @@ impl PartialEq for ValueFlag {
             (ValueFlag::Boolean, ValueFlag::Boolean) => true,
             (ValueFlag::None, ValueFlag::None) => true,
             (ValueFlag::List(ty1, len1), ValueFlag::List(ty2, len2 )) => ty1 == ty2 && len1 == len2,
-            (ValueFlag::Function(args1, ret1), ValueFlag::Function(args2, ret2)) => {
-                args1 == args2 && ret1 == ret2
+            (ValueFlag::Function(args1, ret1, a1), ValueFlag::Function(args2, ret2, a2)) => {
+                args1 == args2 && ret1 == ret2 && a1 == a2
             },
             (ValueFlag::Struct(fields1), ValueFlag::Struct(fields2)) => fields1 == fields2,
             (ValueFlag::StructInstance(name1), ValueFlag::StructInstance(name2)) => name1 == name2,

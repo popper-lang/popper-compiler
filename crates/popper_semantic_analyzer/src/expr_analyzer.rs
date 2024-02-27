@@ -1,7 +1,7 @@
 
 use popper_ast::*;
 use popper_error::{diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound, typemismatch::TypeMismatch, typenotspecified::TypeNotSpecified};
-use popper_flag::{Environment, SymbolFlags, ValueFlag};
+use popper_flag::{Environment, Flag, SymbolFlags, ValueFlag};
 
 
 use popper_ast::visitor::ExprVisitor;
@@ -33,12 +33,12 @@ impl ExprAnalyzer {
             TypeKind::Int => ValueFlag::Integer,
             TypeKind::String(size) => ValueFlag::String(size),
             TypeKind::List(ty, l) => ValueFlag::List(Box::new(self.get_type(*ty)), l),
-            TypeKind::Function(args, returnty) => {
+            TypeKind::Function(args, returnty, is_var_args) => {
                 let mut args_type = Vec::new();
                 for arg in args {
                     args_type.push(self.get_type(arg));
                 }
-                ValueFlag::Function(args_type, Box::new(self.get_type(*returnty)))
+                ValueFlag::Function(args_type, Box::new(self.get_type(*returnty)), is_var_args)
             }
             TypeKind::Unit => ValueFlag::None,
             TypeKind::Pointer(ptr) => ValueFlag::Pointer(
@@ -176,6 +176,14 @@ impl ExprVisitor for ExprAnalyzer {
         }
     }
 
+    fn visit_va_arg(&mut self, va_arg: VaArg) -> Result<Self::Output,Self::Error> {
+        let value_flag = ValueFlag::from_ty(va_arg.clone().ty);
+        return Ok(SymbolFlags::new(va_arg.span())
+            .add_flag(Flag::Value(value_flag))
+            .clone()
+        );
+    }
+
     fn visit_bin_op(&mut self, bin_op: BinOp) -> Result<Self::Output, Self::Error> {
         let flag_lhs = self.visit_expr(*bin_op.lhs)?;
         let flag_rhs = self.visit_expr(*bin_op.rhs)?;
@@ -239,8 +247,19 @@ impl ExprVisitor for ExprAnalyzer {
         match x {
             Some(var) => {
                 match var.value.get_function() {
-                    Some((args, ret)) => {
-                        let args_s = call.arguments.iter().map(|arg| self.clone().visit_expr(arg.clone())).collect::<Result<Vec<_>, _>>()?;
+                    Some((args, ret, is_var_args)) => {
+                        let mut args_s = call.arguments.iter().map(|arg| self.clone().visit_expr(arg.clone())).collect::<Result<Vec<_>, _>>()?;
+                        if is_var_args {
+                            if args_s.len() < args.len() {
+                                return Err(
+                                    Box::new(
+                                        DiffLengthOfArgument::new(args.len(), args_s.len(), call.span)
+                                    )
+                                );
+                            }
+
+                            args_s = args_s.into_iter().take(args.len()).collect();
+                        }
                         if args_s.len() != args.len() {
                             return Err(
                                 Box::new(
@@ -456,7 +475,8 @@ impl ExprVisitor for ExprAnalyzer {
             Expression::Call(call) => self.visit_call(call),
             Expression::StructInstance(struct_instance) => self.visit_struct_instance(struct_instance),
             Expression::StructFieldAccess(struct_field_access) => self.visit_struct_field_access(struct_field_access),
-            Expression::Index(index) => self.visit_index(index)
+            Expression::Index(index) => self.visit_index(index),
+            Expression::VaArg(va_arg) => self.visit_va_arg(va_arg),
         }
     }
 

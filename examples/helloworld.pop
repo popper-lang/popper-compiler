@@ -1,6 +1,13 @@
+extern {
+    func printf(s: string ...): int
+};
+
+func add(a: int, b: int ...) : bool {
+    return arg bool;
+}
 
 func main(): int {
-    let c = [3, 4, 5];
-    let d = c:0;
+    let res = add(1, 2, 8);
+    printf("res: %d", res);
     return 0;
 }

@@ -183,7 +183,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         };
 
         let symbol_flag = SymbolFlags::new(function.span)
-            .set_function(args, *return_type)
+            .set_function(args, *return_type, function.is_var_args)
             .clone()
         ;
 
@@ -199,6 +199,32 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         self.env.add_variable(function_flag);
 
         Ok(SymbolFlags::new(function.span))
+    }
+
+    fn visit_extern(&mut self, extern_stmt:Extern) -> Result<Self::Output,Self::Error> {
+        let _analyzer = ExprAnalyzer::new(self.env.clone());
+
+        for sign in &extern_stmt.signs {
+            let args: Vec<ValueFlag> = sign
+                .arguments
+                .args
+                .iter()
+                .map(|x| {
+                    let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                    expr_analyzer.get_type(x.ty.clone())
+                })
+                .collect();
+
+            let return_type = {
+                let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                expr_analyzer.get_type(sign.return_type.clone())
+            };
+
+            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type, sign.is_var_args).clone(), ScopeFlag::Global, false, Default::default());
+            self.env.add_variable(var);
+        }
+
+        Ok(SymbolFlags::new(extern_stmt.span()))
     }
 
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
@@ -242,6 +268,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::External(external) => self.visit_external(external),
             Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
             Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
+            Statement::Extern(ext) => self.visit_extern(ext)
         }
     }
 
@@ -264,7 +291,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 expr_analyzer.get_type(sign.return_type.clone())
             };
 
-            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type).clone(), ScopeFlag::Global, false, Default::default());
+            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type, sign.is_var_args).clone(), ScopeFlag::Global, false, Default::default());
             self.env.add_variable(var);
         }
 

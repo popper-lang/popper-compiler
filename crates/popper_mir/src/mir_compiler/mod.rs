@@ -60,7 +60,7 @@ impl MirCompiler {
         let ret = self.compile_type(fn_sign.return_type);
         self.ir.push(
             Ir::Declare(
-                Declare::new(fn_sign.name.clone(), List::new(args.clone()), ret.clone())
+                Declare::new(fn_sign.name.clone(), List::new(args.clone()), ret.clone(), fn_sign.is_var_args)
             )
         );
 

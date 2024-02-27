@@ -1,12 +1,14 @@
 mod args;
 mod call;
 mod return_expr;
-pub mod sign;
+mod sign;
+mod va_arg;
 
 pub use args::{Arguments, Argument, ArgumentValue};
 pub use call::Call;
 pub use return_expr::Return;
 pub use sign::FunctionSign;
+pub use va_arg::VaArg;
 
 use crate::Type;
 use crate::Span;
@@ -20,16 +22,18 @@ pub struct Function {
     pub arguments: Arguments,
     pub returntype: Type,
     pub body: Vec<Statement>,
+    pub is_var_args: bool,
     pub span: Span
 }
 
 impl Function {
-    pub fn new(name: String, arguments: Arguments, returntype: Type, body: Vec<Statement>, span: Span) -> Self {
+    pub fn new(name: String, arguments: Arguments, returntype: Type, body: Vec<Statement>, is_var_args: bool, span: Span) -> Self {
         Self {
             name,
             arguments,
             returntype,
             body,
+            is_var_args,
             span
         }
     }
