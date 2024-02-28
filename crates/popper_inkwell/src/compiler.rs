@@ -5,7 +5,7 @@ use popper_mir::mir_ast::{
 use popper_common::hash::hash_file;
 use std::{collections::HashMap, env::var};
 
-use crate::llvm_functions::{popper_va_arg_null_check, popper_panic, LLVMBuiltinFunction};
+use crate::value::{Flag, LLVMValue};
 
 macro_rules! cmd {
     ($cmd:ident $($e:expr)* ) => {
@@ -23,7 +23,7 @@ pub struct Compiler<'ctx> {
     module: Module<'ctx>,
     mir_module: MirModule,
     used_cdylibs: Vec<String>,
-    env: HashMap<String, BasicValueEnum<'ctx>>,
+    env: HashMap<String, LLVMValue<'ctx>>,
     can_load: bool,
     old_basic_block: Option<inkwell::basic_block::BasicBlock<'ctx>>,
     is_llvm_va_arg_fn_decl: bool,
@@ -75,7 +75,11 @@ impl<'ctx> Compiler<'ctx> {
         self.builder.build_conditional_branch(is_null, then_block, else_block).unwrap();
 
         self.builder.position_at_end(then_block);
-        self.builder.build_call(self.module.get_function("popper.panic").expect("panic not found"), &[], "").unwrap();
+        let msg = self.context.const_string("popper.va_arg_null_check: va_arg is null".as_bytes(), true);
+
+        let ptr = self.builder.build_alloca(msg.get_type(), "panic_msg").unwrap();
+        self.builder.build_store(ptr, msg).unwrap();
+        self.builder.build_call(self.module.get_function("popper.panic").expect("panic not found"), &[ptr.into()], "").unwrap();
         self.builder.build_return(None).unwrap();
         self.builder.position_at_end(else_block);
         self.builder.build_return(None).unwrap();
@@ -88,17 +92,20 @@ impl<'ctx> Compiler<'ctx> {
         if self.llvm_functions.contains_key("popper.panic") {
             return;
         }
-        let fn_type = self.context.void_type().fn_type(&[], false);
+        let i8ptr = self.context.i8_type().ptr_type(Default::default());
+        let fn_type = self.context.void_type().fn_type(&[i8ptr.into()], false);
         let function = self.module.add_function(
             "popper.panic",
             fn_type,
             None,
         );
 
+        let panic_msg = function.get_first_param().unwrap().into_pointer_value();
+
         let basic_block = self.context.append_basic_block(function, "entry");
         self.builder.position_at_end(basic_block);
 
-        let s = self.context.const_string("Panic".as_bytes(), true);
+        let s = self.context.const_string("Popper program panic: %s".as_bytes(), true);
         let ptr = self.builder.build_alloca(s.get_type(), "panic_msg").unwrap();
         self.builder.build_store(
             ptr,
@@ -106,7 +113,7 @@ impl<'ctx> Compiler<'ctx> {
         ).unwrap();
         self.builder.build_call(
             self.module.get_function("printf").unwrap(),
-            &[ptr.into()],
+            &[ptr.into(), panic_msg.into()],
             "",
         ).unwrap();
 
@@ -306,7 +313,7 @@ impl<'ctx> Compiler<'ctx> {
 
         for (i, arg) in function.get_param_iter().enumerate() {
             arg.set_name(&func.args.args[i].name);
-            self.env.insert(func.args.args[i].name.clone(), arg);
+            self.env.insert(func.args.args[i].name.clone(), LLVMValue::new(arg));
 
         }
 
@@ -322,7 +329,7 @@ impl<'ctx> Compiler<'ctx> {
                     .build_alloca(self.llvm_types.get("va_list").unwrap().clone(), "__popper_vl")
                     .unwrap()
                     .as_basic_value_enum();
-            self.env.insert("__popper_vl".to_string(), popper_vl);
+            self.env.insert("__popper_vl".to_string(), LLVMValue::new(popper_vl));
             let va_start = self.llvm_functions.get("llvm.va_start").unwrap();
             self.builder.build_call(va_start.clone(), &[popper_vl.into()], "").unwrap();
         }
@@ -335,7 +342,6 @@ impl<'ctx> Compiler<'ctx> {
         if func.is_var_args {
             self.is_current_fn_var_args = false;
         }
-
         self.env.clear();
     }
 
@@ -343,7 +349,7 @@ impl<'ctx> Compiler<'ctx> {
         match body_fn {
             BodyFn::Return(ret) => {
                 let ret = self.compile_value(&ret.value);
-                self.ret(Some(ret))
+                self.ret(Some(ret.into()))
             },
             BodyFn::Call(c) => {
                 let name = &c.name;
@@ -355,16 +361,26 @@ impl<'ctx> Compiler<'ctx> {
                     .iter()
                     .cloned()
                     .map(|arg| {
-                        self.compile_value(&arg).into()
+                        self.compile_value(&arg).basic_value_enum().into()
                     })
                     .collect::<Vec<_>>();
 
                 let ret = self.builder.build_call(function, args.as_slice(), "call").unwrap().try_as_basic_value().left().unwrap();
-                let val = self.get_unloaded_var(c.ret.to_string()).into_pointer_value();
+                let val = self.get_unloaded_var(c.ret.to_string())
+                    .basic_value_enum()
+                    .into_pointer_value();
                 self.builder.build_store(val, ret).unwrap();
             },
             BodyFn::VaArg(v) => {
-                let val = self.builder.build_va_arg(self.env.get("__popper_vl").unwrap().into_pointer_value(), self.mir_type_to_llvm_type(v.ty.clone()), &v.res).unwrap();
+                let val = self.builder.build_va_arg(
+                    self.env
+                    .get("__popper_vl")
+                    .unwrap()
+                    .basic_value_enum()
+                    .into_pointer_value(),
+                self.mir_type_to_llvm_type(v.ty.clone()),
+                &v.res
+                ).unwrap();
                 let ptr = match v.ty {
                     MirType::Int => {
                         let int = val.into_int_value();
@@ -377,39 +393,57 @@ impl<'ctx> Compiler<'ctx> {
                         self.builder.build_int_to_ptr(int, int.get_type().ptr_type(Default::default()), "inttoptr").unwrap()
                     },
                     MirType::String(_) => {
-                        let array = val.into_array_value();
-                        let i8ptr = self.context.i8_type().ptr_type(Default::default());
-                        self.builder.build_bitcast(array, i8ptr, "bitcast").unwrap().into_pointer_value()
+                        if val.is_pointer_value() {
+                            val.into_pointer_value()
+                        } else {
+                            let array = val.into_array_value();
+                            let i8ptr = self.context.i8_type().ptr_type(Default::default());
+                            self.builder.build_bitcast(array, i8ptr, "bitcast").unwrap().into_pointer_value()
+                        }
+
                     },
                     _ => panic!("unsupported type")
                 };
-
                 self.builder.build_call(self.llvm_functions.get("popper.va_arg_null_check").unwrap().clone(), &[ptr.into()], "").unwrap();
+                let mut val = LLVMValue::new(val);
+                val.add_flag(
+                    Flag::CantLoad
+                );
 
-                self.env.insert(v.res.clone(), val.as_basic_value_enum());
+                self.env.insert(v.res.clone(),
+                    val
+                );
             }
             BodyFn::Alloc(a) => {
                 let ty = self.mir_type_to_llvm_type(a.ty.clone());
                 let val = self.builder.build_alloca(ty, &a.name).unwrap();
-                self.env.insert(a.name.clone(), val.as_basic_value_enum());
+                self.env.insert(a.name.clone(),
+                    LLVMValue::new(val.as_basic_value_enum())
+                );
             },
             BodyFn::Store(s) => {
                 let val = self.compile_value(&s.value);
-                let var = self.env.get(&s.name).unwrap().into_pointer_value();
-                self.builder.build_store(var, val).unwrap();
+                let var = self.env.get(&s.name).unwrap().basic_value_enum().into_pointer_value();
+                self.builder.build_store(var, val.basic_value_enum()).unwrap();
             },
             BodyFn::Add(a) => {
-                let lhs = self.compile_value(&a.lhs);
-                let rhs = self.compile_value(&a.rhs);
+                let lhs = self.compile_value(&a.lhs).basic_value_enum();
+                let rhs = self.compile_value(&a.rhs).basic_value_enum();
                 let val = self.builder.build_int_add(lhs.into_int_value(), rhs.into_int_value(), "add").unwrap();
-                let var = self.get_unloaded_var(a.name.clone()).into_pointer_value();
+                let var = self.get_unloaded_var(a.name.clone())
+                    .basic_value_enum()
+                    .into_pointer_value();
                 self.builder.build_store(var, val.as_basic_value_enum()).unwrap();
             },
             BodyFn::Index(i) => {
                 self.can_load = false;
                 let minor_type = self.mir_type_to_llvm_type(i.list.get_minor_type().unwrap());
-                let val = self.compile_value(&i.list).into_pointer_value();
-                let idx = self.compile_value(&i.index).into_int_value();
+                let val = self.compile_value(&i.list)
+                    .basic_value_enum()
+                    .into_pointer_value();
+                let idx = self.compile_value(&i.index)
+                    .basic_value_enum()
+                    .into_int_value();
                 let _ = unsafe {
                     self.builder.build_gep(minor_type, val, &[idx], &i.res).unwrap()
                 };
@@ -422,7 +456,13 @@ impl<'ctx> Compiler<'ctx> {
     pub fn ret(&self, val: Option<BasicValueEnum>) {
         if self.is_current_fn_var_args {
             let va_end = self.llvm_functions.get("llvm.va_end").expect("llvm.va_end not found.");
-            self.builder.build_call(va_end.clone(), &[self.env.get("__popper_vl").expect("__popper_vl llvm var not found").clone().into()], "").unwrap();
+            self.builder.build_call(va_end.clone(), &[self.env
+                .get("__popper_vl")
+                .expect("__popper_vl llvm var not found")
+                .clone()
+                .basic_value_enum()
+                .into()
+            ], "").unwrap();
         }
         if let Some(ref a) = val {
             self.builder.build_return(Some(a)).unwrap();
@@ -431,19 +471,21 @@ impl<'ctx> Compiler<'ctx> {
         }
     }
 
-    pub fn get_unloaded_var(&self, name: String) -> BasicValueEnum {
+    pub fn get_unloaded_var(&self, name: String) -> LLVMValue<'_> {
         self.env.get(&name).unwrap().clone()
     }
 
-    pub fn compile_value(&self, val: &Value) -> BasicValueEnum {
+    pub fn compile_value(&self, val: &Value) -> LLVMValue {
         match val {
             Value::Const(c) => self.compile_const(c),
             Value::Variable(v) => {
                 let var = self.env.get(&v.name).unwrap();
                 let ty = self.mir_type_to_llvm_type(v.ty.clone());
-                if var.is_pointer_value() {
-                    if self.can_load {
-                        self.builder.build_load(ty, var.into_pointer_value(), "load").unwrap()
+                if var.basic_value_enum().is_pointer_value() {
+                    if self.can_load && var.can_load() {
+                        LLVMValue::new(
+                            self.builder.build_load(ty, var.basic_value_enum().into_pointer_value(), "load").unwrap()
+                        )
                     } else {
                         var.clone()
                     }
@@ -454,16 +496,18 @@ impl<'ctx> Compiler<'ctx> {
         }
     }
 
-    pub fn compile_const(&self, c: &Const) -> BasicValueEnum {
-        match c {
+    pub fn compile_const(&self, c: &Const) -> LLVMValue {
+        LLVMValue::new(match c {
             Const::Int(i) => self.context.i32_type().const_int(i.value as u64, false).into(),
             Const::Float(f) => self.context.f32_type().const_float(f.value as f64).into(),
             Const::String(s) => {
-                let s = &s.string;
-                let alloc = self.builder.build_alloca(self.context.i8_type().array_type(s.len() as u32 + 1), "alloc").unwrap();
-                let val = self.context.const_string(s.as_bytes(), true);
-                self.builder.build_store(alloc, val).unwrap();
-                alloc.as_basic_value_enum()
+                let s = &s.string
+                    .replace("\\n", "\n")
+                    .replace("\\t", "\t")
+                    .replace("\\r", "\r");
+                let global = self.module.add_global(self.context.i8_type().array_type(s.len() as u32 + 1), None, "str");
+                global.set_initializer(&self.context.const_string(s.as_bytes(), true));
+                global.as_pointer_value().into()
             },
             Const::Bool(b) => self.context.bool_type().const_int(b.value as u64, false).into(),
             Const::Void => self.context.i64_type().const_zero().as_basic_value_enum(),
@@ -474,21 +518,28 @@ impl<'ctx> Compiler<'ctx> {
 
                 self.build_array(l.get_minor_type(), list)
             },
-        }
+        })
     }
 
-    pub fn build_array<'a>(&'a self, ty: MirType, values: Vec<BasicValueEnum<'a>>) -> BasicValueEnum {
+    pub fn build_array<'a>(&'a self, ty: MirType, values: Vec<LLVMValue<'a>>) -> BasicValueEnum {
         let val = self.mir_type_to_llvm_type(ty);
+        let values = values
+            .iter()
+            .map(|v| v.basic_value_enum())
+            .collect::<Vec<_>>();
+
         match val {
             BasicTypeEnum::IntType(i) => {
-                let values = values.iter().map(|v| {
+                let values = values.iter()
+                    .map(|v| {
                     v.into_int_value()
                 }).collect::<Vec<_>>();
 
                 i.const_array(&values).as_basic_value_enum()
             },
             BasicTypeEnum::FloatType(f) => {
-                let values = values.iter().map(|v| {
+                let values = values.iter()
+                    .map(|v| {
                     v.into_float_value()
                 }).collect::<Vec<_>>();
 
