@@ -1,4 +1,4 @@
-use inkwell::{builder::Builder, context::Context, module::Module, types::{AnyType, BasicType, BasicTypeEnum}, values::{BasicValue, BasicValueEnum}};
+use inkwell::{builder::Builder, context::Context, module::Module, types::{AnyType, BasicType, BasicTypeEnum}, values::{AnyValue, BasicValue, BasicValueEnum}};
 use popper_mir::mir_ast::{
     BodyFn, Const, Function as MirFunction, Ir, Module as MirModule, Type as MirType, Value
 };
@@ -138,6 +138,7 @@ impl<'ctx> Compiler<'ctx> {
         );
 
     }
+
     pub fn declare_llvm_va_arg_fn(&mut self) {
         if self.is_llvm_va_arg_fn_decl {
             return;
@@ -146,29 +147,49 @@ impl<'ctx> Compiler<'ctx> {
         self.define_popper_panic();
         self.define_popper_va_arg_null_check();
 
-        let i8_ptr_ty = self.context.i8_type().ptr_type(Default::default());
+        let va_list = if cfg!(target_os = "macos") {
+            let o = self.context.opaque_struct_type(
+                "struct.__popper_va_arg"
+            );
+
+            o.set_body(&[
+                self.context.i32_type().into(),
+                self.context.i32_type().into(),
+                self.context.i8_type().ptr_type(Default::default()).into(),
+                self.context.i8_type().ptr_type(Default::default()).into(),
+            ], false);
+
+            o.into()
+        } else {
+            self.context.i8_type().ptr_type(Default::default()).as_basic_type_enum()
+        };
+
+        let arg = if va_list.is_pointer_type() {
+            va_list
+        } else {
+            va_list.ptr_type(Default::default()).as_basic_type_enum()
+        };
 
         let void = self.context.void_type();
 
         let llvm_va_start = self.module.add_function(
             "llvm.va_start",
-            void.fn_type(&[i8_ptr_ty.into()], false),
+            void.fn_type(&[arg.into()], false),
             None
         );
 
         let llvm_va_end = self.module.add_function(
             "llvm.va_end",
-            void.fn_type(&[i8_ptr_ty.into()], false),
+            void.fn_type(&[arg.into()], false),
             None
         );
+
 
         let llvm_va_copy = self.module.add_function(
             "llvm.va_copy",
-            void.fn_type(&[i8_ptr_ty.into(), i8_ptr_ty.into()], false),
+            void.fn_type(&[arg.into(), arg.into()], false),
             None
         );
-
-        let va_list = self.context.struct_type(&[i8_ptr_ty.into()], false).as_basic_type_enum();
 
         self.is_llvm_va_arg_fn_decl = true;
 

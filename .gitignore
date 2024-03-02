@@ -1,14 +1,6 @@
-/target
 target/
 .idea
 .DS_Store
-examples/ex1/target/
-/Cargo.lock
-/target_popper
-
-
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target
+target/
+Cargo.lock/
+target_popper/

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use popper_ast::*;
 
-use popper_error::{alreadyexist::AlreadyExist, typemismatch::TypeMismatch, Error};
+use popper_error::{alreadyexist::AlreadyExist, returnnotallowed::ReturnNotAllowed, typemismatch::TypeMismatch, Error};
 use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
@@ -12,11 +12,13 @@ use popper_error::modulenotfound::ModuleNotFound;
 pub struct StmtAnalyzer {
     env: Environment,
     current_scope: ScopeFlag,
+    is_return: bool,
+    return_type: Option<ValueFlag>,
 }
 
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
-        Self { env , current_scope: ScopeFlag::Global }
+        Self { env , current_scope: ScopeFlag::Global, return_type: None, is_return: false }
     }
 }
 
@@ -173,14 +175,28 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
         }
 
-        for stmt in function.body {
-            self.visit_stmt(stmt)?;
-        }
-
         let return_type = {
             let expr_analyser = ExprAnalyzer::new(self.env.clone());
             Box::new(expr_analyser.get_type(function.returntype.clone()))
         };
+
+        self.return_type = Some(*return_type.clone());
+
+        for stmt in function.body {
+            self.visit_stmt(stmt)?;
+        }
+
+
+        if !self.is_return {
+            return Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (function.span, return_type.to_string()),
+                        (function.span, ValueFlag::None.to_string())
+                    )
+                )
+            )
+        }
 
         let symbol_flag = SymbolFlags::new(function.span)
             .set_function(args, *return_type, function.is_var_args)
@@ -228,6 +244,38 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
+        let mut expr_analyzer = ExprAnalyzer::new(self.env.clone());
+        if self.return_type.is_none() {
+            return Err(Box::new(
+                ReturnNotAllowed::new(
+                    return_expr.span
+                )
+            ));
+        }
+        let val =
+            return_expr.expression
+                .map(|x|
+                    expr_analyzer
+                        .visit_expr(*x)
+                        .map(|x|
+                            x
+                                .get_value()
+                                .unwrap()
+                        )
+                )
+                .unwrap_or(Ok(ValueFlag::None))?
+            ;
+
+        if val != self.return_type.clone().unwrap() {
+            return Err(Box::new(
+                TypeMismatch::new(
+                    (return_expr.span, self.return_type.clone().unwrap().to_string()),
+                    (return_expr.span, val.to_string())
+                )
+            ))
+        }
+
+        self.is_return = true;
         Ok(SymbolFlags::new(return_expr.span))
     }
 
