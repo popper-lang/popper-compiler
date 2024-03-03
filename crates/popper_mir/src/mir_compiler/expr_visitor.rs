@@ -126,7 +126,7 @@ impl ExprVisitor for MirCompiler {
         let name = call.name.clone();
         let func = self
             .get(name.as_str())
-            .expect(&format!("Function {} not found", name))
+            .unwrap_or_else(|| panic!("Function {} not found", name))
             .clone();
         let out = self.new_var_id(func.clone())?;
         let args = call

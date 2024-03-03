@@ -48,7 +48,7 @@ impl MirCompile for Ir {
     fn compile(&self) -> String {
         match self {
             Ir::LoadModule(path) => {
-                format!("{}", path.compile())
+                path.compile().to_string()
             }
             Ir::LoadExternal(path) => {
                 format!("load_external {}", path.compile())

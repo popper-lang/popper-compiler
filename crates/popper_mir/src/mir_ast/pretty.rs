@@ -32,7 +32,7 @@ impl Pretty {
 
     pub fn tab(&mut self) {
         self.result
-            .push_str(&format!("{}", " ".repeat(self.indent * self.tab_size)));
+            .push_str(&" ".repeat(self.indent * self.tab_size).to_string());
     }
 
     pub fn pretty_module(&mut self, module: &Module) {
@@ -50,9 +50,9 @@ impl Pretty {
         self.tab();
         match ir {
             Ir::LoadModule(mir_string) => {
-                self.result.push_str(&"load_module ".to_string());
+                self.result.push_str("load_module ");
                 self.pretty_module(mir_string);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             Ir::LoadExternal(mir_string) => {
                 self.result
@@ -64,7 +64,7 @@ impl Pretty {
                 self.pretty_list(declare.args.clone());
                 self.result.push_str(" ret");
                 self.pretty_type(declare.ret.clone());
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             Ir::Function(func) => {
                 self.result.push_str("func ");
@@ -119,17 +119,17 @@ impl Pretty {
                 self.pretty_value(add.lhs);
                 self.result.push_str(", ");
                 self.pretty_value(add.rhs);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Alloc(alloc) => {
                 self.result.push_str(&format!("alloc {}, ", alloc.name));
                 self.pretty_type(alloc.ty);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Store(store) => {
                 self.result.push_str(&format!("store {}, ", store.name));
                 self.pretty_value(store.value);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Call(call) => {
                 self.result.push_str(&format!("call {}, ", call.name));
@@ -139,32 +139,32 @@ impl Pretty {
             BodyFn::Return(ret) => {
                 self.result.push_str("ret");
                 if let Some(ret) = ret.value {
-                    self.result.push_str(" ");
+                    self.result.push(' ');
                     self.pretty_value(ret);
                 }
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Index(index) => {
                 self.result.push_str(&format!("index {}, ", index.res));
                 self.pretty_value(index.list);
                 self.result.push_str(", ");
                 self.pretty_value(index.index);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::VaArg(va_arg) => {
                 self.result.push_str(&format!("va_arg {}, ", va_arg.res));
                 self.pretty_type(va_arg.ty);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Ref(r) => {
                 self.result.push_str(&format!("ref {}, ", r.res));
                 self.pretty_value(r.val);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
             BodyFn::Deref(d) => {
                 self.result.push_str(&format!("deref {}, ", d.res));
                 self.pretty_value(d.ptr);
-                self.result.push_str("\n");
+                self.result.push('\n');
             }
         }
     }
@@ -172,10 +172,10 @@ impl Pretty {
     pub fn pretty_value(&mut self, value: Value) {
         match value {
             Value::Const(constant) => {
-                self.result.push_str(&format!("{}", constant.compile()));
+                self.result.push_str(&constant.compile().to_string());
             }
             Value::Variable(variable) => {
-                self.result.push_str(&format!("{}", variable.compile()));
+                self.result.push_str(&variable.compile().to_string());
             }
         }
     }
