@@ -1,26 +1,20 @@
-use llvm_sys::core::{LLVMConstPointerCast, LLVMIsNull};
-use llvm_sys::prelude::{LLVMValueRef};
 use crate::types::TypeEnum;
 use crate::value::{Value, ValueEnum};
+use llvm_sys::core::{LLVMConstPointerCast, LLVMIsNull};
+use llvm_sys::prelude::LLVMValueRef;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PointerValue {
-    pub(crate) pointer_value: LLVMValueRef
+    pub(crate) pointer_value: LLVMValueRef,
 }
 
 impl PointerValue {
-
     pub fn new_constant(value: ValueEnum, ty: TypeEnum) -> Self {
         let ptr = unsafe { LLVMConstPointerCast(value.as_llvm_ref(), ty.get_type_ref()) };
-        Self {
-            pointer_value: ptr
-        }
-
+        Self { pointer_value: ptr }
     }
     pub fn new_llvm_ref(pointer_value: LLVMValueRef) -> Self {
-        Self {
-            pointer_value
-        }
+        Self { pointer_value }
     }
 
     pub fn get_llvm_ref(&self) -> LLVMValueRef {
@@ -30,7 +24,6 @@ impl PointerValue {
     pub fn to_value_enum(&self) -> ValueEnum {
         ValueEnum::PointerValue(*self)
     }
-
 }
 impl Value for PointerValue {
     fn as_value_ref(&self) -> LLVMValueRef {

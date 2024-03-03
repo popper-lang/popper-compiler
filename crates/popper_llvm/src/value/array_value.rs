@@ -1,7 +1,7 @@
-use llvm_sys::core::{LLVMConstArray2, LLVMTypeOf};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use crate::types;
 use crate::value::{Value, ValueEnum};
+use llvm_sys::core::{LLVMConstArray2, LLVMTypeOf};
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 #[derive(Debug, Copy, Clone)]
 pub struct ArrayValue {
@@ -10,15 +10,27 @@ pub struct ArrayValue {
 }
 
 impl ArrayValue {
-
     pub fn new_const(value: &[ValueEnum], array_type: types::array_types::ArrayType) -> Self {
-        let array_value = unsafe { LLVMConstArray2(array_type.array_type, value.as_ptr() as *mut LLVMValueRef, value.len() as u64) };
-        Self { array_value, array_type }
+        let array_value = unsafe {
+            LLVMConstArray2(
+                array_type.array_type,
+                value.as_ptr() as *mut LLVMValueRef,
+                value.len() as u64,
+            )
+        };
+        Self {
+            array_value,
+            array_type,
+        }
     }
 
     pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
-        let array_type = types::array_types::ArrayType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
-        Self { array_value: lref, array_type }
+        let array_type =
+            types::array_types::ArrayType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
+        Self {
+            array_value: lref,
+            array_type,
+        }
     }
 
     pub fn get_value(&self) -> LLVMValueRef {

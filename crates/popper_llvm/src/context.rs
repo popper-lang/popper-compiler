@@ -1,13 +1,10 @@
-use llvm_sys::prelude::LLVMContextRef;
-use llvm_sys::core::{
-    LLVMContextCreate,
-    LLVMAppendBasicBlockInContext,
-};
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
+use llvm_sys::core::{LLVMAppendBasicBlockInContext, LLVMContextCreate};
+use llvm_sys::prelude::LLVMContextRef;
 
-use crate::types::{float_types, int_types};
 use crate::module::Module;
+use crate::types::{float_types, int_types};
 use crate::value::function_value::FunctionValue;
 
 #[derive(Clone, Copy, Debug)]
@@ -18,7 +15,7 @@ pub struct Context {
 impl Context {
     pub fn new() -> Self {
         let context = unsafe { LLVMContextCreate() };
-        Self { context  }
+        Self { context }
     }
 
     pub fn new_module(&self, name: &str) -> Module {
@@ -28,7 +25,6 @@ impl Context {
     pub fn new_builder(&mut self) -> Builder {
         let builder = Builder::new(self.clone());
         builder
-
     }
 
     pub fn void_type(&self) -> int_types::IntType {
@@ -61,7 +57,9 @@ impl Context {
 
     pub fn append_basic_block(&self, name: &str, fn_value: FunctionValue) -> BasicBlock {
         let name = std::ffi::CString::new(name).unwrap();
-        let block = unsafe { LLVMAppendBasicBlockInContext(self.context, fn_value.function_value, name.as_ptr()) };
+        let block = unsafe {
+            LLVMAppendBasicBlockInContext(self.context, fn_value.function_value, name.as_ptr())
+        };
         BasicBlock::new(block, self.clone())
     }
 }

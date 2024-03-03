@@ -1,16 +1,19 @@
-use llvm_sys::prelude::LLVMBasicBlockRef;
-use llvm_sys::core::LLVMGetBasicBlockName;
 use crate::context::Context;
+use llvm_sys::core::LLVMGetBasicBlockName;
+use llvm_sys::prelude::LLVMBasicBlockRef;
 
 #[derive(Debug, Clone, Copy)]
 pub struct BasicBlock {
     pub(crate) basic_block: LLVMBasicBlockRef,
-    pub(crate) context:  Context,
+    pub(crate) context: Context,
 }
 
 impl BasicBlock {
     pub fn new(basic_block: LLVMBasicBlockRef, context: Context) -> Self {
-        Self { basic_block, context }
+        Self {
+            basic_block,
+            context,
+        }
     }
 
     pub fn get_context(&self) -> Context {
@@ -25,6 +28,4 @@ impl BasicBlock {
         let c_string = unsafe { std::ffi::CStr::from_ptr(LLVMGetBasicBlockName(self.basic_block)) };
         c_string.to_str().unwrap().to_string()
     }
-
-
 }

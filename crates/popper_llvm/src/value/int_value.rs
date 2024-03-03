@@ -1,14 +1,7 @@
-use llvm_sys::prelude::{
-    LLVMTypeRef,
-    LLVMValueRef,
-};
-use llvm_sys::core::{
-    LLVMConstInt,
-    LLVMConstIntGetZExtValue,
-    LLVMTypeOf
-};
 use crate::types::{int_types, TypeEnum};
 use crate::value::{Value, ValueEnum};
+use llvm_sys::core::{LLVMConstInt, LLVMConstIntGetZExtValue, LLVMTypeOf};
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 #[derive(Debug, Copy, Clone)]
 pub struct IntValue {
@@ -17,14 +10,20 @@ pub struct IntValue {
 }
 
 impl IntValue {
-
     pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
         let int_type = int_types::IntType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
-        Self { int_value: lref, int_type }
+        Self {
+            int_value: lref,
+            int_type,
+        }
     }
     pub fn new_const(value: u32, int_type: int_types::IntType, sign_extend: bool) -> Self {
-        let int_value = unsafe { LLVMConstInt(int_type.int_type, value as u64, sign_extend.into()) };
-        Self { int_value, int_type }
+        let int_value =
+            unsafe { LLVMConstInt(int_type.int_type, value as u64, sign_extend.into()) };
+        Self {
+            int_value,
+            int_type,
+        }
     }
 
     pub fn get_int_type(&self) -> int_types::IntType {
@@ -34,12 +33,11 @@ impl IntValue {
     pub fn get_value(&self) -> u32 {
         unsafe { LLVMConstIntGetZExtValue(self.int_value) as u32 }
     }
-    
+
     pub fn to_value_enum(self) -> ValueEnum {
         ValueEnum::IntValue(self)
     }
 }
-
 
 impl Value for IntValue {
     fn get_type_ref(&self) -> LLVMTypeRef {

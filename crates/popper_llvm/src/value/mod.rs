@@ -1,22 +1,14 @@
-use llvm_sys::prelude::{
-    LLVMTypeRef,
-    LLVMValueRef,
-};
 use llvm_sys::core::{
-    LLVMPrintValueToString,
-    LLVMReplaceAllUsesWith,
-    LLVMDumpValue,
-    LLVMTypeOf,
-    LLVMGetValueName2 as LLVMGetValueName,
-    LLVMSetValueName2 as LLVMSetValueName,
+    LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString,
+    LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf,
 };
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 trait UnsignedInt: Sized + Into<u32> {}
 
 impl UnsignedInt for u8 {}
 impl UnsignedInt for u16 {}
 impl UnsignedInt for u32 {}
-
 
 macro_rules! values {
     (int($ty:tt) $e:expr) => {
@@ -38,7 +30,6 @@ macro_rules! values {
     };
 }
 
-
 use crate::types::{int_types, TypeEnum};
 use crate::value::array_value::ArrayValue;
 
@@ -57,7 +48,9 @@ pub trait Value {
     fn is_undef(&self) -> bool;
     fn print_to_string(&self) -> String {
         let llvm_str = unsafe { LLVMPrintValueToString(self.as_value_ref()) };
-        let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }.to_str().unwrap();
+        let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
+            .to_str()
+            .unwrap();
         let string = str_slice.to_owned();
         string
     }
@@ -82,12 +75,11 @@ pub trait Value {
     }
 }
 
-pub mod int_value;
+pub mod array_value;
 pub mod float_value;
 pub mod function_value;
-pub mod array_value;
+pub mod int_value;
 pub mod pointer_value;
-
 
 #[derive(Debug, Copy, Clone)]
 pub enum ValueEnum {
@@ -98,9 +90,7 @@ pub enum ValueEnum {
     PointerValue(pointer_value::PointerValue),
 }
 
-
 impl ValueEnum {
-
     pub fn pointer(&self, type_enum: TypeEnum) -> pointer_value::PointerValue {
         pointer_value::PointerValue::new_constant(*self, type_enum)
     }
@@ -151,8 +141,6 @@ impl ValueEnum {
             ValueEnum::PointerValue(pointer_value) => pointer_value.dump(),
         }
     }
-
-
 }
 
 impl Into<ValueEnum> for LLVMValueRef {
@@ -161,10 +149,16 @@ impl Into<ValueEnum> for LLVMValueRef {
         let value_type_enum = value_type.into();
         match value_type_enum {
             TypeEnum::IntType(_) => ValueEnum::IntValue(int_value::IntValue::new_llvm_ref(self)),
-            TypeEnum::FloatType(_) => ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(self)),
-            TypeEnum::FunctionType(_) => ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(self)),
+            TypeEnum::FloatType(_) => {
+                ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(self))
+            }
+            TypeEnum::FunctionType(_) => {
+                ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(self))
+            }
             TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(ArrayValue::new_llvm_ref(self)),
-            TypeEnum::PointerType(_) => ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self)),
+            TypeEnum::PointerType(_) => {
+                ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self))
+            }
             _ => panic!("Unknown type"),
         }
     }

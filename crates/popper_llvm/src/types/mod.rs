@@ -1,12 +1,11 @@
+use llvm_sys::core::LLVMPrintTypeToString;
 use llvm_sys::prelude::LLVMTypeRef;
-use llvm_sys::core::{LLVMPrintTypeToString};
 
-
-mod metadata;
-pub mod int_types;
+pub mod array_types;
 pub mod float_types;
 pub mod function_types;
-pub mod array_types;
+pub mod int_types;
+mod metadata;
 mod pointer_types;
 
 #[macro_export]
@@ -45,15 +44,15 @@ macro_rules! types {
 
 }
 
-
-
 pub trait Type {
     fn is_sized(&self) -> bool;
     fn get_type_ref(&self) -> LLVMTypeRef;
 
     fn print_to_string(&self) -> String {
         let llvm_str = unsafe { LLVMPrintTypeToString(self.get_type_ref()) };
-        let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }.to_str().unwrap();
+        let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
+            .to_str()
+            .unwrap();
         let string = str_slice.to_owned();
         string
     }
@@ -96,11 +95,7 @@ impl TypeEnum {
     pub fn ptr(&self) -> pointer_types::PointerTypes {
         pointer_types::PointerTypes::new_const(*self)
     }
-
-
-
 }
-
 
 impl Into<TypeEnum> for LLVMTypeRef {
     fn into(self) -> TypeEnum {
@@ -117,10 +112,10 @@ impl Into<TypeEnum> for LLVMTypeRef {
             }
             llvm_sys::LLVMTypeKind::LLVMArrayTypeKind => {
                 TypeEnum::ArrayType(array_types::ArrayType::new_with_llvm_ref(self))
-            },
+            }
             llvm_sys::LLVMTypeKind::LLVMPointerTypeKind => {
                 TypeEnum::PointerType(pointer_types::PointerTypes::new_llvm_ref(self))
-            },
+            }
             _ => panic!("Unknown type"),
         }
     }

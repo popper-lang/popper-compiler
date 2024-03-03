@@ -1,14 +1,13 @@
-use std::ffi::CString;
 use llvm_sys::analysis::LLVMVerifyModule;
-use llvm_sys::prelude::{
-    LLVMModuleRef,
-    LLVMMemoryBufferRef
-};
-use llvm_sys::core::{LLVMAddFunction, LLVMAppendModuleInlineAsm, LLVMCreateMemoryBufferWithContentsOfFile, LLVMDumpModule, LLVMGetNamedFunction, LLVMModuleCreateWithNameInContext, LLVMPrintModuleToString};
-use llvm_sys::bit_reader::{
-    LLVMParseBitcodeInContext2
+use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
+use llvm_sys::core::{
+    LLVMAddFunction, LLVMAppendModuleInlineAsm, LLVMCreateMemoryBufferWithContentsOfFile,
+    LLVMDumpModule, LLVMGetNamedFunction, LLVMModuleCreateWithNameInContext,
+    LLVMPrintModuleToString,
 };
 use llvm_sys::linker::LLVMLinkModules2;
+use llvm_sys::prelude::{LLVMMemoryBufferRef, LLVMModuleRef};
+use std::ffi::CString;
 
 use crate::context::Context;
 use crate::types::function_types::FunctionType;
@@ -22,7 +21,6 @@ pub struct Module {
 }
 
 impl Module {
-
     pub fn from_bc_file(path: &str, context: Context) -> Self {
         let path = std::ffi::CString::new(path).unwrap();
         let module;
@@ -32,10 +30,17 @@ impl Module {
             let mut mod_uninit = std::mem::MaybeUninit::uninit();
             let buf: LLVMMemoryBufferRef;
 
-            let res_buf =  LLVMCreateMemoryBufferWithContentsOfFile(path.as_ptr(), buf_uninit.as_mut_ptr(), &mut err);
+            let res_buf = LLVMCreateMemoryBufferWithContentsOfFile(
+                path.as_ptr(),
+                buf_uninit.as_mut_ptr(),
+                &mut err,
+            );
             if res_buf != 0 {
                 assert!(!err.is_null());
-                panic!("Failed to load bitcode: {}", std::ffi::CStr::from_ptr(err).to_str().unwrap());
+                panic!(
+                    "Failed to load bitcode: {}",
+                    std::ffi::CStr::from_ptr(err).to_str().unwrap()
+                );
             }
 
             buf = buf_uninit.assume_init();
@@ -52,9 +57,7 @@ impl Module {
 
     pub fn new(name: &str, context: Context) -> Self {
         let name = std::ffi::CString::new(name).unwrap();
-        let module = unsafe {
-            LLVMModuleCreateWithNameInContext(name.as_ptr(), context.context)
-        };
+        let module = unsafe { LLVMModuleCreateWithNameInContext(name.as_ptr(), context.context) };
         Self { module, context }
     }
 
@@ -69,13 +72,11 @@ impl Module {
         self.context.clone()
     }
 
-
-
     pub fn dump(&self) {
         unsafe { LLVMDumpModule(self.module) }
     }
 
-    pub fn push_asm(&self, asm_code: String)  {
+    pub fn push_asm(&self, asm_code: String) {
         let asm_code = std::ffi::CString::new(asm_code).unwrap();
         let len = asm_code.clone().into_bytes().len();
         unsafe {
@@ -85,21 +86,17 @@ impl Module {
 
     pub fn add_function(&self, name: &str, function_type: FunctionType) -> FunctionValue {
         let name = CString::new(name).unwrap();
-        let function = unsafe {
-            LLVMAddFunction(self.module, name.as_ptr(), function_type.get_type_ref())
-        };
+        let function =
+            unsafe { LLVMAddFunction(self.module, name.as_ptr(), function_type.get_type_ref()) };
         let val: ValueEnum = function.into();
         let ty = val.get_type().get_type_ref();
-
 
         FunctionValue::new_llvm_ref(function)
     }
 
     pub fn get_function(&self, name: &str) -> Option<FunctionValue> {
         let name = std::ffi::CString::new(name).unwrap();
-        let function = unsafe {
-            LLVMGetNamedFunction(self.module, name.as_ptr())
-        };
+        let function = unsafe { LLVMGetNamedFunction(self.module, name.as_ptr()) };
         if function.is_null() {
             None
         } else {
@@ -110,7 +107,11 @@ impl Module {
     pub fn verify(&self) -> bool {
         unsafe {
             let mut err = std::ptr::null_mut();
-            let result = LLVMVerifyModule(self.module, llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction, &mut err);
+            let result = LLVMVerifyModule(
+                self.module,
+                llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction,
+                &mut err,
+            );
             if result != 0 {
                 println!("Error: {}", std::ffi::CStr::from_ptr(err).to_str().unwrap());
                 false
@@ -122,8 +123,10 @@ impl Module {
 
     pub fn print_to_string(&self) -> String {
         unsafe {
-            CString::from_raw(LLVMPrintModuleToString(self.module)).to_str().unwrap().to_string()
+            CString::from_raw(LLVMPrintModuleToString(self.module))
+                .to_str()
+                .unwrap()
+                .to_string()
         }
     }
-
 }

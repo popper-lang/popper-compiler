@@ -1,12 +1,14 @@
-use std::fmt::Debug;
+use llvm_sys::core::{
+    LLVMArrayType2 as LLVMArrayType, LLVMConstString, LLVMGetArrayLength2 as LLVMGetArrayLength,
+    LLVMGetElementType,
+};
 use llvm_sys::prelude::LLVMTypeRef;
-use llvm_sys::core::{LLVMGetElementType, LLVMArrayType2 as LLVMArrayType, LLVMGetArrayLength2 as LLVMGetArrayLength, LLVMConstString};
+use std::fmt::Debug;
 
-use crate::types::{Type, TypeEnum};
 use crate::types::function_types::FunctionType;
+use crate::types::{Type, TypeEnum};
 use crate::value::array_value::ArrayValue;
 use crate::value::ValueEnum;
-
 
 #[derive(Clone, Copy)]
 pub struct ArrayType {
@@ -30,7 +32,10 @@ impl ArrayType {
     }
 
     pub fn new_with_llvm_ref(array_type: LLVMTypeRef) -> Self {
-        Self { array_type, size: unsafe { LLVMGetArrayLength(array_type) }}
+        Self {
+            array_type,
+            size: unsafe { LLVMGetArrayLength(array_type) },
+        }
     }
 
     pub fn const_array(&self, values: &[ValueEnum]) -> ArrayValue {
@@ -38,7 +43,8 @@ impl ArrayType {
     }
 
     pub fn const_string(&self, string: &str) -> ArrayValue {
-        let values = unsafe { LLVMConstString(string.as_ptr() as *const i8, string.len() as u32, 0) };
+        let values =
+            unsafe { LLVMConstString(string.as_ptr() as *const i8, string.len() as u32, 0) };
         ArrayValue::new_llvm_ref(values)
     }
 

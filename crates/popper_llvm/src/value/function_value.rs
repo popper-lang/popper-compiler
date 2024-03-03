@@ -1,13 +1,6 @@
-use llvm_sys::prelude::{
-    LLVMValueRef,
-    LLVMTypeRef
-};
-use llvm_sys::core::{
-    LLVMTypeOf,
-    LLVMGetParam,
-    LLVMGetValueName2 as LLVMGetValueName
-};
 use crate::module::Module;
+use llvm_sys::core::{LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName, LLVMTypeOf};
+use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 use crate::types::{function_types, TypeEnum};
 
@@ -20,12 +13,19 @@ pub struct FunctionValue {
 }
 
 impl FunctionValue {
-
     pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
-        let function_type = function_types::FunctionType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
-        Self { function_value: lref, function_type }
+        let function_type =
+            function_types::FunctionType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
+        Self {
+            function_value: lref,
+            function_type,
+        }
     }
-    pub fn new_constant(function_type: function_types::FunctionType, module: Module, name: &str) -> Self {
+    pub fn new_constant(
+        function_type: function_types::FunctionType,
+        module: Module,
+        name: &str,
+    ) -> Self {
         let function_value = unsafe {
             llvm_sys::core::LLVMAddFunction(
                 module.module,
@@ -60,10 +60,14 @@ impl FunctionValue {
     }
 
     pub fn verify(&self) -> bool {
-        let result = unsafe { llvm_sys::analysis::LLVMVerifyFunction(self.function_value, llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction) };
+        let result = unsafe {
+            llvm_sys::analysis::LLVMVerifyFunction(
+                self.function_value,
+                llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction,
+            )
+        };
         result == 0
     }
-
 }
 
 impl Value for FunctionValue {

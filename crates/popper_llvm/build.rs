@@ -1,9 +1,7 @@
-
 struct LLVM {
     version: String,
     prefix: String,
 }
-
 
 fn found_llvm() -> Option<LLVM> {
     let llvm_prefix = std::process::Command::new("llvm-config")
@@ -29,18 +27,19 @@ fn found_llvm() -> Option<LLVM> {
         };
         Some(llvm)
     }
-
 }
 
 fn main() {
     let llvm = found_llvm();
     if llvm.is_none() {
-        panic!(r#"
+        panic!(
+            r#"
         ==============================
         LLVM not found
         ==============================
         please install LLVM first (https://llvm.org/)
-        "#)
+        "#
+        )
     }
 
     let llvm = llvm.unwrap();
@@ -48,12 +47,14 @@ fn main() {
     let llvm_prefix = llvm.prefix;
     let major_version = llvm_version.split(".").next().unwrap();
     if major_version != "17" {
-        panic!(r#"
+        panic!(
+            r#"
         ==============================
         LLVM version not supported
         ==============================
         please install LLVM 17 (https://llvm.org/)
-        "#)
+        "#
+        )
     }
 
     std::env::set_var("LLVM_SYS_170_PREFIX", llvm_prefix);

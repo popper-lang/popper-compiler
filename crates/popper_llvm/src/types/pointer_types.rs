@@ -1,26 +1,19 @@
-use llvm_sys::prelude::LLVMTypeRef;
 use crate::types::function_types::FunctionType;
 use crate::types::{Type, TypeEnum};
-
-
+use llvm_sys::prelude::LLVMTypeRef;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PointerTypes {
-    pub(crate) ty: LLVMTypeRef
+    pub(crate) ty: LLVMTypeRef,
 }
 
 impl PointerTypes {
-
     pub fn new_const(ty: TypeEnum) -> Self {
         let ty = unsafe { llvm_sys::core::LLVMPointerType(ty.get_type_ref(), 0) };
-        Self {
-            ty
-        }
+        Self { ty }
     }
     pub fn new_llvm_ref(ty: LLVMTypeRef) -> Self {
-        Self {
-            ty
-        }
+        Self { ty }
     }
 
     pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {
@@ -34,7 +27,6 @@ impl PointerTypes {
     pub fn get_llvm_ref(&self) -> LLVMTypeRef {
         self.ty
     }
-
 }
 
 impl Type for PointerTypes {
