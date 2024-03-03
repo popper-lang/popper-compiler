@@ -2,8 +2,8 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
-    types::{AnyType, BasicType, BasicTypeEnum},
-    values::{AnyValue, BasicValue, BasicValueEnum, IntValue, PointerValue},
+    types::{BasicType, BasicTypeEnum},
+    values::{BasicValue, BasicValueEnum, IntValue, PointerValue},
 };
 use popper_common::hash::hash_file;
 use popper_mir::mir_ast::{
@@ -240,7 +240,7 @@ impl<'ctx> Compiler<'ctx> {
         match ty {
             MirType::Int => self.context.i32_type().as_basic_type_enum(),
             MirType::Float => self.context.f32_type().as_basic_type_enum(),
-            MirType::String(l) => self
+            MirType::String(_) => self
                 .context
                 .i8_type()
                 .ptr_type(Default::default())
@@ -268,8 +268,6 @@ impl<'ctx> Compiler<'ctx> {
                 let llvm_ty = self.mir_type_to_llvm_type(*ty);
                 llvm_ty.ptr_type(Default::default()).as_basic_type_enum()
             }
-
-            _ => panic!("Type not supported yet"),
         }
     }
 
@@ -363,7 +361,6 @@ impl<'ctx> Compiler<'ctx> {
             Ir::Function(func) => {
                 self.compile_function(func);
             }
-            _ => todo!(),
         }
     }
 

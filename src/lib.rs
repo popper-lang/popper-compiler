@@ -5,7 +5,7 @@ use popper_ast::Statement;
 use popper_codegen::compiler::Compiler;
 use popper_semantic_analyzer::analyze;
 use popper_error::generate_color;
-use popper_mir::mir_ast::{MirCompile, Module};
+use popper_mir::mir_ast::Module;
 use popper_mir::mir_ast::pretty::Pretty;
 use popper_mir::mir_compiler::MirCompiler;
 use popper_inkwell::compiler::Compiler as InkwellCompiler;
