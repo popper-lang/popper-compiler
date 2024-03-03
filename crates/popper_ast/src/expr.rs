@@ -1,11 +1,11 @@
-use crate::{Call, Constant, Deref, Reference, Return, VaArg};
 use crate::BinOp;
-use crate::UnaryOp;
-use crate::Span;
-use crate::ParenGroup;
-use crate::StructInstance;
-use crate::StructFieldAccess;
 use crate::Index;
+use crate::ParenGroup;
+use crate::Span;
+use crate::StructFieldAccess;
+use crate::StructInstance;
+use crate::UnaryOp;
+use crate::{Call, Constant, Deref, Reference, Return, VaArg};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -21,7 +21,7 @@ pub enum Expression {
     Index(Index),
     VaArg(VaArg),
     Reference(Reference),
-    Deref(Deref)
+    Deref(Deref),
 }
 
 impl Expression {
@@ -37,7 +37,7 @@ impl Expression {
             Expression::Index(i) => i.span,
             Expression::VaArg(v) => v.span(),
             Expression::Reference(r) => r.span,
-            Expression::Deref(p) => p.span
+            Expression::Deref(p) => p.span,
         }
     }
 }

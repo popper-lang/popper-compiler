@@ -13,7 +13,11 @@ pub struct UnaryOp {
 
 impl UnaryOp {
     pub fn new(span: Span, op: UnaryOpKind, expr: Expression) -> Self {
-        Self { op, expr: Box::new(expr), span }
+        Self {
+            op,
+            expr: Box::new(expr),
+            span,
+        }
     }
 
     pub fn span(&self) -> Span {
@@ -49,4 +53,3 @@ impl UnaryOpKind {
         }
     }
 }
-

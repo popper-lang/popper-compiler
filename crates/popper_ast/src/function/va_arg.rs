@@ -1,12 +1,11 @@
 use crate::{Span, Type};
 
-
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
 pub struct VaArg {
     span: Span,
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl VaArg {

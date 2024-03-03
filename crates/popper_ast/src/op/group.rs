@@ -1,6 +1,5 @@
-use crate::Span;
 use crate::Expression;
-
+use crate::Span;
 
 /// A parenthesized group of expressions.
 /// Syntax: `(expr)`
@@ -14,7 +13,10 @@ pub struct ParenGroup {
 
 impl ParenGroup {
     pub fn new(span: Span, expr: Expression) -> Self {
-        Self { span, expr: Box::new(expr) }
+        Self {
+            span,
+            expr: Box::new(expr),
+        }
     }
 
     pub fn span(&self) -> Span {

@@ -23,7 +23,6 @@ pub trait ExprVisitor {
     visit!(visit_va_arg, va_arg => VaArg);
     visit!(visit_reference, reference => Reference);
     visit!(visit_deref, pointer => Deref);
-
 }
 
 /// stmt visitor
@@ -45,5 +44,4 @@ pub trait StmtVisitor {
     visit!(visit_extern, extern_stmt => Extern);
     visit!(visit_for_stmt, for_stmt => ForStmt);
     visit!(visit_struct_stmt, struct_stmt => StructStmt);
-
 }

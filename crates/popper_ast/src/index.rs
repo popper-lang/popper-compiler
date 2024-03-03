@@ -1,13 +1,12 @@
 use crate::{Expression, Span};
 
-
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
 pub struct Index {
     pub value: Box<Expression>,
     pub index: Box<Expression>,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Index {
@@ -15,7 +14,7 @@ impl Index {
         Self {
             value: Box::new(value),
             index: Box::new(index),
-            span
+            span,
         }
     }
 }

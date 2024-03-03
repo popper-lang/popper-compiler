@@ -1,5 +1,5 @@
-use crate::{Expression, Type};
 use crate::Span;
+use crate::{Expression, Type};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -7,16 +7,12 @@ use crate::Span;
 pub struct Argument {
     pub name: String,
     pub ty: Type,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Argument {
     pub fn new(name: String, ty: Type, span: Span) -> Self {
-        Self {
-            name,
-            ty,
-            span
-        }
+        Self { name, ty, span }
     }
 }
 
@@ -26,7 +22,7 @@ impl Argument {
 pub struct Arguments {
     pub args: Vec<Argument>,
     pub argument_total: usize,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Arguments {
@@ -34,7 +30,7 @@ impl Arguments {
         Self {
             args: args.clone(),
             argument_total: args.len(),
-            span
+            span,
         }
     }
 }
@@ -45,15 +41,11 @@ impl Arguments {
 pub struct ArgumentValue {
     pub name: String,
     pub value: Expression,
-    pub span: Span
+    pub span: Span,
 }
 
 impl ArgumentValue {
     pub fn new(name: String, value: Expression, span: Span) -> Self {
-        Self {
-            name,
-            value,
-            span
-        }
+        Self { name, value, span }
     }
 }

@@ -10,7 +10,6 @@ pub struct ForStmt {
     span: Span,
 }
 
-
 impl ForStmt {
     pub fn new(it: Ident, expr: Expression, body: Block, span: Span) -> Self {
         Self {

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::Span;
+use std::collections::HashMap;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -48,39 +48,29 @@ pub enum TypeKind {
     Struct(HashMap<String, Type>),
     /// `struct name
     StructInstance(String),
-
 }
 
 impl ToString for TypeKind {
     fn to_string(&self) -> String {
         match self.clone() {
-            TypeKind::Tuple(tys) =>
-                format!(
-                    "({})",
-                    tys
-                        .iter()
-                        .map(|ty| ty.type_kind.to_string())
-                        .collect::<Vec<String>>()
-                        .join(",")
-                )
-            ,
-            TypeKind::List(ty, size) =>
-                format!("[{}:{}]", ty.type_kind.to_string().clone(), size)
-            ,
-            TypeKind::Function(tys, ret, varargs) =>
-                format!("func({}{}): {}",
-                        tys
-                            .iter()
-                            .map(|t| t.type_kind.to_string())
-                            .collect::<Vec<String>>()
-                            .join(","),
-                        if varargs { "..." } else { "" },
-                        ret.type_kind.to_string()
-                )
-            ,
-            TypeKind::Pointer(ty) =>
-                format!("*{}", ty.type_kind.to_string())
-            ,
+            TypeKind::Tuple(tys) => format!(
+                "({})",
+                tys.iter()
+                    .map(|ty| ty.type_kind.to_string())
+                    .collect::<Vec<String>>()
+                    .join(",")
+            ),
+            TypeKind::List(ty, size) => format!("[{}:{}]", ty.type_kind.to_string().clone(), size),
+            TypeKind::Function(tys, ret, varargs) => format!(
+                "func({}{}): {}",
+                tys.iter()
+                    .map(|t| t.type_kind.to_string())
+                    .collect::<Vec<String>>()
+                    .join(","),
+                if varargs { "..." } else { "" },
+                ret.type_kind.to_string()
+            ),
+            TypeKind::Pointer(ty) => format!("*{}", ty.type_kind.to_string()),
             TypeKind::Unit => String::from("()"),
             TypeKind::Int => String::from("int"),
             TypeKind::Float => String::from("float"),

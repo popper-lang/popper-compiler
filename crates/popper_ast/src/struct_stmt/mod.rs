@@ -12,11 +12,7 @@ pub struct StructStmt {
 
 impl StructStmt {
     pub fn new(name: String, fields: Vec<StructField>, span: Span) -> Self {
-        Self {
-            name,
-            fields,
-            span,
-        }
+        Self { name, fields, span }
     }
 }
 
@@ -46,11 +42,7 @@ pub struct StructInstance {
 
 impl StructInstance {
     pub fn new(name: String, fields: Vec<StructFieldInstance>, span: Span) -> Self {
-        Self {
-            name,
-            fields,
-            span,
-        }
+        Self { name, fields, span }
     }
 }
 

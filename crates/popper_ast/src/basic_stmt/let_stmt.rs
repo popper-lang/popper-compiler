@@ -1,6 +1,5 @@
-use crate::{Expression, Ident, Type};
 use crate::Span;
-
+use crate::{Expression, Ident, Type};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -12,11 +11,16 @@ pub struct LetStmt {
     pub r#type: Option<Type>,
     pub mutable: bool,
     pub span: Span,
-
 }
 
 impl LetStmt {
-    pub fn new(span: Span, name: Ident, r#type: Option<Type>, mutable: bool, value: Expression) -> Self {
+    pub fn new(
+        span: Span,
+        name: Ident,
+        r#type: Option<Type>,
+        mutable: bool,
+        value: Expression,
+    ) -> Self {
         Self {
             name,
             value,

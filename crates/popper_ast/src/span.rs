@@ -31,7 +31,6 @@ impl Span {
         }
         line
     }
-
 }
 
 impl Display for Span {

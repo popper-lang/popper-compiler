@@ -147,7 +147,7 @@ impl Constant {
             Self::StringLiteral(string_literal) => string_literal.span,
             Self::Bool(bool) => bool.span,
             Self::Null(null) => null.span,
-            Self::List(list) => list.span()
+            Self::List(list) => list.span(),
         }
     }
 }

@@ -1,5 +1,5 @@
-use crate::Span;
 use crate::Expression;
+use crate::Span;
 use crate::Statement;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
@@ -14,7 +14,11 @@ pub struct If {
 
 impl If {
     pub fn new(span: Span, condition: Expression, body: Statement) -> Self {
-        Self { span, condition, body: Box::new(body) }
+        Self {
+            span,
+            condition,
+            body: Box::new(body),
+        }
     }
 
     pub fn span(&self) -> Span {
@@ -35,7 +39,12 @@ pub struct IfElse {
 
 impl IfElse {
     pub fn new(span: Span, condition: Expression, body: Statement, else_body: Statement) -> Self {
-        Self { span, condition, body: Box::new(body), else_body: Box::new(else_body) }
+        Self {
+            span,
+            condition,
+            body: Box::new(body),
+            else_body: Box::new(else_body),
+        }
     }
 
     pub fn span(&self) -> Span {

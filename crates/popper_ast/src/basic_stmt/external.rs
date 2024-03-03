@@ -1,4 +1,4 @@
-use crate::{Span, FunctionSign};
+use crate::{FunctionSign, Span};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -6,7 +6,7 @@ use crate::{Span, FunctionSign};
 pub struct External {
     span: Span,
     pub file: String,
-    pub signs: Vec<FunctionSign>
+    pub signs: Vec<FunctionSign>,
 }
 
 impl External {
@@ -24,7 +24,7 @@ impl External {
 #[derive(Clone)]
 pub struct Extern {
     span: Span,
-    pub signs: Vec<FunctionSign>
+    pub signs: Vec<FunctionSign>,
 }
 
 impl Extern {

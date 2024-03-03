@@ -1,5 +1,5 @@
-use crate::{Span, Statement};
 use crate::Ident;
+use crate::{Span, Statement};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -12,14 +12,17 @@ pub struct ImportStmt {
 
 impl ImportStmt {
     pub fn new(span: Span, path: PathImport, module_stmts: Vec<Statement>) -> Self {
-        Self { span, path, module_stmts }
+        Self {
+            span,
+            path,
+            module_stmts,
+        }
     }
 
     pub fn span(&self) -> Span {
         self.span
     }
 }
-
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

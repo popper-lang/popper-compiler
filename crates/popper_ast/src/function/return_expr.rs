@@ -6,14 +6,14 @@ use crate::Span;
 #[derive(Clone)]
 pub struct Return {
     pub expression: Option<Box<Expression>>,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Return {
     pub fn new(expression: Option<Expression>, span: Span) -> Self {
         Self {
             expression: expression.map(Box::new),
-            span
+            span,
         }
     }
 

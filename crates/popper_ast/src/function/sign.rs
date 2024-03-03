@@ -1,4 +1,4 @@
-use crate::{Span, Arguments, Type};
+use crate::{Arguments, Span, Type};
 
 // a function signature :
 // func add (a: int, b: int): int;
@@ -14,8 +14,20 @@ pub struct FunctionSign {
 }
 
 impl FunctionSign {
-    pub fn new(span: Span, name: String, arguments: Arguments, return_type: Type, is_var_args: bool) -> Self {
-        Self { span, name, arguments, return_type, is_var_args }
+    pub fn new(
+        span: Span,
+        name: String,
+        arguments: Arguments,
+        return_type: Type,
+        is_var_args: bool,
+    ) -> Self {
+        Self {
+            span,
+            name,
+            arguments,
+            return_type,
+            is_var_args,
+        }
     }
 
     pub fn span(&self) -> Span {

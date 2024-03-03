@@ -1,17 +1,17 @@
+use crate::Block;
 use crate::Expression;
 use crate::Extern;
-use crate::While;
-use crate::Block;
-use crate::LetStmt;
-use crate::If;
-use crate::IfElse;
-use crate::Function;
-use crate::Return;
-use crate::Span;
-use crate::ImportStmt;
 use crate::External;
 use crate::ForStmt;
+use crate::Function;
+use crate::If;
+use crate::IfElse;
+use crate::ImportStmt;
+use crate::LetStmt;
+use crate::Return;
+use crate::Span;
 use crate::StructStmt;
+use crate::While;
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]

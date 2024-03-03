@@ -7,7 +7,7 @@ use crate::Span;
 pub struct Call {
     pub name: String,
     pub arguments: Vec<Expression>,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Call {
@@ -15,8 +15,7 @@ impl Call {
         Self {
             name,
             arguments,
-            span
+            span,
         }
     }
 }
-
