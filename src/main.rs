@@ -1,4 +1,4 @@
-use std::fmt::DebugStruct;
+
 use std::io::Write;
 use popper_compiler::{compile_to_inkwell_llvm, compile_to_llvm, compile_to_mir, execute_llvm, pretty_mir};
 use popper_compiler::get_ast;
