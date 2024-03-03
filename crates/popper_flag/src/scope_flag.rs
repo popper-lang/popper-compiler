@@ -1,11 +1,11 @@
-
 /// Scope flag is used to save the scope
 #[derive(Debug, Default, PartialEq, Clone)]
 pub enum ScopeFlag {
-    #[default] Global,
+    #[default]
+    Global,
     Local,
     Function,
-    Block
+    Block,
 }
 
 impl ScopeFlag {

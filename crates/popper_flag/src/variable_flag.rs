@@ -1,8 +1,7 @@
-
 use crate::scope_flag::ScopeFlag;
 
-use popper_ast::Span;
 use crate::SymbolFlags;
+use popper_ast::Span;
 
 #[derive(PartialEq, Clone, Debug)]
 /// variable flag is used to store Variable information
@@ -13,17 +12,17 @@ pub struct VariableFlag {
     pub used_at: Vec<Span>,
     pub scope: ScopeFlag,
     pub mutable: bool,
-    pub span: Span
+    pub span: Span,
 }
 
-
 impl VariableFlag {
-    pub fn new(name: String,
-               value: SymbolFlags,
-               scope: ScopeFlag,
-               mutable: bool,
-               span: Span
-               ) -> Self {
+    pub fn new(
+        name: String,
+        value: SymbolFlags,
+        scope: ScopeFlag,
+        mutable: bool,
+        span: Span,
+    ) -> Self {
         Self {
             name,
             value,
@@ -31,7 +30,7 @@ impl VariableFlag {
             used_at: Vec::new(),
             scope,
             mutable,
-            span
+            span,
         }
     }
 
@@ -40,7 +39,6 @@ impl VariableFlag {
         self.used_at.push(span);
         self
     }
-
 }
 
 /// store Variable in environement
@@ -78,7 +76,10 @@ impl Environment {
     }
 
     pub fn variables_in_scope(&self, scope: &ScopeFlag) -> Vec<&VariableFlag> {
-        self.variables.iter().filter(|v| &v.scope == scope).collect()
+        self.variables
+            .iter()
+            .filter(|v| &v.scope == scope)
+            .collect()
     }
 
     pub fn check_variable(&self, name: &str) -> bool {
@@ -104,6 +105,4 @@ impl Environment {
         self.variables.append(&mut other.variables);
         self
     }
-
 }
-

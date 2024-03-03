@@ -1,7 +1,6 @@
+use popper_ast::{Type, TypeKind};
 use std::collections::HashMap;
 use std::fmt::Display;
-use popper_ast::{Type, TypeKind};
-
 
 #[derive(Clone, Debug)]
 pub enum ValueFlag {
@@ -15,7 +14,7 @@ pub enum ValueFlag {
     Struct(HashMap<String, ValueFlag>),
     StructInstance(String),
     Pointer(Box<ValueFlag>),
-    Module(HashMap<String, String>)
+    Module(HashMap<String, String>),
 }
 
 impl Display for ValueFlag {
@@ -39,10 +38,10 @@ impl Display for ValueFlag {
                     args_string.push_str("...");
                 }
                 write!(f, "func({}): {}", args_string, returntype.to_string())
-            },
+            }
             ValueFlag::Pointer(ptr) => {
                 write!(f, "*{}", ptr)
-            },
+            }
             ValueFlag::Struct(fields) => {
                 let mut fields_string = String::new();
                 for (name, ty) in fields {
@@ -51,10 +50,10 @@ impl Display for ValueFlag {
                 fields_string.pop();
                 fields_string.pop();
                 write!(f, "struct({})", fields_string)
-            },
+            }
 
             ValueFlag::StructInstance(name) => write!(f, "struct({})", name),
-            ValueFlag::Module(hash) => write!(f, "module({:?})", hash)
+            ValueFlag::Module(hash) => write!(f, "module({:?})", hash),
         }
     }
 }
@@ -66,19 +65,11 @@ impl ValueFlag {
             TypeKind::Bool => ValueFlag::Boolean,
             TypeKind::Int => ValueFlag::Integer,
             TypeKind::Unit => ValueFlag::None,
-            TypeKind::List(ty, l) => ValueFlag::List(
-                Box::new(
-                    Self::from_ty(*ty)
-                ),
-                l
-            ),
+            TypeKind::List(ty, l) => ValueFlag::List(Box::new(Self::from_ty(*ty)), l),
             TypeKind::Function(args, ret, var) => ValueFlag::Function(
-                args
-                    .iter()
-                    .cloned()
-                    .map(Self::from_ty).collect(),
+                args.iter().cloned().map(Self::from_ty).collect(),
                 Box::new(Self::from_ty(*ret)),
-                var
+                var,
             ),
             TypeKind::Struct(fields) => {
                 let mut hashmap = HashMap::new();
@@ -86,17 +77,10 @@ impl ValueFlag {
                     hashmap.insert(name, Self::from_ty(ty));
                 }
                 ValueFlag::Struct(hashmap)
-            },
-            TypeKind::StructInstance(name) => {
-                ValueFlag::StructInstance(name)
-            },
-            TypeKind::Pointer(ptr) => ValueFlag::Pointer(
-                Box::new(
-                    Self::from_ty(*ptr)
-                )
-            ),
-            _ => unimplemented!()
-
+            }
+            TypeKind::StructInstance(name) => ValueFlag::StructInstance(name),
+            TypeKind::Pointer(ptr) => ValueFlag::Pointer(Box::new(Self::from_ty(*ptr))),
+            _ => unimplemented!(),
         }
     }
 
@@ -107,7 +91,7 @@ impl ValueFlag {
     pub fn get(&self, name: &str) -> Option<&ValueFlag> {
         match self {
             ValueFlag::Struct(fields) => fields.get(name),
-            _ => None
+            _ => None,
         }
     }
 
@@ -124,15 +108,15 @@ impl PartialEq for ValueFlag {
             (ValueFlag::String(_), ValueFlag::String(_)) => true,
             (ValueFlag::Boolean, ValueFlag::Boolean) => true,
             (ValueFlag::None, ValueFlag::None) => true,
-            (ValueFlag::List(ty1, len1), ValueFlag::List(ty2, len2 )) => ty1 == ty2 && len1 == len2,
+            (ValueFlag::List(ty1, len1), ValueFlag::List(ty2, len2)) => ty1 == ty2 && len1 == len2,
             (ValueFlag::Function(args1, ret1, a1), ValueFlag::Function(args2, ret2, a2)) => {
                 args1 == args2 && ret1 == ret2 && a1 == a2
-            },
+            }
             (ValueFlag::Struct(fields1), ValueFlag::Struct(fields2)) => fields1 == fields2,
             (ValueFlag::StructInstance(name1), ValueFlag::StructInstance(name2)) => name1 == name2,
             (ValueFlag::Module(hash1), ValueFlag::Module(hash2)) => hash1 == hash2,
             (ValueFlag::Pointer(ty1), ValueFlag::Pointer(ty2)) => ty1 == ty2,
-            _ => false
+            _ => false,
         }
     }
 }
