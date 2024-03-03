@@ -45,8 +45,8 @@ impl From<Span> for std::ops::Range<usize> {
     }
 }
 
-impl Into<Span> for std::ops::Range<usize> {
-    fn into(self) -> Span {
-        Span::new(self.start, self.end)
+impl From<std::ops::Range<usize>> for Span {
+    fn from(val: std::ops::Range<usize>) -> Self {
+        Span::new(val.start, val.end)
     }
 }
