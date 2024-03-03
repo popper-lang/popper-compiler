@@ -1,12 +1,14 @@
-use std::collections::HashMap;
 use popper_ast::*;
+use std::collections::HashMap;
 
-use popper_error::{alreadyexist::AlreadyExist, returnnotallowed::ReturnNotAllowed, typemismatch::TypeMismatch, Error};
-use popper_flag::{ScopeFlag, VariableFlag, Environment, SymbolFlags, ValueFlag, Flag};
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
 use popper_error::modulenotfound::ModuleNotFound;
-
+use popper_error::{
+    alreadyexist::AlreadyExist, returnnotallowed::ReturnNotAllowed, typemismatch::TypeMismatch,
+    Error,
+};
+use popper_flag::{Environment, Flag, ScopeFlag, SymbolFlags, ValueFlag, VariableFlag};
 
 #[derive(Clone)]
 pub struct StmtAnalyzer {
@@ -18,7 +20,12 @@ pub struct StmtAnalyzer {
 
 impl StmtAnalyzer {
     pub fn new(env: Environment) -> Self {
-        Self { env , current_scope: ScopeFlag::Global, return_type: None, is_return: false }
+        Self {
+            env,
+            current_scope: ScopeFlag::Global,
+            return_type: None,
+            is_return: false,
+        }
     }
 }
 
@@ -29,12 +36,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
 
         analyzer.visit_expr(expr)
-
     }
 
     fn visit_let_stmt(&mut self, let_stmt: LetStmt) -> Result<Self::Output, Self::Error> {
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
-
 
         let value = if let Some(ref ty) = let_stmt.r#type {
             let r: ValueFlag = ValueFlag::from_ty(ty.clone());
@@ -44,14 +49,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let value = analyzer.visit_expr(let_stmt.value.clone())?;
             let x = value.get_value().unwrap();
             if r != x {
-                return Err(
-                    Box::new(
-                        TypeMismatch::new(
-                            (ty.clone().span, ty.type_kind.to_string()),
-                            (let_stmt.value.span(), x.to_string())
-                        )
-                    )
-                )
+                return Err(Box::new(TypeMismatch::new(
+                    (ty.clone().span, ty.type_kind.to_string()),
+                    (let_stmt.value.span(), x.to_string()),
+                )));
             }
 
             value
@@ -64,7 +65,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             value.clone(),
             self.current_scope.clone(),
             let_stmt.mutable,
-            let_stmt.span
+            let_stmt.span,
         );
 
         self.env.add_variable(variable);
@@ -90,12 +91,13 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let condition = analyzer.visit_expr(while_stmt.condition.clone())?;
 
         if !condition.is_boolean() {
-            return Err(Box::new(
-                TypeMismatch::new(
-                    (while_stmt.condition.span(), ValueFlag::Boolean.to_string()),
-                    (while_stmt.condition.span(), condition.get_value().unwrap().to_string()),
-                )
-            ))
+            return Err(Box::new(TypeMismatch::new(
+                (while_stmt.condition.span(), ValueFlag::Boolean.to_string()),
+                (
+                    while_stmt.condition.span(),
+                    condition.get_value().unwrap().to_string(),
+                ),
+            )));
         }
 
         let mut analyzer = StmtAnalyzer::new(self.env.clone());
@@ -111,12 +113,13 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let condition = analyzer.visit_expr(if_stmt.condition.clone())?;
 
         if !condition.is_boolean() {
-            return Err(Box::new(
-                TypeMismatch::new(
-                    (if_stmt.condition.span(), ValueFlag::Boolean.to_string()),
-                    (if_stmt.condition.span(), condition.get_value().unwrap().to_string()),
-                )
-            ))
+            return Err(Box::new(TypeMismatch::new(
+                (if_stmt.condition.span(), ValueFlag::Boolean.to_string()),
+                (
+                    if_stmt.condition.span(),
+                    condition.get_value().unwrap().to_string(),
+                ),
+            )));
         }
 
         let mut analyzer = StmtAnalyzer::new(self.env.clone());
@@ -127,18 +130,21 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_if_else_stmt(&mut self, if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
-
         let mut analyzer = ExprAnalyzer::new(self.env.clone());
         let symbol_flag = SymbolFlags::new(if_else_stmt.span);
         let condition = analyzer.visit_expr(if_else_stmt.condition.clone())?;
 
         if !condition.is_boolean() {
-            return Err(Box::new(
-                TypeMismatch::new(
-                    (if_else_stmt.condition.span(), ValueFlag::Boolean.to_string()),
-                    (if_else_stmt.condition.span(), condition.get_value().unwrap().to_string()),
-                )
-            ))
+            return Err(Box::new(TypeMismatch::new(
+                (
+                    if_else_stmt.condition.span(),
+                    ValueFlag::Boolean.to_string(),
+                ),
+                (
+                    if_else_stmt.condition.span(),
+                    condition.get_value().unwrap().to_string(),
+                ),
+            )));
         }
 
         let mut analyzer = StmtAnalyzer::new(self.env.clone());
@@ -166,13 +172,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 symbol_flag.clone(),
                 self.current_scope.clone(),
                 false,
-                function.span
+                function.span,
             );
             self.env.add_variable(variable);
-            args.push(
-                val
-            )
-
+            args.push(val)
         }
 
         let return_type = {
@@ -186,33 +189,27 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             self.visit_stmt(stmt)?;
         }
 
-
         if !self.is_return {
-            if !(self.return_type.is_some() && self.return_type.clone().unwrap().is_same(&ValueFlag::None)) {
-                return Err(
-                    Box::new(
-                        TypeMismatch::new(
-                            (function.span, return_type.to_string()),
-                            (function.span, ValueFlag::None.to_string())
-                        )
-                    )
-                )
+            if !(self.return_type.is_some()
+                && self.return_type.clone().unwrap().is_same(&ValueFlag::None))
+            {
+                return Err(Box::new(TypeMismatch::new(
+                    (function.span, return_type.to_string()),
+                    (function.span, ValueFlag::None.to_string()),
+                )));
             }
-
         }
 
         let symbol_flag = SymbolFlags::new(function.span)
             .set_function(args, *return_type, function.is_var_args)
-            .clone()
-        ;
-
+            .clone();
 
         let function_flag = VariableFlag::new(
             function.name,
             symbol_flag,
             self.current_scope.clone(),
             false,
-            function.span
+            function.span,
         );
 
         self.env.add_variable(function_flag);
@@ -220,7 +217,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         Ok(SymbolFlags::new(function.span))
     }
 
-    fn visit_extern(&mut self, extern_stmt:Extern) -> Result<Self::Output,Self::Error> {
+    fn visit_extern(&mut self, extern_stmt: Extern) -> Result<Self::Output, Self::Error> {
         let _analyzer = ExprAnalyzer::new(self.env.clone());
 
         for sign in &extern_stmt.signs {
@@ -239,7 +236,15 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 expr_analyzer.get_type(sign.return_type.clone())
             };
 
-            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type, sign.is_var_args).clone(), ScopeFlag::Global, false, Default::default());
+            let var = VariableFlag::new(
+                sign.name.clone(),
+                SymbolFlags::new(sign.span())
+                    .set_function(args, return_type, sign.is_var_args)
+                    .clone(),
+                ScopeFlag::Global,
+                false,
+                Default::default(),
+            );
             self.env.add_variable(var);
         }
 
@@ -249,33 +254,21 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
         let mut expr_analyzer = ExprAnalyzer::new(self.env.clone());
         if self.return_type.is_none() {
-            return Err(Box::new(
-                ReturnNotAllowed::new(
-                    return_expr.span
-                )
-            ));
+            return Err(Box::new(ReturnNotAllowed::new(return_expr.span)));
         }
-        let val =
-            return_expr.expression
-                .map(|x|
-                    expr_analyzer
-                        .visit_expr(*x)
-                        .map(|x|
-                            x
-                                .get_value()
-                                .unwrap()
-                        )
-                )
-                .unwrap_or(Ok(ValueFlag::None))?
-            ;
+        let val = return_expr
+            .expression
+            .map(|x| expr_analyzer.visit_expr(*x).map(|x| x.get_value().unwrap()))
+            .unwrap_or(Ok(ValueFlag::None))?;
 
         if val != self.return_type.clone().unwrap() {
-            return Err(Box::new(
-                TypeMismatch::new(
-                    (return_expr.span, self.return_type.clone().unwrap().to_string()),
-                    (return_expr.span, val.to_string())
-                )
-            ))
+            return Err(Box::new(TypeMismatch::new(
+                (
+                    return_expr.span,
+                    self.return_type.clone().unwrap().to_string(),
+                ),
+                (return_expr.span, val.to_string()),
+            )));
         }
 
         self.is_return = true;
@@ -286,12 +279,10 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let path = popper_common::ast_path_to_path::ast_path_to_path(import.path.clone());
 
         if !path.exists() {
-            return Err(Box::new(
-                ModuleNotFound::new(
-                    import.path.to_string(),
-                    import.path.span()
-                )
-            ))
+            return Err(Box::new(ModuleNotFound::new(
+                import.path.to_string(),
+                import.path.span(),
+            )));
         }
 
         let mut stmt_analyzer = StmtAnalyzer::new(Environment::new());
@@ -319,7 +310,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::External(external) => self.visit_external(external),
             Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
             Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
-            Statement::Extern(ext) => self.visit_extern(ext)
+            Statement::Extern(ext) => self.visit_extern(ext),
         }
     }
 
@@ -342,7 +333,15 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 expr_analyzer.get_type(sign.return_type.clone())
             };
 
-            let var = VariableFlag::new(sign.name.clone(), SymbolFlags::new(sign.span()).set_function(args, return_type, sign.is_var_args).clone(), ScopeFlag::Global, false, Default::default());
+            let var = VariableFlag::new(
+                sign.name.clone(),
+                SymbolFlags::new(sign.span())
+                    .set_function(args, return_type, sign.is_var_args)
+                    .clone(),
+                ScopeFlag::Global,
+                false,
+                Default::default(),
+            );
             self.env.add_variable(var);
         }
 
@@ -359,11 +358,15 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let err = AlreadyExist::new(s.span, (struct_stmt.name, struct_stmt.span));
             return Err(Box::new(err));
         }
-        let field: HashMap<_, _> = struct_stmt.fields.iter().map(|field| {
-            let expr_analyzer = ExprAnalyzer::new(self.env.clone());
-            let ty = expr_analyzer.get_type(field.ty.clone());
-            (field.name.clone(), ty)
-        }).collect();
+        let field: HashMap<_, _> = struct_stmt
+            .fields
+            .iter()
+            .map(|field| {
+                let expr_analyzer = ExprAnalyzer::new(self.env.clone());
+                let ty = expr_analyzer.get_type(field.ty.clone());
+                (field.name.clone(), ty)
+            })
+            .collect();
 
         let symbol_flag = SymbolFlags::new(struct_stmt.span).set_struct(field).clone();
         let variable = VariableFlag::new(
@@ -371,13 +374,11 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             symbol_flag,
             self.current_scope.clone(),
             false,
-            struct_stmt.span
+            struct_stmt.span,
         );
 
         self.env.add_variable(variable);
 
         Ok(SymbolFlags::new(struct_stmt.span))
     }
-
-
 }

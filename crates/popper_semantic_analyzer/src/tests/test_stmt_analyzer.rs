@@ -1,10 +1,9 @@
-use popper_flag::Environment;
-use popper_ast::visitor::StmtVisitor;
 use crate::stmt_analyzer::StmtAnalyzer;
 use popper_ast::get_ast_from_json_file;
+use popper_ast::visitor::StmtVisitor;
 use popper_ast::Span;
+use popper_flag::Environment;
 use popper_flag::SymbolFlags;
-
 
 #[cfg(test)]
 pub fn test_bad_type_add() {
@@ -15,7 +14,6 @@ pub fn test_bad_type_add() {
         a + "2";
         "#;
 
-
     let mut analyzer = StmtAnalyzer::new(Environment::new());
     let mut result = Ok(SymbolFlags::new(Span::new(0, 0)));
     for stmt in ast {
@@ -25,14 +23,10 @@ pub fn test_bad_type_add() {
     if let Ok(_) = result {
         assert!(false)
     } else if let Err(err) = result {
-        err.report(
-            generate_color(),
-            &body,
-            "<test `test_bad_type_add`>"
-        ) // We don't use assert here because we want to see the error message
-          // in the terminal
-          // So the test will fail if the error message is not printed
-          // Now, the test is passed
+        err.report(generate_color(), &body, "<test `test_bad_type_add`>") // We don't use assert here because we want to see the error message
+                                                                          // in the terminal
+                                                                          // So the test will fail if the error message is not printed
+                                                                          // Now, the test is passed
     }
 }
 
@@ -53,14 +47,10 @@ pub fn test_unknow_variable() {
     if let Ok(_) = result {
         assert!(false)
     } else if let Err(err) = result {
-        err.report(
-            generate_color(),
-            &body,
-            "<test `test_unknow_variable`>"
-        ) // We don't use assert here because we want to see the error message
-        // in the terminal
-        // So the test will fail if the error message is not printed
-        // Now, the test is passed
+        err.report(generate_color(), &body, "<test `test_unknow_variable`>") // We don't use assert here because we want to see the error message
+                                                                             // in the terminal
+                                                                             // So the test will fail if the error message is not printed
+                                                                             // Now, the test is passed
     }
 }
 
@@ -86,14 +76,10 @@ pub fn test_already_exist() {
     if let Ok(_) = result {
         assert!(false)
     } else if let Err(err) = result {
-        err.report(
-            generate_color(),
-            &body,
-            "<test `test_already_exist`>"
-        ) // We don't use assert here because we want to see the error message
-        // in the terminal
-        // So the test will fail if the error message is not printed
-        // Now, the test is passed
+        err.report(generate_color(), &body, "<test `test_already_exist`>") // We don't use assert here because we want to see the error message
+                                                                           // in the terminal
+                                                                           // So the test will fail if the error message is not printed
+                                                                           // Now, the test is passed
     }
 }
 
@@ -114,19 +100,12 @@ pub fn test_function() {
     }
 
     if let Err(err) = result {
-        err.report(
-            generate_color(),
-            body,
-            "<test `test_function`>"
-        ) // We don't use assert here because we want to see the error message
-        // in the terminal
-        // So the test will fail if the error message is not printed
-        // Now, the test is passed
+        err.report(generate_color(), body, "<test `test_function`>") // We don't use assert here because we want to see the error message
+                                                                     // in the terminal
+                                                                     // So the test will fail if the error message is not printed
+                                                                     // Now, the test is passed
     }
 }
-
-
-
 
 #[cfg(test)]
 pub fn test_call_mismatch_type() {
@@ -146,14 +125,10 @@ pub fn test_call_mismatch_type() {
     }
 
     if let Err(err) = result {
-        err.report(
-            generate_color(),
-            body,
-            "<test `test_call_mismatch`>"
-        ) // We don't use assert here because we want to see the error message
-        // in the terminal
-        // So the test will fail if the error message is not printed
-        // Now, the test is passed
+        err.report(generate_color(), body, "<test `test_call_mismatch`>") // We don't use assert here because we want to see the error message
+                                                                          // in the terminal
+                                                                          // So the test will fail if the error message is not printed
+                                                                          // Now, the test is passed
     }
 }
 
@@ -174,17 +149,13 @@ pub fn test_call_diff_length_argument() {
     }
 
     if let Err(err) = result {
-        err.report(
-            generate_color(),
-            body,
-            "<test `test_diff_length_argument`>"
-        ) // We don't use assert here because we want to see the error message
+        err.report(generate_color(), body, "<test `test_diff_length_argument`>")
+        // We don't use assert here because we want to see the error message
         // in the terminal
         // So the test will fail if the error message is not printed
         // Now, the test is passed
     }
 }
-
 
 #[cfg(test)]
 pub fn run_tests() {
