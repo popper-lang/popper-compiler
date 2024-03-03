@@ -47,6 +47,12 @@ pub struct Environment {
     pub variables: Vec<VariableFlag>,
 }
 
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Environment {
     pub fn new() -> Self {
         Self {

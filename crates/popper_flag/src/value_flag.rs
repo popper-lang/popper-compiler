@@ -25,7 +25,7 @@ impl Display for ValueFlag {
             ValueFlag::String(len) => write!(f, "string:{}", len),
             ValueFlag::Boolean => write!(f, "bool"),
             ValueFlag::None => write!(f, "unit"),
-            ValueFlag::List(t, u) => write!(f, "[{}: {}]", t.to_string(), u),
+            ValueFlag::List(t, u) => write!(f, "[{}: {}]", t, u),
             ValueFlag::Function(args, returntype, is_var_args) => {
                 let mut args_string = String::new();
                 for arg in args {
@@ -37,7 +37,7 @@ impl Display for ValueFlag {
                 if *is_var_args {
                     args_string.push_str("...");
                 }
-                write!(f, "func({}): {}", args_string, returntype.to_string())
+                write!(f, "func({}): {}", args_string, returntype)
             }
             ValueFlag::Pointer(ptr) => {
                 write!(f, "*{}", ptr)
