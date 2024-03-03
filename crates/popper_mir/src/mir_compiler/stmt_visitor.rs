@@ -1,7 +1,13 @@
-use popper_ast::{Block, Expression, External, ForStmt, Function, If, IfElse, ImportStmt, LetStmt, Return, Statement, StructStmt, While};
-use popper_ast::visitor::{ExprVisitor, StmtVisitor};
-use crate::mir_ast::{Alloc, BodyFn, Ir, MirString, Store, Return as MirReturn, Body, Function as MirFunction, Arguments, Argument};
+use crate::mir_ast::{
+    Alloc, Argument, Arguments, Body, BodyFn, Function as MirFunction, Ir, MirString,
+    Return as MirReturn, Store,
+};
 use crate::mir_compiler::MirCompiler;
+use popper_ast::visitor::{ExprVisitor, StmtVisitor};
+use popper_ast::{
+    Block, Expression, External, ForStmt, Function, If, IfElse, ImportStmt, LetStmt, Return,
+    Statement, StructStmt, While,
+};
 
 impl StmtVisitor for MirCompiler {
     type Output = ();
@@ -24,70 +30,31 @@ impl StmtVisitor for MirCompiler {
         self.local.insert(name.clone(), ty.clone());
         if !self.is_let_name_used {
             let current_fn = self.current_fn.as_mut().unwrap();
-            current_fn.push(
-                BodyFn::Alloc(
-                    Alloc::new(name.clone(), ty)
-                )
-            );
+            current_fn.push(BodyFn::Alloc(Alloc::new(name.clone(), ty)));
 
-            current_fn.push(
-                BodyFn::Store(
-                    Store::new(
-                        name,
-                        expr
-                    )
-                )
-            )
+            current_fn.push(BodyFn::Store(Store::new(name, expr)))
         } else {
             self.is_let_name_used = false
         }
 
         Ok(())
-
-
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
         match stmt {
-            Statement::Expression(expr) => {
-                self.visit_expr_stmt(expr)
-            },
-            Statement::Let(let_stmt) => {
-                self.visit_let_stmt(let_stmt)
-            },
-            Statement::Block(block) => {
-                self.visit_block(block)
-            },
-            Statement::While(while_stmt) => {
-                self.visit_while_stmt(while_stmt)
-            },
-            Statement::If(if_stmt) => {
-                self.visit_if_stmt(if_stmt)
-            },
-            Statement::IfElse(if_else_stmt) => {
-                self.visit_if_else_stmt(if_else_stmt)
-            },
-            Statement::Function(function) => {
-                self.visit_function(function)
-            },
-            Statement::Return(return_expr) => {
-                self.visit_return(return_expr)
-            },
-            Statement::Import(import) => {
-                self.visit_import(import)
-            },
-            Statement::External(external) => {
-                self.visit_external(external)
-            },
-            Statement::For(for_stmt) => {
-                self.visit_for_stmt(for_stmt)
-            },
-            Statement::Struct(struct_stmt) => {
-                self.visit_struct_stmt(struct_stmt)
-            },
-            Statement::Extern(enum_stmt) => {
-                self.visit_extern(enum_stmt)
-            },
+            Statement::Expression(expr) => self.visit_expr_stmt(expr),
+            Statement::Let(let_stmt) => self.visit_let_stmt(let_stmt),
+            Statement::Block(block) => self.visit_block(block),
+            Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),
+            Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
+            Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
+            Statement::Function(function) => self.visit_function(function),
+            Statement::Return(return_expr) => self.visit_return(return_expr),
+            Statement::Import(import) => self.visit_import(import),
+            Statement::External(external) => self.visit_external(external),
+            Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
+            Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
+            Statement::Extern(enum_stmt) => self.visit_extern(enum_stmt),
         }
     }
 
@@ -113,13 +80,7 @@ impl StmtVisitor for MirCompiler {
             .arguments
             .args
             .iter()
-            .map(|arg|
-                (arg.name.clone(),
-                 self.compile_type(
-                     arg.ty.clone()
-                 )
-                )
-            )
+            .map(|arg| (arg.name.clone(), self.compile_type(arg.ty.clone())))
             .map(|x| Argument::new(x.0, x.1))
             .collect::<Vec<Argument>>();
 
@@ -136,15 +97,17 @@ impl StmtVisitor for MirCompiler {
 
         self.local.clear();
         self.global.insert(name.clone(), ret.clone());
-        let function = MirFunction::new(name, Arguments::new(args), ret,function.is_var_args, self.current_fn.clone().unwrap());
+        let function = MirFunction::new(
+            name,
+            Arguments::new(args),
+            ret,
+            function.is_var_args,
+            self.current_fn.clone().unwrap(),
+        );
 
         self.current_fn = None;
 
-        self.ir.push(
-            Ir::Function(
-                function
-            )
-        );
+        self.ir.push(Ir::Function(function));
 
         self.current_fn = None;
 
@@ -157,17 +120,15 @@ impl StmtVisitor for MirCompiler {
         }
         if let Some(expr) = return_expr.expression {
             let expr = self.visit_expr(*expr)?;
-            self.current_fn.as_mut().unwrap().push(
-                BodyFn::Return(
-                    MirReturn::new(Some(expr))
-                )
-            );
+            self.current_fn
+                .as_mut()
+                .unwrap()
+                .push(BodyFn::Return(MirReturn::new(Some(expr))));
         } else {
-            self.current_fn.as_mut().unwrap().push(
-                BodyFn::Return(
-                    MirReturn::new(None)
-                )
-            );
+            self.current_fn
+                .as_mut()
+                .unwrap()
+                .push(BodyFn::Return(MirReturn::new(None)));
         }
 
         Ok(())
@@ -178,7 +139,8 @@ impl StmtVisitor for MirCompiler {
 
         // convert stmt path to path
 
-        let path = path.segments
+        let path = path
+            .segments
             .iter()
             .map(|segment| segment.name.clone())
             .collect::<Vec<String>>()
@@ -188,40 +150,34 @@ impl StmtVisitor for MirCompiler {
 
         let path = std::path::Path::new(path.as_str());
 
-        let mut compiler = MirCompiler::new(import.module_stmts, path.to_str().unwrap().to_string());
+        let mut compiler =
+            MirCompiler::new(import.module_stmts, path.to_str().unwrap().to_string());
 
         compiler.compile();
 
         let module = compiler.get_module();
-        self.ir.push(
-            Ir::LoadModule(
-                module
-            )
-        );
+        self.ir.push(Ir::LoadModule(module));
 
         self.global.extend(compiler.global.clone());
-
 
         Ok(())
     }
 
     fn visit_external(&mut self, external: External) -> Result<Self::Output, Self::Error> {
         let file = external.file;
-        self.ir.push(
-            Ir::LoadExternal(
-                MirString::new(file)
-            )
-        );
+        self.ir.push(Ir::LoadExternal(MirString::new(file)));
 
         for fn_sign in external.signs {
             self.compile_fn_sign(fn_sign);
         }
 
         Ok(())
-
     }
 
-    fn visit_extern(&mut self,extern_stmt:popper_ast::Extern) -> Result<Self::Output,Self::Error> {
+    fn visit_extern(
+        &mut self,
+        extern_stmt: popper_ast::Extern,
+    ) -> Result<Self::Output, Self::Error> {
         for fn_sign in extern_stmt.signs {
             self.compile_fn_sign(fn_sign);
         }

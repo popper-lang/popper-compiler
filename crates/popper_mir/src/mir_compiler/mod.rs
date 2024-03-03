@@ -1,12 +1,11 @@
-mod stmt_visitor;
 mod expr_visitor;
+mod stmt_visitor;
 
+use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Ir, List, Module, Type as MirType, Value};
+use popper_ast::visitor::StmtVisitor;
+use popper_ast::{FunctionSign, Statement, Type, TypeKind};
 use std::collections::HashMap;
 use std::path::Path;
-use popper_ast::{FunctionSign, Statement, Type, TypeKind};
-use popper_ast::visitor::StmtVisitor;
-use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Ir, List, Module, Type as MirType, Value};
-
 
 #[derive(Debug, Clone)]
 pub struct MirCompiler {
@@ -18,7 +17,7 @@ pub struct MirCompiler {
     pub(crate) var_id: usize,
     pub(crate) can_alloc: bool,
     let_name: Option<String>,
-    is_let_name_used: bool
+    is_let_name_used: bool,
 }
 
 impl MirCompiler {
@@ -39,7 +38,7 @@ impl MirCompiler {
             can_alloc: true,
             var_id: 0,
             let_name: None,
-            is_let_name_used: false
+            is_let_name_used: false,
         }
     }
 
@@ -52,21 +51,26 @@ impl MirCompiler {
             TypeKind::Unit => MirType::Void,
             TypeKind::List(ty, len) => MirType::List(Box::new(self.compile_type(*ty)), len),
             TypeKind::Pointer(ty) => MirType::Pointer(Box::new(self.compile_type(*ty))),
-            e => panic!("not implemented {:?}", e)
+            e => panic!("not implemented {:?}", e),
         }
     }
 
-    pub fn compile_fn_sign(&mut self, fn_sign: FunctionSign)  {
-        let args = fn_sign.arguments.args.iter().map(|arg| self.compile_type(arg.ty.clone())).collect::<Vec<MirType>>();
+    pub fn compile_fn_sign(&mut self, fn_sign: FunctionSign) {
+        let args = fn_sign
+            .arguments
+            .args
+            .iter()
+            .map(|arg| self.compile_type(arg.ty.clone()))
+            .collect::<Vec<MirType>>();
         let ret = self.compile_type(fn_sign.return_type);
-        self.ir.push(
-            Ir::Declare(
-                Declare::new(fn_sign.name.clone(), List::new(args.clone()), ret.clone(), fn_sign.is_var_args)
-            )
-        );
+        self.ir.push(Ir::Declare(Declare::new(
+            fn_sign.name.clone(),
+            List::new(args.clone()),
+            ret.clone(),
+            fn_sign.is_var_args,
+        )));
 
         self.global.insert(fn_sign.name, ret);
-
     }
 
     pub fn get(&self, name: &str) -> Option<MirType> {
@@ -101,14 +105,7 @@ impl MirCompiler {
         };
         if self.can_alloc {
             let current_fn = self.current_fn.as_mut().unwrap();
-            current_fn.push(
-                BodyFn::Alloc(
-                    Alloc::new(
-                        var.clone(),
-                        ty
-                    )
-                )
-            );
+            current_fn.push(BodyFn::Alloc(Alloc::new(var.clone(), ty)));
         }
         Ok(var.clone())
     }
@@ -122,16 +119,11 @@ impl MirCompiler {
 
     pub fn get_minor_type_from_list(&self, val: Value) -> Option<MirType> {
         match val {
-            Value::Variable(v) => {
-                match v.ty {
-                    MirType::List(l, _) => Some(*l),
-                    _ => None
-                }
+            Value::Variable(v) => match v.ty {
+                MirType::List(l, _) => Some(*l),
+                _ => None,
             },
-            Value::Const(_) => {
-                val.into_array().map(|x| x.get_minor_type())
-            }
-
+            Value::Const(_) => val.into_array().map(|x| x.get_minor_type()),
         }
     }
 
@@ -140,59 +132,38 @@ impl MirCompiler {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use popper_ast::{Argument, Arguments, Expression, Function, Int, Return, Statement, Type, TypeKind, Constant};
-    use crate::mir_ast::{Body, Declare, Function as MirFunction, Ir, List, Module, Type as MirType};
+    use crate::mir_ast::{
+        Body, Declare, Function as MirFunction, Ir, List, Module, Type as MirType,
+    };
+    use popper_ast::{
+        Argument, Arguments, Constant, Expression, Function, Int, Return, Statement, Type, TypeKind,
+    };
 
     #[test]
     fn test_function() {
-        let ast = vec![
-            Statement::Function(
-                Function::new(
-                    "main".to_string(),
-                    Arguments::new(
-                        vec![
-                            Argument::new(
-                                "a".to_string(),
-                                Type::new(
-                                    Default::default(),
-                                    TypeKind::Int,
-                                    Default::default()
-                                ),
-                                Default::default()
-                            )
-                        ],
-                        Default::default()
-                    ),
-                    Type::new(
-                        Default::default(),
-                        TypeKind::Int,
-                        Default::default()
-                    ),
-                    vec![
-                        Statement::Return(
-                            Return::new(
-                                Some(
-                                    Expression::Constant(
-                                        Constant::Int(
-                                            Int::new(
-                                                Default::default(),
-                                                1
-                                            )
-                                        )
-                                    )
-                                ),
-                                Default::default()
-                            )
-                        )
-                    ],
-                    Default::default()
-                )
-            )
-        ];
+        let ast = vec![Statement::Function(Function::new(
+            "main".to_string(),
+            Arguments::new(
+                vec![Argument::new(
+                    "a".to_string(),
+                    Type::new(Default::default(), TypeKind::Int, Default::default()),
+                    Default::default(),
+                )],
+                Default::default(),
+            ),
+            Type::new(Default::default(), TypeKind::Int, Default::default()),
+            vec![Statement::Return(Return::new(
+                Some(Expression::Constant(Constant::Int(Int::new(
+                    Default::default(),
+                    1,
+                )))),
+                Default::default(),
+            ))],
+            Default::default(),
+        ))];
 
         let mut compiler = MirCompiler::new(ast, "test".to_string());
 

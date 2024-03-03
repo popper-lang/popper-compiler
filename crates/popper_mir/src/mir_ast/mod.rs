@@ -2,15 +2,14 @@ pub mod pretty;
 
 use std::fmt::Display;
 
-
 pub trait MirCompile {
     fn compile(&self) -> String;
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Module {
-    pub name: String,              // module <name>
-    pub ir: Vec<Ir>               // <ir>
+    pub name: String, // module <name>
+    pub ir: Vec<Ir>,  // <ir>
 }
 
 impl Module {
@@ -25,16 +24,24 @@ impl Module {
 
 impl MirCompile for Module {
     fn compile(&self) -> String {
-        format!("module {} {{{}}}", self.name, self.ir.iter().map(|ir| ir.compile()).collect::<Vec<String>>().join("\n\t"))
+        format!(
+            "module {} {{{}}}",
+            self.name,
+            self.ir
+                .iter()
+                .map(|ir| ir.compile())
+                .collect::<Vec<String>>()
+                .join("\n\t")
+        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ir {
-    LoadModule(Module),          // load_module <path>
-    LoadExternal(MirString),        // load_external <path>
-    Declare(Declare),               // declare <name> = args [<args>] ret <ret>
-    Function(Function)              // func @<ret> <name>(<args>): <body>
+    LoadModule(Module),      // load_module <path>
+    LoadExternal(MirString), // load_external <path>
+    Declare(Declare),        // declare <name> = args [<args>] ret <ret>
+    Function(Function),      // func @<ret> <name>(<args>): <body>
 }
 
 impl MirCompile for Ir {
@@ -42,23 +49,19 @@ impl MirCompile for Ir {
         match self {
             Ir::LoadModule(path) => {
                 format!("{}", path.compile())
-            },
+            }
             Ir::LoadExternal(path) => {
                 format!("load_external {}", path.compile())
-            },
-            Ir::Declare(declare) => {
-                declare.compile()
-            },
-            Ir::Function(function) => {
-                function.compile()
             }
+            Ir::Declare(declare) => declare.compile(),
+            Ir::Function(function) => function.compile(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirString {
-    pub string: String
+    pub string: String,
 }
 
 impl MirString {
@@ -81,23 +84,21 @@ impl MirCompile for MirString {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
-    Int,                                // @int
-    Float,                              // @float
-    String(usize),                      // @string <size>
-    Bool,                               // @bool
-    Void,                               // @void
-    List(Box<Type>, usize),                    // @list[<type>: <size>]
-    Function(Vec<Type>, Box<Type>),     // @function(<args>) <ret>
-    Struct(Vec<Type>),                  // @struct { <fields> }
-    Pointer(Box<Type>),                 // @pointer <type>
+    Int,                            // @int
+    Float,                          // @float
+    String(usize),                  // @string <size>
+    Bool,                           // @bool
+    Void,                           // @void
+    List(Box<Type>, usize),         // @list[<type>: <size>]
+    Function(Vec<Type>, Box<Type>), // @function(<args>) <ret>
+    Struct(Vec<Type>),              // @struct { <fields> }
+    Pointer(Box<Type>),             // @pointer <type>
 }
 
 impl Type {
     pub fn into_function(self) -> (Vec<Type>, Box<Type>) {
         match self {
-            Type::Function(args, ret) => {
-                (args, ret)
-            },
+            Type::Function(args, ret) => (args, ret),
             e => {
                 panic!("Type is not a function: {:?}", e)
             }
@@ -106,12 +107,8 @@ impl Type {
 
     pub fn into_list(self) -> Option<(Box<Type>, usize)> {
         match self {
-            Type::List(t, size) => {
-                Some((t, size))
-            },
-            _ => {
-                None
-            }
+            Type::List(t, size) => Some((t, size)),
+            _ => None,
         }
     }
 }
@@ -119,30 +116,36 @@ impl Type {
 impl MirCompile for Type {
     fn compile(&self) -> String {
         match self {
-            Type::Int => {
-                "@int".to_string()
-            },
-            Type::Float => {
-                "@float".to_string()
-            },
+            Type::Int => "@int".to_string(),
+            Type::Float => "@float".to_string(),
             Type::String(s) => {
                 format!("@string {}", s)
-            },
-            Type::Bool => {
-                "@bool".to_string()
-            },
-            Type::Void => {
-                "@void".to_string()
-            },
+            }
+            Type::Bool => "@bool".to_string(),
+            Type::Void => "@void".to_string(),
             Type::List(t, size) => {
                 format!("@list[{}: {}]", t.compile(), size)
-            },
+            }
             Type::Function(args, ret) => {
-                format!("@function({}) {}", args.iter().map(|arg| arg.compile()).collect::<Vec<String>>().join(" "), ret.compile())
-            },
+                format!(
+                    "@function({}) {}",
+                    args.iter()
+                        .map(|arg| arg.compile())
+                        .collect::<Vec<String>>()
+                        .join(" "),
+                    ret.compile()
+                )
+            }
             Type::Struct(fields) => {
-                format!("@struct {{ {} }}", fields.iter().map(|field| field.compile()).collect::<Vec<String>>().join(" "))
-            },
+                format!(
+                    "@struct {{ {} }}",
+                    fields
+                        .iter()
+                        .map(|field| field.compile())
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                )
+            }
             Type::Pointer(t) => {
                 format!("@pointer {}", t.compile())
             }
@@ -155,24 +158,35 @@ pub struct Declare {
     pub name: String,
     pub args: List<Type>,
     pub ret: Type,
-    pub is_var_args: bool
+    pub is_var_args: bool,
 }
 
 impl Declare {
     pub fn new(name: String, args: List<Type>, ret: Type, is_var_args: bool) -> Self {
-        Self { name, args, ret, is_var_args }
+        Self {
+            name,
+            args,
+            ret,
+            is_var_args,
+        }
     }
 }
 
 impl MirCompile for Declare {
     fn compile(&self) -> String {
-        format!("declare {} = args {} ret {} {}", self.name, self.args.compile(), self.ret.compile(), if self.is_var_args { "..." } else { "" })
+        format!(
+            "declare {} = args {} ret {} {}",
+            self.name,
+            self.args.compile(),
+            self.ret.compile(),
+            if self.is_var_args { "..." } else { "" }
+        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct List<T: MirCompile + PartialEq> {
-    pub list: Vec<T>,  // [T]
+    pub list: Vec<T>, // [T]
 }
 
 impl<T: MirCompile + PartialEq> List<T> {
@@ -183,7 +197,14 @@ impl<T: MirCompile + PartialEq> List<T> {
 
 impl<T: MirCompile + PartialEq> MirCompile for List<T> {
     fn compile(&self) -> String {
-        format!("[{}]", self.list.iter().map(|item| item.compile()).collect::<Vec<String>>().join(", "))
+        format!(
+            "[{}]",
+            self.list
+                .iter()
+                .map(|item| item.compile())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }
 
@@ -193,24 +214,37 @@ pub struct Function {
     pub args: Arguments,
     pub ret: Type,
     pub is_var_args: bool,
-    pub body: Body
+    pub body: Body,
 }
 
 impl Function {
     pub fn new(name: String, args: Arguments, ret: Type, is_var_args: bool, body: Body) -> Self {
-        Self { name, args, ret, is_var_args,  body }
+        Self {
+            name,
+            args,
+            ret,
+            is_var_args,
+            body,
+        }
     }
 }
 
 impl MirCompile for Function {
     fn compile(&self) -> String {
-        format!("func {} {} {}{}{{\n\t{}\n}}", self.ret.compile(), self.name, self.args.compile(), if self.is_var_args { " ... "} else {" "}, self.body.compile())
+        format!(
+            "func {} {} {}{}{{\n\t{}\n}}",
+            self.ret.compile(),
+            self.name,
+            self.args.compile(),
+            if self.is_var_args { " ... " } else { " " },
+            self.body.compile()
+        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Arguments {
-    pub args: Vec<Argument>
+    pub args: Vec<Argument>,
 }
 
 impl Arguments {
@@ -221,14 +255,21 @@ impl Arguments {
 
 impl MirCompile for Arguments {
     fn compile(&self) -> String {
-        format!("({})", self.args.iter().map(|arg| arg.compile()).collect::<Vec<String>>().join(", "))
+        format!(
+            "({})",
+            self.args
+                .iter()
+                .map(|arg| arg.compile())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Argument {
     pub name: String,
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl Argument {
@@ -245,7 +286,7 @@ impl MirCompile for Argument {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
-    pub body: Vec<BodyFn>
+    pub body: Vec<BodyFn>,
 }
 
 impl Body {
@@ -259,43 +300,35 @@ impl Body {
 
 impl MirCompile for Body {
     fn compile(&self) -> String {
-        self.body.iter().map(|body_fn| body_fn.compile()).collect::<Vec<String>>().join("\n\t")
+        self.body
+            .iter()
+            .map(|body_fn| body_fn.compile())
+            .collect::<Vec<String>>()
+            .join("\n\t")
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum BodyFn {
-    Alloc(Alloc),                  // alloc <name>, <ty>
-    Store(Store),                  // store <name>, <value>
-    Call(Call),                    // call <name>, [<args>], <ret>
-    Return(Return),                // ret <value>
-    Add(Add),                      // add <name>, <value>, <res>
-    Index(Index),                  // index <res>, <list>, <index>
-    VaArg(VaArg),                  // va_arg <res>, <ty>
-    Ref(Ref),                      // ref <val>, <res>
-    Deref(Deref),                  // deref <val>, <res>
-
-
+    Alloc(Alloc),   // alloc <name>, <ty>
+    Store(Store),   // store <name>, <value>
+    Call(Call),     // call <name>, [<args>], <ret>
+    Return(Return), // ret <value>
+    Add(Add),       // add <name>, <value>, <res>
+    Index(Index),   // index <res>, <list>, <index>
+    VaArg(VaArg),   // va_arg <res>, <ty>
+    Ref(Ref),       // ref <val>, <res>
+    Deref(Deref),   // deref <val>, <res>
 }
 
 impl MirCompile for BodyFn {
     fn compile(&self) -> String {
         match self {
-            BodyFn::Alloc(alloc) => {
-                alloc.compile()
-            },
-            BodyFn::Store(store) => {
-                store.compile()
-            },
-            BodyFn::Call(call) => {
-                call.compile()
-            },
-            BodyFn::Return(ret) => {
-                ret.compile()
-            },
-            BodyFn::Add(add) => {
-                add.compile()
-            },
+            BodyFn::Alloc(alloc) => alloc.compile(),
+            BodyFn::Store(store) => store.compile(),
+            BodyFn::Call(call) => call.compile(),
+            BodyFn::Return(ret) => ret.compile(),
+            BodyFn::Add(add) => add.compile(),
             BodyFn::Index(index) => index.compile(),
             BodyFn::VaArg(va_arg) => va_arg.compile(),
             BodyFn::Ref(r#ref) => r#ref.compile(),
@@ -307,7 +340,7 @@ impl MirCompile for BodyFn {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Alloc {
     pub name: String,
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl Alloc {
@@ -325,7 +358,7 @@ impl MirCompile for Alloc {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Store {
     pub name: String,
-    pub value: Value
+    pub value: Value,
 }
 
 impl Store {
@@ -344,7 +377,7 @@ impl MirCompile for Store {
 pub struct Call {
     pub name: String,
     pub args: List<Value>,
-    pub ret: String
+    pub ret: String,
 }
 
 impl Call {
@@ -361,7 +394,7 @@ impl MirCompile for Call {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Return {
-    pub value: Option<Value>
+    pub value: Option<Value>,
 }
 
 impl Return {
@@ -384,7 +417,7 @@ impl MirCompile for Return {
 pub struct Add {
     pub name: String,
     pub lhs: Value,
-    pub rhs: Value
+    pub rhs: Value,
 }
 
 impl Add {
@@ -395,7 +428,12 @@ impl Add {
 
 impl MirCompile for Add {
     fn compile(&self) -> String {
-        format!("add {}, {}, {}", self.name, self.lhs.compile(), self.rhs.compile())
+        format!(
+            "add {}, {}, {}",
+            self.name,
+            self.lhs.compile(),
+            self.rhs.compile()
+        )
     }
 }
 
@@ -403,29 +441,30 @@ impl MirCompile for Add {
 pub struct Index {
     pub res: String,
     pub list: Value,
-    pub index: Value
+    pub index: Value,
 }
 
 impl Index {
     pub fn new(res: String, list: Value, index: Value) -> Self {
-        Self {
-            res,
-            list,
-            index
-        }
+        Self { res, list, index }
     }
 }
 
 impl MirCompile for Index {
     fn compile(&self) -> String {
-        format!("index {}, {}, {}", self.res, self.list.compile(), self.index.compile())
+        format!(
+            "index {}, {}, {}",
+            self.res,
+            self.list.compile(),
+            self.index.compile()
+        )
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct VaArg {
     pub res: String,
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl VaArg {
@@ -443,7 +482,7 @@ impl MirCompile for VaArg {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ref {
     pub val: Value,
-    pub res: String
+    pub res: String,
 }
 
 impl Ref {
@@ -461,7 +500,7 @@ impl MirCompile for Ref {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Deref {
     pub ptr: Value,
-    pub res: String
+    pub res: String,
 }
 
 impl Deref {
@@ -478,7 +517,7 @@ impl MirCompile for Deref {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirPtr {
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl MirPtr {
@@ -493,41 +532,31 @@ impl MirCompile for MirPtr {
     }
 }
 
-
-
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Const(Const),                 // const <value>
-    Variable(Variable),           // id <name>
+    Const(Const),       // const <value>
+    Variable(Variable), // id <name>
 }
 
 impl Value {
     pub fn get_type(&self) -> Type {
         match self {
-            Value::Const(constant) => {
-                constant.get_type()
-            },
-            Value::Variable(variable) => {
-                variable.ty.clone()
-            }
+            Value::Const(constant) => constant.get_type(),
+            Value::Variable(variable) => variable.ty.clone(),
         }
     }
 
     pub fn into_array(&self) -> Option<&MirList> {
         match self {
             Value::Const(Const::List(l)) => Some(l),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn get_minor_type(&self) -> Option<Type> {
         match self {
-            Value::Const(Const::List(l)) => {
-                Some(l.get_minor_type())
-            },
-            Value::Const(Const::Ptr(p)) => {
-                Some(p.ty.clone())
-            },
+            Value::Const(Const::List(l)) => Some(l.get_minor_type()),
+            Value::Const(Const::Ptr(p)) => Some(p.ty.clone()),
             Value::Variable(variable) => {
                 if let Type::Pointer(p) = &variable.ty {
                     Some(*p.clone())
@@ -536,8 +565,8 @@ impl Value {
                 } else {
                     None
                 }
-            },
-            _ => None
+            }
+            _ => None,
         }
     }
 }
@@ -545,25 +574,21 @@ impl Value {
 impl MirCompile for Value {
     fn compile(&self) -> String {
         match self {
-            Value::Const(constant) => {
-                constant.compile()
-            },
-            Value::Variable(variable) => {
-                variable.compile()
-            }
+            Value::Const(constant) => constant.compile(),
+            Value::Variable(variable) => variable.compile(),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Const {
-    Int(MirInt),                     // int <value>
-    Float(MirFloat),                 // float <value>
-    String(MirString),               // string <value>
-    Bool(MirBool),                   // bool <value>
-    List(MirList),                   // list <value>
-    Ptr(MirPtr),                     // ptr <value>
-    Void                             // void
+    Int(MirInt),       // int <value>
+    Float(MirFloat),   // float <value>
+    String(MirString), // string <value>
+    Bool(MirBool),     // bool <value>
+    List(MirList),     // list <value>
+    Ptr(MirPtr),       // ptr <value>
+    Void,              // void
 }
 
 impl Const {
@@ -575,9 +600,7 @@ impl Const {
             Const::List(l) => l.get_type(),
             Const::Bool(_) => Type::Bool,
             Const::Void => Type::Void,
-            Const::Ptr(p) => Type::Pointer(
-                Box::new(p.ty.clone())
-            )
+            Const::Ptr(p) => Type::Pointer(Box::new(p.ty.clone())),
         }
     }
 }
@@ -585,35 +608,22 @@ impl Const {
 impl MirCompile for Const {
     fn compile(&self) -> String {
         match self {
-            Const::Int(int) => {
-                int.compile()
-            },
-            Const::Float(float) => {
-                float.compile()
-            },
+            Const::Int(int) => int.compile(),
+            Const::Float(float) => float.compile(),
             Const::String(string) => {
                 format!("string {}", string.compile())
-            },
-            Const::Bool(bool) => {
-                bool.compile()
-            },
-            Const::List(list) => {
-                list.compile()
-            },
-            Const::Void => {
-                "void".to_string()
-            },
-            Const::Ptr(p) => {
-                p.compile()
             }
+            Const::Bool(bool) => bool.compile(),
+            Const::List(list) => list.compile(),
+            Const::Void => "void".to_string(),
+            Const::Ptr(p) => p.compile(),
         }
     }
 }
 
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirInt {
-    pub value: i64
+    pub value: i64,
 }
 
 impl MirInt {
@@ -630,7 +640,7 @@ impl MirCompile for MirInt {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirFloat {
-    pub value: f64
+    pub value: f64,
 }
 
 impl MirFloat {
@@ -647,7 +657,7 @@ impl MirCompile for MirFloat {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirBool {
-    pub value: bool
+    pub value: bool,
 }
 
 impl MirBool {
@@ -673,10 +683,7 @@ impl MirList {
     }
 
     pub fn get_type(&self) -> Type {
-        Type::List(
-            Box::new(self.get_minor_type()),
-            self.values.len()
-        )
+        Type::List(Box::new(self.get_minor_type()), self.values.len())
     }
 
     pub fn get_minor_type(&self) -> Type {
@@ -701,7 +708,7 @@ impl MirCompile for MirList {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Variable {
     pub name: String,
-    pub ty: Type
+    pub ty: Type,
 }
 
 impl Variable {
