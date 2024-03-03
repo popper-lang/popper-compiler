@@ -1,5 +1,5 @@
 use llvm_sys::prelude::LLVMTypeRef;
-use llvm_sys::core::{LLVMConstString, LLVMPrintTypeToString};
+use llvm_sys::core::{LLVMPrintTypeToString};
 
 
 mod metadata;

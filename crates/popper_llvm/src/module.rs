@@ -4,7 +4,7 @@ use llvm_sys::prelude::{
     LLVMModuleRef,
     LLVMMemoryBufferRef
 };
-use llvm_sys::core::{LLVMAddFunction, LLVMAppendModuleInlineAsm, LLVMCreateMemoryBufferWithContentsOfFile, LLVMDumpModule, LLVMGetNamedFunction, LLVMGetTypeKind, LLVMGetValueKind, LLVMModuleCreateWithNameInContext, LLVMPrintModuleToString, LLVMTypeOf};
+use llvm_sys::core::{LLVMAddFunction, LLVMAppendModuleInlineAsm, LLVMCreateMemoryBufferWithContentsOfFile, LLVMDumpModule, LLVMGetNamedFunction, LLVMModuleCreateWithNameInContext, LLVMPrintModuleToString};
 use llvm_sys::bit_reader::{
     LLVMParseBitcodeInContext2
 };

@@ -1,6 +1,6 @@
 use std::ffi::CString;
 use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
-use llvm_sys::core::{LLVMBuildAdd, LLVMBuildMul, LLVMBuildFDiv, LLVMConstInt, LLVMBuildNSWAdd, LLVMBuildNSWMul, LLVMBuildSub, LLVMConstIntGetZExtValue, LLVMCreateBuilderInContext, LLVMDumpModule, LLVMDumpValue, LLVMIsAFunction, LLVMIsAGlobalIFunc, LLVMPositionBuilderAtEnd, LLVMPrintValueToString};
+use llvm_sys::core::{LLVMBuildAdd, LLVMBuildMul, LLVMBuildFDiv, LLVMConstInt, LLVMBuildNSWAdd, LLVMBuildSub, LLVMCreateBuilderInContext, LLVMPositionBuilderAtEnd};
 use crate::basic_block::BasicBlock;
 use crate::context::Context;
 use crate::types::TypeEnum;

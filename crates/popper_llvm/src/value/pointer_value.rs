@@ -1,5 +1,5 @@
-use llvm_sys::core::{LLVMBuildPointerCast, LLVMConstPointerCast, LLVMIsNull};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+use llvm_sys::core::{LLVMConstPointerCast, LLVMIsNull};
+use llvm_sys::prelude::{LLVMValueRef};
 use crate::types::TypeEnum;
 use crate::value::{Value, ValueEnum};
 
