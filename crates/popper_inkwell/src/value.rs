@@ -1,6 +1,5 @@
 use inkwell::values::BasicValueEnum;
 
-
 #[derive(Debug, Clone)]
 pub struct LLVMValue<'a> {
     value: BasicValueEnum<'a>,
@@ -38,10 +37,8 @@ impl<'val> Into<BasicValueEnum<'val>> for LLVMValue<'val> {
     }
 }
 
-
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Flag {
     CantLoad,
-    None
+    None,
 }

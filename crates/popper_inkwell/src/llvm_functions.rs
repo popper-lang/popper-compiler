@@ -1,13 +1,13 @@
 use inkwell::{builder::Builder, context::Context, module::Module, values::FunctionValue};
 
-
-
-
-
 pub trait LLVMBuiltinFunction {
     fn get_type<'f>(context: &'f Context) -> inkwell::types::FunctionType<'f>;
     fn get_name() -> String;
-    fn body<'v>(context: &'v Context, module: &'v Module<'v>, builder: &'v Builder) -> FunctionValue<'v>;
+    fn body<'v>(
+        context: &'v Context,
+        module: &'v Module<'v>,
+        builder: &'v Builder,
+    ) -> FunctionValue<'v>;
 }
 
 #[allow(non_camel_case_types)]
@@ -23,12 +23,13 @@ impl LLVMBuiltinFunction for popper_va_arg_null_check {
         "popper.va_arg_null_check".to_string()
     }
 
-    fn body<'v>(context: &'v Context, module: &'v Module<'v>, builder: &'v Builder) -> FunctionValue<'v> {
-        let function = module.add_function(
-            "popper.va_arg_null_check",
-            Self::get_type(context),
-            None,
-        );
+    fn body<'v>(
+        context: &'v Context,
+        module: &'v Module<'v>,
+        builder: &'v Builder,
+    ) -> FunctionValue<'v> {
+        let function =
+            module.add_function("popper.va_arg_null_check", Self::get_type(context), None);
 
         let basic_block = context.append_basic_block(function, "entry");
         builder.position_at_end(basic_block);
@@ -40,7 +41,13 @@ impl LLVMBuiltinFunction for popper_va_arg_null_check {
         builder.build_conditional_branch(is_null, then_block, else_block);
 
         builder.position_at_end(then_block);
-        builder.build_call(module.get_function("popper.panic").expect("panic not found"), &[], "");
+        builder.build_call(
+            module
+                .get_function("popper.panic")
+                .expect("panic not found"),
+            &[],
+            "",
+        );
 
         builder.position_at_end(else_block);
         builder.build_return(None);
@@ -48,7 +55,6 @@ impl LLVMBuiltinFunction for popper_va_arg_null_check {
         function
     }
 }
-
 
 #[allow(non_camel_case_types)]
 pub struct popper_panic;
@@ -62,12 +68,12 @@ impl LLVMBuiltinFunction for popper_panic {
         "popper.panic".to_string()
     }
 
-    fn body<'v>(context: &'v Context, module: &'v Module<'v>, builder: &'v Builder) -> FunctionValue<'v> {
-        let function = module.add_function(
-            "popper.panic",
-            Self::get_type(context),
-            None,
-        );
+    fn body<'v>(
+        context: &'v Context,
+        module: &'v Module<'v>,
+        builder: &'v Builder,
+    ) -> FunctionValue<'v> {
+        let function = module.add_function("popper.panic", Self::get_type(context), None);
 
         let basic_block = context.append_basic_block(function, "entry");
         builder.position_at_end(basic_block);
