@@ -1,6 +1,6 @@
 use popper_ast::{Block, Expression, External, ForStmt, Function, If, IfElse, ImportStmt, LetStmt, Return, Statement, StructStmt, While};
 use popper_ast::visitor::{ExprVisitor, StmtVisitor};
-use crate::mir_ast::{Alloc, BodyFn, Ir, MirString, Store, Return as MirReturn, Value, Const, Body, Function as MirFunction, Type, Arguments, Argument};
+use crate::mir_ast::{Alloc, BodyFn, Ir, MirString, Store, Return as MirReturn, Body, Function as MirFunction, Arguments, Argument};
 use crate::mir_compiler::MirCompiler;
 
 impl StmtVisitor for MirCompiler {
