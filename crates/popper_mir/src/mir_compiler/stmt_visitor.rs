@@ -159,13 +159,13 @@ impl StmtVisitor for MirCompiler {
             let expr = self.visit_expr(*expr)?;
             self.current_fn.as_mut().unwrap().push(
                 BodyFn::Return(
-                    MirReturn::new(expr)
+                    MirReturn::new(Some(expr))
                 )
             );
         } else {
             self.current_fn.as_mut().unwrap().push(
                 BodyFn::Return(
-                    MirReturn::new(Value::Const(Const::Void))
+                    MirReturn::new(None)
                 )
             );
         }

@@ -1,13 +1,12 @@
-extern {
-    func printf(s: string ...): int
-};
+import std.io;
 
-func add(...) : int {
-    return arg int + arg int;
+func print(s: *int): unit {
+    printf("%d\n", @s);
+    return;
 }
 
 func main(): int {
-    let res = add(1, 2);
-    printf("res: %d\n", res);
+    let res = 5;
+    print(ref res);
     return 0;
 }

@@ -1,4 +1,4 @@
-use crate::{Call, Constant, Return, VaArg};
+use crate::{Call, Constant, Deref, Reference, Return, VaArg};
 use crate::BinOp;
 use crate::UnaryOp;
 use crate::Span;
@@ -19,7 +19,9 @@ pub enum Expression {
     StructInstance(StructInstance),
     StructFieldAccess(StructFieldAccess),
     Index(Index),
-    VaArg(VaArg)
+    VaArg(VaArg),
+    Reference(Reference),
+    Deref(Deref)
 }
 
 impl Expression {
@@ -34,6 +36,8 @@ impl Expression {
             Expression::StructFieldAccess(s) => s.span,
             Expression::Index(i) => i.span,
             Expression::VaArg(v) => v.span(),
+            Expression::Reference(r) => r.span,
+            Expression::Deref(p) => p.span
         }
     }
 }

@@ -1,6 +1,6 @@
 pub mod pretty;
 
-use std::fmt::{format, Display};
+use std::fmt::Display;
 
 
 pub trait MirCompile {
@@ -88,7 +88,8 @@ pub enum Type {
     Void,                               // @void
     List(Box<Type>, usize),                    // @list[<type>: <size>]
     Function(Vec<Type>, Box<Type>),     // @function(<args>) <ret>
-    Struct(Vec<Type>)                   // @struct { <fields> }
+    Struct(Vec<Type>),                  // @struct { <fields> }
+    Pointer(Box<Type>),                 // @pointer <type>
 }
 
 impl Type {
@@ -141,6 +142,9 @@ impl MirCompile for Type {
             },
             Type::Struct(fields) => {
                 format!("@struct {{ {} }}", fields.iter().map(|field| field.compile()).collect::<Vec<String>>().join(" "))
+            },
+            Type::Pointer(t) => {
+                format!("@pointer {}", t.compile())
             }
         }
     }
@@ -267,7 +271,10 @@ pub enum BodyFn {
     Return(Return),                // ret <value>
     Add(Add),                      // add <name>, <value>, <res>
     Index(Index),                  // index <res>, <list>, <index>
-    VaArg(VaArg)                   // va_arg <res>, <ty>
+    VaArg(VaArg),                  // va_arg <res>, <ty>
+    Ref(Ref),                      // ref <val>, <res>
+    Deref(Deref),                  // deref <val>, <res>
+
 
 }
 
@@ -290,7 +297,9 @@ impl MirCompile for BodyFn {
                 add.compile()
             },
             BodyFn::Index(index) => index.compile(),
-            BodyFn::VaArg(va_arg) => va_arg.compile()
+            BodyFn::VaArg(va_arg) => va_arg.compile(),
+            BodyFn::Ref(r#ref) => r#ref.compile(),
+            BodyFn::Deref(deref) => deref.compile(),
         }
     }
 }
@@ -352,18 +361,22 @@ impl MirCompile for Call {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Return {
-    pub value: Value
+    pub value: Option<Value>
 }
 
 impl Return {
-    pub fn new(value: Value) -> Self {
+    pub fn new(value: Option<Value>) -> Self {
         Self { value }
     }
 }
 
 impl MirCompile for Return {
     fn compile(&self) -> String {
-        format!("ret {}", self.value.compile())
+        if let Some(value) = &self.value {
+            format!("ret {}", value.compile())
+        } else {
+            "ret".to_string()
+        }
     }
 }
 
@@ -428,6 +441,61 @@ impl MirCompile for VaArg {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Ref {
+    pub val: Value,
+    pub res: String
+}
+
+impl Ref {
+    pub fn new(val: Value, res: String) -> Self {
+        Self { val, res }
+    }
+}
+
+impl MirCompile for Ref {
+    fn compile(&self) -> String {
+        format!("ref {}, {}", self.val.compile(), self.res)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Deref {
+    pub ptr: Value,
+    pub res: String
+}
+
+impl Deref {
+    pub fn new(ptr: Value, res: String) -> Self {
+        Self { ptr, res }
+    }
+}
+
+impl MirCompile for Deref {
+    fn compile(&self) -> String {
+        format!("deref {}, {}", self.ptr.compile(), self.res)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MirPtr {
+    pub ty: Type
+}
+
+impl MirPtr {
+    pub fn new(ty: Type) -> Self {
+        Self { ty }
+    }
+}
+
+impl MirCompile for MirPtr {
+    fn compile(&self) -> String {
+        format!("ptr {}", self.ty.compile())
+    }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Const(Const),                 // const <value>
     Variable(Variable),           // id <name>
@@ -457,8 +525,17 @@ impl Value {
             Value::Const(Const::List(l)) => {
                 Some(l.get_minor_type())
             },
+            Value::Const(Const::Ptr(p)) => {
+                Some(p.ty.clone())
+            },
             Value::Variable(variable) => {
-                variable.ty.clone().into_list().map(|x|  *x.0)
+                if let Type::Pointer(p) = &variable.ty {
+                    Some(*p.clone())
+                } else if let Type::List(a, _) = &variable.ty {
+                    Some(*a.clone())
+                } else {
+                    None
+                }
             },
             _ => None
         }
@@ -485,6 +562,7 @@ pub enum Const {
     String(MirString),               // string <value>
     Bool(MirBool),                   // bool <value>
     List(MirList),                   // list <value>
+    Ptr(MirPtr),                     // ptr <value>
     Void                             // void
 }
 
@@ -496,7 +574,10 @@ impl Const {
             Const::String(s) => Type::String(s.string.len()),
             Const::List(l) => l.get_type(),
             Const::Bool(_) => Type::Bool,
-            Const::Void => Type::Void
+            Const::Void => Type::Void,
+            Const::Ptr(p) => Type::Pointer(
+                Box::new(p.ty.clone())
+            )
         }
     }
 }
@@ -521,6 +602,9 @@ impl MirCompile for Const {
             },
             Const::Void => {
                 "void".to_string()
+            },
+            Const::Ptr(p) => {
+                p.compile()
             }
         }
     }
@@ -630,10 +714,4 @@ impl MirCompile for Variable {
     fn compile(&self) -> String {
         format!("{} {}", self.ty.compile(), self.name)
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
 }

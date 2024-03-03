@@ -140,8 +140,11 @@ impl Pretty {
                 self.result.push_str(&format!(", {} \n", call.ret));
             },
             BodyFn::Return(ret) => {
-                self.result.push_str("ret ");
-                self.pretty_value(ret.value);
+                self.result.push_str("ret");
+                if let Some(ret) = ret.value {
+                    self.result.push_str(" ");
+                    self.pretty_value(ret);
+                }
                 self.result.push_str("\n");
             },
             BodyFn::Index(index) => {
@@ -154,6 +157,16 @@ impl Pretty {
             BodyFn::VaArg(va_arg) => {
                 self.result.push_str(&format!("va_arg {}, ", va_arg.res));
                 self.pretty_type(va_arg.ty);
+                self.result.push_str("\n");
+            },
+            BodyFn::Ref(r) => {
+                self.result.push_str(&format!("ref {}, ", r.res));
+                self.pretty_value(r.val);
+                self.result.push_str("\n");
+            },
+            BodyFn::Deref(d) => {
+                self.result.push_str(&format!("deref {}, ", d.res));
+                self.pretty_value(d.ptr);
                 self.result.push_str("\n");
             },
         }

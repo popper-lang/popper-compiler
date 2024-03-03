@@ -33,8 +33,6 @@ pub enum TypeKind {
     Function(Vec<Type>, Box<Type>, bool),
     /// `*type`
     Pointer(Box<Type>),
-    /// `&type`
-    Reference(Box<Type>),
     /// `()`
     Unit,
     /// `int`
@@ -82,9 +80,6 @@ impl ToString for TypeKind {
             ,
             TypeKind::Pointer(ty) =>
                 format!("*{}", ty.type_kind.to_string())
-            ,
-            TypeKind::Reference(ty) =>
-                format!("&{}", ty.type_kind.to_string())
             ,
             TypeKind::Unit => String::from("()"),
             TypeKind::Int => String::from("int"),

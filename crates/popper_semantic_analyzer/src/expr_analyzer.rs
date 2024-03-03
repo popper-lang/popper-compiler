@@ -176,12 +176,44 @@ impl ExprVisitor for ExprAnalyzer {
         }
     }
 
+    fn visit_deref(&mut self, pointer: Deref) -> Result<Self::Output, Self::Error> {
+        let flag = self.visit_expr(*pointer.expr)?;
+        if !flag.is_pointer() {
+            return Err(
+                Box::new(
+                    TypeMismatch::new(
+                        (pointer.span, "pointer".to_string()),
+                        (flag.clone().span(), flag.get_value().unwrap().to_string())
+                    )
+                )
+            );
+        }
+
+        let flag = flag.get_minor_type().unwrap();
+        Ok(SymbolFlags::new(pointer.span)
+            .add_flag(
+                Flag::Value(
+                    flag
+                )
+            )
+            .clone()
+        )
+    }
+
+    fn visit_reference(&mut self, reference: Reference) -> Result<Self::Output,Self::Error> {
+        let flag = self.visit_expr(*reference.expr)?;
+        Ok(SymbolFlags::new(reference.span)
+            .set_pointer(flag.get_value().unwrap())
+            .clone()
+        )
+    }
+
     fn visit_va_arg(&mut self, va_arg: VaArg) -> Result<Self::Output,Self::Error> {
         let value_flag = ValueFlag::from_ty(va_arg.clone().ty);
-        return Ok(SymbolFlags::new(va_arg.span())
+        Ok(SymbolFlags::new(va_arg.span())
             .add_flag(Flag::Value(value_flag))
             .clone()
-        );
+        )
     }
 
     fn visit_bin_op(&mut self, bin_op: BinOp) -> Result<Self::Output, Self::Error> {
@@ -383,7 +415,7 @@ impl ExprVisitor for ExprAnalyzer {
 
             }
 
-            return Ok(SymbolFlags::new(struct_instance.span).set_value(struct_model_value).clone());
+            Ok(SymbolFlags::new(struct_instance.span).set_value(struct_model_value).clone())
         } else {
             Err(
                 Box::new(
@@ -438,13 +470,13 @@ impl ExprVisitor for ExprAnalyzer {
 
         if let Some(l) = list {
             if ind.is_integer() {
-                return Ok(
+                Ok(
                     SymbolFlags::new(index.span)
                         .set_value(l.0)
                         .clone()
                 )
             } else {
-                return Err(
+                Err(
                     Box::new(
                         TypeMismatch::new(
                             (index.index.span(), "int".to_string()),
@@ -477,6 +509,8 @@ impl ExprVisitor for ExprAnalyzer {
             Expression::StructFieldAccess(struct_field_access) => self.visit_struct_field_access(struct_field_access),
             Expression::Index(index) => self.visit_index(index),
             Expression::VaArg(va_arg) => self.visit_va_arg(va_arg),
+            Expression::Reference(r) => self.visit_reference(r),
+            Expression::Deref(p) => self.visit_deref(p),
         }
     }
 

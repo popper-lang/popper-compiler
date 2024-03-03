@@ -10,6 +10,7 @@ pub(crate) mod types;
 pub(crate) mod function;
 pub(crate) mod struct_stmt;
 pub(crate) mod index;
+pub(crate) mod memory;
 
 #[cfg(feature = "visitor")]
 pub mod visitor;
@@ -25,6 +26,7 @@ pub use types::*;
 pub use function::*;
 pub use struct_stmt::*;
 pub use index::*;
+pub use memory::*;
 
 #[cfg(feature = "serde")]
 pub fn get_ast_from_json_file(file: &str) -> Vec<Statement> {

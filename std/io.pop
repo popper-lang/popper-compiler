@@ -1,6 +1,4 @@
-external "core/io.rs" {
-    func println(s: string): int,
-    func println_int(i: int): int,
-    func print(s: string): int,
-    func input(s: string): string
+extern {
+    func printf(s: string ...): int
+
 };

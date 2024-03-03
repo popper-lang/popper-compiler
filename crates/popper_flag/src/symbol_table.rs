@@ -95,6 +95,15 @@ impl SymbolFlags {
         self
     }
 
+    pub fn set_pointer(&mut self, value_flag: ValueFlag) -> &mut Self {
+        self.add_flag(
+            Flag::Value(
+                ValueFlag::Pointer(Box::new(value_flag))
+            )
+        );
+        self
+    }
+
     pub fn set_none(&mut self) -> &mut Self {
         self.add_flag(
             Flag::Value(
@@ -166,6 +175,12 @@ impl SymbolFlags {
         })
     }
 
+    pub fn is_pointer(&self) -> bool {
+        self.symbols.iter().any(|s| {
+            matches!(s, Flag::Value(ValueFlag::Pointer(_)))
+        })
+    }
+
     pub fn get_value(&self) -> Option<ValueFlag> {
         self.symbols.iter().find_map(|s| {
             match s {
@@ -179,6 +194,15 @@ impl SymbolFlags {
         self.symbols.iter().find_map(|s| {
             match s {
                 Flag::Value(ValueFlag::List(v, l)) => Some((*v.clone(), *l)),
+                _ => None
+            }
+        })
+    }
+
+    pub fn get_minor_type(&self) -> Option<ValueFlag> {
+        self.symbols.iter().find_map(|s| {
+            match s {
+                Flag::Value(ValueFlag::Pointer(v)) => Some(*v.clone()),
                 _ => None
             }
         })

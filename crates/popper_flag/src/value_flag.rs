@@ -90,6 +90,11 @@ impl ValueFlag {
             TypeKind::StructInstance(name) => {
                 ValueFlag::StructInstance(name)
             },
+            TypeKind::Pointer(ptr) => ValueFlag::Pointer(
+                Box::new(
+                    Self::from_ty(*ptr)
+                )
+            ),
             _ => unimplemented!()
 
         }
@@ -126,6 +131,7 @@ impl PartialEq for ValueFlag {
             (ValueFlag::Struct(fields1), ValueFlag::Struct(fields2)) => fields1 == fields2,
             (ValueFlag::StructInstance(name1), ValueFlag::StructInstance(name2)) => name1 == name2,
             (ValueFlag::Module(hash1), ValueFlag::Module(hash2)) => hash1 == hash2,
+            (ValueFlag::Pointer(ty1), ValueFlag::Pointer(ty2)) => ty1 == ty2,
             _ => false
         }
     }

@@ -35,6 +35,8 @@ use popper_ast::List;
 use popper_ast::Index;
 use popper_ast::Extern;
 use popper_ast::VaArg;
+use popper_ast::Reference;
+use popper_ast::Deref;
 
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
@@ -163,19 +165,45 @@ ConstTypes: Type = {
         Type::new(generic.0, generic.1.0.type_kind, generic.1.1)
     },
 }
+
+
+PointerTypes: TypeKind = {
+    "*" <t:StructTy> => TypeKind::Pointer(Box::new(t))
+}
+
+
 Types: Type = {
-    <int:Span<"int">> => Type::new(int.0, TypeKind::Int, vec![]),
-    <bool:Span<"bool">> => Type::new(bool.0, TypeKind::Bool, vec![]),
-    <str:Span<StringType>> => Type::new(str.0, str.1, vec![]),
-    <unit:Span<"unit">> => Type::new(unit.0, TypeKind::Unit, vec![]),
-    <struct_:Span<StructType>> => Type::new(struct_.0, struct_.1, vec![]),
     <generic:Span<GenericTypes>> => {
         Type::new(generic.0, generic.1.0.type_kind, generic.1.1)
     },
-    <list:Span<ListType>> => Type::new(list.0, list.1, vec![]),
-
-
+    PointerTy
 }
+
+PointerTy: Type = {
+    <pointer:Span<PointerTypes>> => {
+        Type::new(pointer.0, pointer.1, vec![])
+    },
+    StructTy
+}
+
+StructTy: Type = {
+    <struct_:Span<StructType>> => Type::new(struct_.0, struct_.1, vec![]),
+    ListTy
+}
+
+ListTy: Type = {
+    <list:Span<ListType>> => Type::new(list.0, list.1, vec![]),
+    SimpleTy
+}
+
+
+SimpleTy: Type = {
+     <int:Span<"int">> => Type::new(int.0, TypeKind::Int, vec![]),
+    <bool:Span<"bool">> => Type::new(bool.0, TypeKind::Bool, vec![]),
+    <str:Span<StringType>> => Type::new(str.0, str.1, vec![]),
+    <unit:Span<"unit">> => Type::new(unit.0, TypeKind::Unit, vec![]),
+}
+
 
 TypeDecl: Type = {
     ":" <ty:Types> => {
@@ -341,6 +369,40 @@ IndexExpr: Expression = {
     }
 }
 
+RefSyntax: Expression = {
+    "ref" <t:Deref> => {
+        t
+    }
+}
+
+RefExpr: Expression = {
+    <t:Span<RefSyntax>> => {
+        Expression::Reference(
+            Reference::new(
+                t.1,
+                t.0
+            )
+        )
+    }
+}
+
+DerefSyntax: Expression = {
+    "@" <t:VaArg> => {
+        t
+    }
+}
+
+DerefExpr: Expression = {
+    <t:Span<DerefSyntax>> => {
+        Expression::Deref(
+            Deref::new(
+                t.1,
+                t.0
+            )
+        )
+    }
+}
+
 VaArgExpr: Expression = {
     "arg" <t:Span<ConstTypes>> => {
         Expression::VaArg(
@@ -359,8 +421,18 @@ Expr: Expression = {
 
 Factor: Expression = {
     BinOp<Factor, OpFactor, Call>,
-    VaArg
+    Ref
 };
+
+Ref: Expression = {
+    RefExpr,
+    Deref
+}
+
+Deref: Expression = {
+    DerefExpr,
+    VaArg
+}
 
 VaArg: Expression = {
     VaArgExpr,

@@ -1,6 +1,6 @@
 use popper_ast::{BinOp, BinOpKind, Call, Constant, Expression, ParenGroup, StructFieldAccess, StructInstance, UnaryOp};
 use popper_ast::visitor::ExprVisitor;
-use crate::mir_ast::{Add, BodyFn, Const, Index as MirIndex, List, MirFloat, MirInt, MirList, MirString, VaArg, Value, Variable};
+use crate::mir_ast::{Add, BodyFn, Const, Deref, Index as MirIndex, List, MirFloat, MirInt, MirList, MirString, Ref, Type, VaArg, Value, Variable};
 use crate::mir_compiler::MirCompiler;
 
 impl ExprVisitor for MirCompiler {
@@ -53,6 +53,48 @@ impl ExprVisitor for MirCompiler {
             _ => unimplemented!()
 
         })
+    }
+
+    fn visit_deref(&mut self, pointer: popper_ast::Deref) -> Result<Self::Output,Self::Error> {
+        let mir_val = self.visit_expr(*pointer.expr)?;
+        let out = self.new_var_id(mir_val.get_minor_type().unwrap())?;
+
+        let body = self.current_fn.as_mut().unwrap();
+
+        body.push(
+            BodyFn::Deref(
+                Deref::new(
+                    mir_val.clone(),
+                    out.clone()
+                )
+            )
+        );
+
+        Ok(Value::Variable(
+            Variable::new(out, mir_val.get_type())
+        ))
+
+    }
+
+    fn visit_reference(&mut self,reference: popper_ast::Reference) -> Result<Self::Output, Self::Error> {
+        let mir_val = self.visit_expr(*reference.expr)?;
+        let ty = Type::Pointer(Box::new(mir_val.get_type()));
+        let out = self.new_var_id(ty.clone())?;
+
+        let body = self.current_fn.as_mut().unwrap();
+
+        body.push(
+            BodyFn::Ref(
+                Ref::new(
+                    mir_val.clone(),
+                    out.clone()
+                )
+            )
+        );
+
+        Ok(Value::Variable(
+            Variable::new(out, ty)
+        ))
     }
 
     fn visit_va_arg(&mut self, va_arg: popper_ast::VaArg) -> Result<Self::Output,Self::Error> {
@@ -137,6 +179,8 @@ impl ExprVisitor for MirCompiler {
             },
             Expression::Index(index) => self.visit_index(index),
             Expression::VaArg(va_arg) => self.visit_va_arg(va_arg),
+            Expression::Reference(reference) => self.visit_reference(reference),
+            Expression::Deref(deref) => self.visit_deref(deref),
         }
     }
 

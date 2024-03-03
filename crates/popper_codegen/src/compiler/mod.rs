@@ -221,7 +221,7 @@ impl Compiler {
                 PopObject::new(res, res.get_type())
             },
             BodyFn::Return(ret) => {
-                let val = self.compile_value(ret.value);
+                let val = self.compile_value(ret.value.unwrap());
                 self.builder.build_ret(val);
 
                 PopObject::new(val, val.get_type())

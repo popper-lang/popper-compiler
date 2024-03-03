@@ -21,6 +21,8 @@ pub trait ExprVisitor {
     visit!(visit_struct_field_access, struct_field_access => StructFieldAccess);
     visit!(visit_index, index => Index);
     visit!(visit_va_arg, va_arg => VaArg);
+    visit!(visit_reference, reference => Reference);
+    visit!(visit_deref, pointer => Deref);
 
 }
 
