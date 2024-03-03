@@ -1,5 +1,6 @@
-use llvm_sys::core::LLVMPrintTypeToString;
+use llvm_sys::core::{LLVMGetTypeKind, LLVMPrintTypeToString};
 use llvm_sys::prelude::LLVMTypeRef;
+use llvm_sys::LLVMTypeKind;
 
 pub mod array_types;
 pub mod float_types;
@@ -41,6 +42,21 @@ macro_rules! types {
         $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(64))
     };
 
+
+}
+
+pub(crate) fn check_same_ty(tref: LLVMTypeRef, tname: &str) {
+    let ty = unsafe { LLVMGetTypeKind(tref) };
+
+    match (ty, tname) {
+        (LLVMTypeKind::LLVMIntegerTypeKind, "int") => {}
+        (LLVMTypeKind::LLVMFloatTypeKind, "float") => {}
+        (LLVMTypeKind::LLVMDoubleTypeKind, "double") => {}
+        (LLVMTypeKind::LLVMFunctionTypeKind, "function") => {}
+        (LLVMTypeKind::LLVMArrayTypeKind, "array") => {}
+        (LLVMTypeKind::LLVMPointerTypeKind, "pointer") => {}
+        _ => panic!("Type mismatch: expected {} got {:?}", tname, ty),
+    }
 
 }
 
@@ -101,7 +117,7 @@ impl From<LLVMTypeRef> for TypeEnum {
         let type_ = unsafe { llvm_sys::core::LLVMGetTypeKind(value) };
         match type_ {
             llvm_sys::LLVMTypeKind::LLVMIntegerTypeKind => {
-                TypeEnum::IntType(unsafe { int_types::IntType::new_with_llvm_ref(value) })
+                TypeEnum::IntType(unsafe { int_types::IntType::new_llvm_ref(value) })
             }
             llvm_sys::LLVMTypeKind::LLVMDoubleTypeKind => {
                 TypeEnum::FloatType(float_types::FloatType::new_with_llvm_ref(value))

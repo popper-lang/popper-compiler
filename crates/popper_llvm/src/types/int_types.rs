@@ -6,6 +6,8 @@ use crate::value::int_value::IntValue;
 use llvm_sys::core::{LLVMGetIntTypeWidth, LLVMIntType, LLVMIntTypeInContext};
 use llvm_sys::prelude::LLVMTypeRef;
 
+use super::check_same_ty;
+
 macro_rules! impl_into_int_type {
     ($type:ty) => {
         impl From<$type> for IntType {
@@ -24,9 +26,22 @@ pub struct IntType {
 }
 
 impl IntType {
-    /// # Safety
-    /// This function is unsafe because it does not check if the LLVMTypeRef is a valid int type.
-    pub unsafe fn new_with_llvm_ref(llvm_ty: LLVMTypeRef) -> Self {
+
+    fn check_size(size: u32) {
+        if size == 0 {
+            panic!("Size of int type cannot be 0");
+        }
+
+        if size > 8 * std::mem::size_of::<usize>() as u32 {
+            panic!("Size of int type cannot be greater than {} bits", 8 * std::mem::size_of::<usize>());
+        }
+    }
+
+    /// Creates a new `IntType` with the given `LLVMTypeRef`.
+    /// # Panics
+    /// Panics if the given `LLVMTypeRef` is not an `int` type.
+    pub(crate) fn new_llvm_ref(llvm_ty: LLVMTypeRef) -> Self {
+        check_same_ty(llvm_ty, "int");
         let size = unsafe { LLVMGetIntTypeWidth(llvm_ty) };
         Self {
             int_type: llvm_ty,
@@ -34,12 +49,20 @@ impl IntType {
         }
     }
 
+    /// Creates a new `IntType` with the given size.
+    /// # Panics
+    /// Panics if the given size is not a valid size for an `int` type.
     pub fn new_sized(size: u32) -> Self {
+        Self::check_size(size);
         let int_type = unsafe { LLVMIntType(size) };
         Self { int_type, size }
     }
 
+    /// Creates a new `IntType` with the given size and `Context`.
+    /// # Panics
+    /// Panics if the given size is not a valid size for an `int` type.
     pub fn new_with_context(size: u32, context: Context) -> Self {
+        Self::check_size(size);
         let int_type = unsafe { LLVMIntTypeInContext(context.context, size) };
         Self { int_type, size }
     }

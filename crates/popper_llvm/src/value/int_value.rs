@@ -13,7 +13,7 @@ impl IntValue {
     /// # Safety
     /// This function is unsafe because it does not check if the LLVMValueRef is a valid int value.
     pub unsafe fn new_llvm_ref(lref: LLVMValueRef) -> Self {
-        let int_type = int_types::IntType::new_with_llvm_ref(LLVMTypeOf(lref));
+        let int_type = int_types::IntType::new_llvm_ref(LLVMTypeOf(lref));
         Self {
             int_value: lref,
             int_type,
