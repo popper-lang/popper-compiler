@@ -1,13 +1,12 @@
 use crate::basic_block::BasicBlock;
 use crate::context::Context;
-use crate::types::Type;
 use crate::types::TypeEnum;
 use crate::value::function_value::FunctionValue;
 use crate::value::int_value::IntValue;
 use crate::value::pointer_value::PointerValue;
 use crate::value::{Value, ValueEnum};
 use llvm_sys::core::{
-    LLVMBuildAdd, LLVMBuildFDiv, LLVMBuildMul, LLVMBuildNSWAdd, LLVMBuildSub, LLVMConstInt,
+    LLVMBuildAdd, LLVMBuildFDiv, LLVMBuildMul, LLVMBuildNSWAdd, LLVMBuildSub,
     LLVMCreateBuilderInContext, LLVMPositionBuilderAtEnd,
 };
 use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
@@ -87,19 +86,16 @@ impl Builder {
         args: Vec<LLVMValueRef>,
         name: CString,
     ) -> LLVMValueRef {
-        let i64t = self.context.i64_type().get_type_ref();
-        function.dump();
-        let mut args = unsafe { [LLVMConstInt(i64t, 1, 0), LLVMConstInt(i64t, 1, 0)] };
-        let ty = function.get_type();
+        let args_ptr = args.as_ptr();
         let length = args.len() as u32;
         unsafe {
             llvm_sys::core::LLVMBuildCall2(
                 self.builder,
                 function.get_type_ref(),
                 function.as_value_ref(),
-                args.as_mut_ptr(),
+                args_ptr as *mut _,
                 length,
-                b"entry\0".as_ptr() as *const _,
+                name.as_ptr() as *const _,
             )
         }
     }

@@ -12,7 +12,7 @@ def cargo_fmt_lib(lib):
 def main():
     crates = fix.list_all_crates()
     print(f"[script/fmt.py] Found crates: {', '.join(crate.name for crate in crates)}")
-    input(f"[script/fmt.py] Press enter to continue to run `cargo fmt` on all crates({', '.join(crate.name for crate in crates)})")
+    input(f"[script/fmt.py] Press enter to continue to run `cargo fmt` on all crates...")
     for crate in crates:
         cargo_fmt_lib(crate.name)
 

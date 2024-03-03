@@ -88,7 +88,6 @@ impl TypeEnum {
             TypeEnum::ArrayType(t) => t.func(args, is_var_args),
             TypeEnum::FunctionType(t) => t.func(args, is_var_args),
             TypeEnum::PointerType(t) => t.func(args, is_var_args),
-            _ => panic!("Cannot create function type from function type"),
         }
     }
 

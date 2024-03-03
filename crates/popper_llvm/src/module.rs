@@ -12,7 +12,6 @@ use std::ffi::CString;
 use crate::context::Context;
 use crate::types::function_types::FunctionType;
 use crate::value::function_value::FunctionValue;
-use crate::value::ValueEnum;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Module {
@@ -88,9 +87,6 @@ impl Module {
         let name = CString::new(name).unwrap();
         let function =
             unsafe { LLVMAddFunction(self.module, name.as_ptr(), function_type.get_type_ref()) };
-        let val: ValueEnum = function.into();
-        let ty = val.get_type().get_type_ref();
-
         FunctionValue::new_llvm_ref(function)
     }
 

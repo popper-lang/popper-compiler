@@ -159,7 +159,6 @@ impl Into<ValueEnum> for LLVMValueRef {
             TypeEnum::PointerType(_) => {
                 ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self))
             }
-            _ => panic!("Unknown type"),
         }
     }
 }
