@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use popper_ast::Span;
 use thiserror::Error;
-use ariadne::{Fmt, Label, Report, ReportKind, Source};
+use ariadne::{Label, Report, ReportKind, Source};
 use crate::{ColorConfig, Error as PopperError};
 
 #[derive(Debug, Error)]
@@ -29,7 +29,7 @@ impl PopperError for TypeNotSpecified {
 
             let ty = color.get("type").expect("Failed to get color for type");
 
-            let mut report = Report::<(&str, Range<usize>)>::build(ReportKind::Error,
+            let report = Report::<(&str, Range<usize>)>::build(ReportKind::Error,
                                            file,
                                            self.span.find_line(
                                                source
