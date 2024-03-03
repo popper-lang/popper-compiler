@@ -1,12 +1,6 @@
-use popper_llvm::value::{
-    ValueEnum,
-};
+use popper_llvm::value::ValueEnum;
 
-use popper_llvm::types::{
-    TypeEnum,
-};
-
-
+use popper_llvm::types::TypeEnum;
 
 #[derive(Debug, Clone, Copy)]
 pub struct PopObject {
@@ -15,18 +9,13 @@ pub struct PopObject {
 }
 
 impl PopObject {
-
     pub fn from(value: ValueEnum) -> Self {
         Self {
             value,
-            type_enum: value.get_type()
+            type_enum: value.get_type(),
         }
     }
     pub fn new(value: ValueEnum, type_enum: TypeEnum) -> Self {
-        Self {
-            value,
-            type_enum
-        }
+        Self { value, type_enum }
     }
-
 }
