@@ -43,9 +43,10 @@ impl ArrayType {
     }
 
     pub fn const_string(&self, string: &str) -> ArrayValue {
-        let values =
-            unsafe { LLVMConstString(string.as_ptr() as *const i8, string.len() as u32, 0) };
-        ArrayValue::new_llvm_ref(values)
+        unsafe {
+            let values = LLVMConstString(string.as_ptr() as *const i8, string.len() as u32, 0);
+            ArrayValue::new_llvm_ref(values)
+        }
     }
 
     pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {

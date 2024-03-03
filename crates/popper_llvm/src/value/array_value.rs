@@ -24,7 +24,7 @@ impl ArrayValue {
         }
     }
 
-    pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
+    pub unsafe fn new_llvm_ref(lref: LLVMValueRef) -> Self {
         let array_type =
             types::array_types::ArrayType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
         Self {

@@ -67,7 +67,7 @@ impl Module {
     }
 
     pub fn get_context(&self) -> Context {
-        *self.context
+        self.context
     }
 
     pub fn dump(&self) {
@@ -86,7 +86,7 @@ impl Module {
         let name = CString::new(name).unwrap();
         let function =
             unsafe { LLVMAddFunction(self.module, name.as_ptr(), function_type.get_type_ref()) };
-        FunctionValue::new_llvm_ref(function)
+        unsafe { FunctionValue::new_llvm_ref(function) }
     }
 
     pub fn get_function(&self, name: &str) -> Option<FunctionValue> {
@@ -95,7 +95,7 @@ impl Module {
         if function.is_null() {
             None
         } else {
-            Some(FunctionValue::new_llvm_ref(function))
+            Some(unsafe { FunctionValue::new_llvm_ref(function) })
         }
     }
 

@@ -101,7 +101,7 @@ impl From<LLVMTypeRef> for TypeEnum {
         let type_ = unsafe { llvm_sys::core::LLVMGetTypeKind(value) };
         match type_ {
             llvm_sys::LLVMTypeKind::LLVMIntegerTypeKind => {
-                TypeEnum::IntType(int_types::IntType::new_with_llvm_ref(value))
+                TypeEnum::IntType(unsafe { int_types::IntType::new_with_llvm_ref(value) })
             }
             llvm_sys::LLVMTypeKind::LLVMDoubleTypeKind => {
                 TypeEnum::FloatType(float_types::FloatType::new_with_llvm_ref(value))
@@ -110,7 +110,7 @@ impl From<LLVMTypeRef> for TypeEnum {
                 TypeEnum::FunctionType(function_types::FunctionType::new_with_llvm_ref(value))
             }
             llvm_sys::LLVMTypeKind::LLVMArrayTypeKind => {
-                TypeEnum::ArrayType(array_types::ArrayType::new_with_llvm_ref(value))
+                TypeEnum::ArrayType(unsafe { array_types::ArrayType::new_with_llvm_ref(value) })
             }
             llvm_sys::LLVMTypeKind::LLVMPointerTypeKind => {
                 TypeEnum::PointerType(pointer_types::PointerTypes::new_llvm_ref(value))

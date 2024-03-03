@@ -147,14 +147,16 @@ impl Into<ValueEnum> for LLVMValueRef {
         let value_type = unsafe { LLVMTypeOf(self) };
         let value_type_enum = value_type.into();
         match value_type_enum {
-            TypeEnum::IntType(_) => ValueEnum::IntValue(int_value::IntValue::new_llvm_ref(self)),
+            TypeEnum::IntType(_) => ValueEnum::IntValue(
+                unsafe { int_value::IntValue::new_llvm_ref(self) }
+            ),
             TypeEnum::FloatType(_) => {
                 ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(self))
             }
             TypeEnum::FunctionType(_) => {
-                ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(self))
+                ValueEnum::FunctionValue(unsafe { function_value::FunctionValue::new_llvm_ref(self) })
             }
-            TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(ArrayValue::new_llvm_ref(self)),
+            TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(unsafe { ArrayValue::new_llvm_ref(self) }),
             TypeEnum::PointerType(_) => {
                 ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self))
             }

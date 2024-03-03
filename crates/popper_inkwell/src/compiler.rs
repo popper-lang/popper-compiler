@@ -290,7 +290,7 @@ impl<'ctx> Compiler<'ctx> {
     }
 
     pub fn compile_cdylib(&mut self, path: &str) {
-        let path = std::path::Path::new(path.as_str());
+        let path = std::path::Path::new(path);
 
         if !path.exists() {
             panic!("File not found: {}", path.display());
@@ -661,7 +661,7 @@ impl<'ctx> Compiler<'ctx> {
             .get(&name)
             .unwrap_or_else(
                 || panic!("variable {} not found(get_var)", name.clone()),
-            )
+            );
         if var.basic_value_enum().is_pointer_value() && self.can_load && var.can_load() {
             LLVMValue::new(
                 self.builder
@@ -684,7 +684,7 @@ impl<'ctx> Compiler<'ctx> {
                 let var = self
                     .env
                     .get(&v.name)
-                    .unwrap_or_else(|| panic!("variable {} not found(compile_value)", v.name.clone()))
+                    .unwrap_or_else(|| panic!("variable {} not found(compile_value)", v.name.clone()));
                 let ty = self.mir_type_to_llvm_type(v.ty.clone());
                 if var.basic_value_enum().is_pointer_value() {
                     if self.can_load && var.can_load() {

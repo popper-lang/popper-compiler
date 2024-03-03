@@ -37,35 +37,35 @@ impl Builder {
         let name = std::ffi::CString::new(name).unwrap();
         let value =
             unsafe { LLVMBuildAdd(self.builder, lhs.int_value, rhs.int_value, name.as_ptr()) };
-        IntValue::new_llvm_ref(value)
+        unsafe { IntValue::new_llvm_ref(value) }
     }
 
     pub fn build_int_sub(&self, lhs: &IntValue, rhs: &IntValue, name: &str) -> IntValue {
         let name = std::ffi::CString::new(name).unwrap();
         let value =
             unsafe { LLVMBuildSub(self.builder, lhs.int_value, rhs.int_value, name.as_ptr()) };
-        IntValue::new_llvm_ref(value)
+        unsafe { IntValue::new_llvm_ref(value) }
     }
 
     pub fn build_int_mul(&self, lhs: &IntValue, rhs: &IntValue, name: &str) -> IntValue {
         let name = std::ffi::CString::new(name).unwrap();
         let value =
             unsafe { LLVMBuildMul(self.builder, lhs.int_value, rhs.int_value, name.as_ptr()) };
-        IntValue::new_llvm_ref(value)
+        unsafe { IntValue::new_llvm_ref(value) }
     }
 
     pub fn build_int_div(&self, lhs: &IntValue, rhs: &IntValue, name: &str) -> IntValue {
         let name = std::ffi::CString::new(name).unwrap();
         let value =
             unsafe { LLVMBuildFDiv(self.builder, lhs.int_value, rhs.int_value, name.as_ptr()) };
-        IntValue::new_llvm_ref(value)
+        unsafe { IntValue::new_llvm_ref(value) }
     }
 
     pub fn build_int_nsw_add(&self, lhs: &IntValue, rhs: &IntValue, name: &str) -> IntValue {
         let name = CString::new(name).unwrap();
         let value =
             unsafe { LLVMBuildNSWAdd(self.builder, lhs.int_value, rhs.int_value, name.as_ptr()) };
-        IntValue::new_llvm_ref(value)
+        unsafe { IntValue::new_llvm_ref(value) }
     }
 
     pub fn build_call(
