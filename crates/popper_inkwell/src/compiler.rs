@@ -1,9 +1,9 @@
-use inkwell::{builder::Builder, context::Context, module::Module, types::{AnyType, BasicMetadataTypeEnum, BasicType, BasicTypeEnum}, values::{AnyValue, BasicValue, BasicValueEnum, IntValue, PointerValue}};
+use inkwell::{builder::Builder, context::Context, module::Module, types::{AnyType, BasicType, BasicTypeEnum}, values::{AnyValue, BasicValue, BasicValueEnum, IntValue, PointerValue}};
 use popper_mir::mir_ast::{
     BodyFn, Const, Function as MirFunction, Ir, Module as MirModule, Type as MirType, Value
 };
 use popper_common::hash::hash_file;
-use std::{collections::HashMap, env::var, fmt::format};
+use std::{collections::HashMap, env::var};
 
 use crate::value::{Flag, LLVMValue};
 use std::rc::Rc;
