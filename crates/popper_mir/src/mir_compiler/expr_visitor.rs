@@ -91,11 +91,11 @@ impl ExprVisitor for MirCompiler {
         Ok(Value::Variable(Variable::new(out, lhs_ty)))
     }
 
-    fn visit_unary_op(&mut self, unary_op: UnaryOp) -> Result<Self::Output, Self::Error> {
+    fn visit_unary_op(&mut self, _unary_op: UnaryOp) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_group(&mut self, group: ParenGroup) -> Result<Self::Output, Self::Error> {
+    fn visit_group(&mut self, _group: ParenGroup) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
@@ -172,14 +172,14 @@ impl ExprVisitor for MirCompiler {
 
     fn visit_struct_instance(
         &mut self,
-        struct_instance: StructInstance,
+        _struct_instance: StructInstance,
     ) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
     fn visit_struct_field_access(
         &mut self,
-        struct_field_access: StructFieldAccess,
+        _struct_field_access: StructFieldAccess,
     ) -> Result<Self::Output, Self::Error> {
         todo!()
     }

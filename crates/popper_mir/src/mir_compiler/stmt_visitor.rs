@@ -58,19 +58,19 @@ impl StmtVisitor for MirCompiler {
         }
     }
 
-    fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
+    fn visit_block(&mut self, _block: Block) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_while_stmt(&mut self, while_stmt: While) -> Result<Self::Output, Self::Error> {
+    fn visit_while_stmt(&mut self, _while_stmt: While) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_if_stmt(&mut self, if_stmt: If) -> Result<Self::Output, Self::Error> {
+    fn visit_if_stmt(&mut self, _if_stmt: If) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_if_else_stmt(&mut self, if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
+    fn visit_if_else_stmt(&mut self, _if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
@@ -185,11 +185,11 @@ impl StmtVisitor for MirCompiler {
         Ok(())
     }
 
-    fn visit_for_stmt(&mut self, for_stmt: ForStmt) -> Result<Self::Output, Self::Error> {
+    fn visit_for_stmt(&mut self, _for_stmt: ForStmt) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_struct_stmt(&mut self, struct_stmt: StructStmt) -> Result<Self::Output, Self::Error> {
+    fn visit_struct_stmt(&mut self, _struct_stmt: StructStmt) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 }

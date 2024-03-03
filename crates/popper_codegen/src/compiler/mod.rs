@@ -128,7 +128,6 @@ impl Compiler {
             Ir::Function(func) => {
                 self.compile_function(func);
             }
-            _ => unimplemented!(),
         }
     }
 
