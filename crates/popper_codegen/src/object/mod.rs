@@ -1,15 +1,8 @@
 use popper_llvm::value::{
-    int_value,
-    function_value,
-    float_value,
     ValueEnum,
-    ToValue,
 };
 
 use popper_llvm::types::{
-    int_types,
-    float_types,
-    function_types,
     TypeEnum,
 };
 
