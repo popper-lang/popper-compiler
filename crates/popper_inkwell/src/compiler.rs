@@ -367,7 +367,6 @@ impl<'ctx> Compiler<'ctx> {
         self.id_counter = function.count_params() as usize + 1;
 
         for (i, arg) in function.get_param_iter().enumerate() {
-            arg.set_name(&func.args.args[i].name);
             let mut val = LLVMValue::new(arg);
 
             if arg.is_pointer_value() {
@@ -499,7 +498,6 @@ impl<'ctx> Compiler<'ctx> {
                 self.builder.build_store(var, val.basic_value_enum()).unwrap();
             },
             BodyFn::Add(a) => {
-                let id = &self.give_id();
                 let lhs = self.compile_value(&a.lhs).basic_value_enum();
                 let rhs = self.compile_value(&a.rhs).basic_value_enum();
                 let val = self.builder.build_int_add(lhs.into_int_value(), rhs.into_int_value(), "").unwrap();
@@ -509,7 +507,6 @@ impl<'ctx> Compiler<'ctx> {
                 self.builder.build_store(var, val.as_basic_value_enum()).unwrap();
             },
             BodyFn::Index(i) => {
-                let id = &self.give_id();
                 self.can_load = false;
                 let minor_type = self.mir_type_to_llvm_type(i.list.get_minor_type().unwrap());
                 let val = self.compile_value(&i.list)
@@ -523,13 +520,14 @@ impl<'ctx> Compiler<'ctx> {
                 };
             },
             BodyFn::Deref(d) => {
-                let ptr = self.compile_value(&d.ptr)
+                let ptr = self.compile_unloaded_value(&d.ptr)
                     .basic_value_enum()
                     .into_pointer_value();
+
                 let ty = ptr.get_type().as_basic_type_enum();
                 let minor_type = self.mir_type_to_llvm_type(d.ptr.get_minor_type().unwrap());
                 let val = self.builder.build_load(ty, ptr, "").unwrap().into_pointer_value();
-                let val =  self.builder.build_load(minor_type, val, "").unwrap();
+                let val = self.builder.build_load(minor_type, val, "").unwrap();
                 let var = self.get_unloaded_var(d.res.clone())
                     .basic_value_enum()
                     .into_pointer_value();
@@ -576,6 +574,19 @@ impl<'ctx> Compiler<'ctx> {
         self.env.get(&name).expect(
             &format!("variable {} not found(get_unloaded_var)", name)
         ).clone()
+    }
+
+    pub fn get_var(&self, name: String) -> LLVMValue<'_> {
+        let var = self.env.get(&name).expect(
+            &format!("variable {} not found(get_var)", name)
+        );
+        if var.basic_value_enum().is_pointer_value() && self.can_load && var.can_load() {
+            LLVMValue::new(
+                self.builder.build_load(var.basic_value_enum().get_type().as_basic_type_enum(), var.basic_value_enum().into_pointer_value(), "").unwrap()
+            )
+        } else {
+            var.clone()
+        }
     }
 
     pub fn compile_value(&self, val: &Value) -> LLVMValue {

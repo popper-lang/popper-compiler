@@ -6,7 +6,7 @@ func print(s: *int): unit {
 }
 
 func main(): int {
-    let res = 5;
+    let res = 44;
     print(ref res);
     return 0;
 }

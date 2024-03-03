@@ -168,7 +168,7 @@ ConstTypes: Type = {
 
 
 PointerTypes: TypeKind = {
-    "*" <t:StructTy> => TypeKind::Pointer(Box::new(t))
+    "*" <t:PointerTy> => TypeKind::Pointer(Box::new(t))
 }
 
 
@@ -370,7 +370,7 @@ IndexExpr: Expression = {
 }
 
 RefSyntax: Expression = {
-    "ref" <t:Deref> => {
+    "ref" <t:Ref> => {
         t
     }
 }
@@ -387,7 +387,7 @@ RefExpr: Expression = {
 }
 
 DerefSyntax: Expression = {
-    "@" <t:VaArg> => {
+    "@" <t:Deref> => {
         t
     }
 }

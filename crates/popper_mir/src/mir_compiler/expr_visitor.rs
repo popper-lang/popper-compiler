@@ -58,7 +58,7 @@ impl ExprVisitor for MirCompiler {
     fn visit_deref(&mut self, pointer: popper_ast::Deref) -> Result<Self::Output,Self::Error> {
         let mir_val = self.visit_expr(*pointer.expr)?;
         let out = self.new_var_id(mir_val.get_minor_type().unwrap())?;
-
+        let minor_type = mir_val.get_minor_type().unwrap();
         let body = self.current_fn.as_mut().unwrap();
 
         body.push(
@@ -71,7 +71,7 @@ impl ExprVisitor for MirCompiler {
         );
 
         Ok(Value::Variable(
-            Variable::new(out, mir_val.get_type())
+            Variable::new(out, minor_type)
         ))
 
     }
