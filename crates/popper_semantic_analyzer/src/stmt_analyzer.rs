@@ -189,15 +189,12 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             self.visit_stmt(stmt)?;
         }
 
-        if !self.is_return {
-            if !(self.return_type.is_some()
-                && self.return_type.clone().unwrap().is_same(&ValueFlag::None))
-            {
-                return Err(Box::new(TypeMismatch::new(
-                    (function.span, return_type.to_string()),
-                    (function.span, ValueFlag::None.to_string()),
-                )));
-            }
+        if !self.is_return && !(self.return_type.is_some()
+                && self.return_type.clone().unwrap().is_same(&ValueFlag::None)) {
+            return Err(Box::new(TypeMismatch::new(
+                (function.span, return_type.to_string()),
+                (function.span, ValueFlag::None.to_string()),
+            )));
         }
 
         let symbol_flag = SymbolFlags::new(function.span)

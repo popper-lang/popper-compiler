@@ -102,25 +102,9 @@ impl ExprVisitor for ExprAnalyzer {
                 }
                 if let Some(value_flag) = base_value_flag {
                     flags.set_list(value_flag, l.value.len());
-                } else {
-                    if let Some(val) = self.let_expected_value.clone() {
-                        if let ValueFlag::List(ty, size) = val.get_value().unwrap() {
-                            if size != l.value.len() {
-                                return Err(Box::new(TypeMismatch::new(
-                                    (
-                                        self.let_expected_value.clone().unwrap().span(),
-                                        self.let_expected_value
-                                            .clone()
-                                            .unwrap()
-                                            .get_value()
-                                            .unwrap()
-                                            .to_string(),
-                                    ),
-                                    (l.span(), format!("[{}: {}]", ty.to_string(), l.value.len())),
-                                )));
-                            }
-                            flags.set_list(*ty, size);
-                        } else {
+                } else if let Some(val) = self.let_expected_value.clone() {
+                    if let ValueFlag::List(ty, size) = val.get_value().unwrap() {
+                        if size != l.value.len() {
                             return Err(Box::new(TypeMismatch::new(
                                 (
                                     self.let_expected_value.clone().unwrap().span(),
@@ -131,15 +115,29 @@ impl ExprVisitor for ExprAnalyzer {
                                         .unwrap()
                                         .to_string(),
                                 ),
-                                (l.span(), format!("list of length {}", l.value.len())),
+                                (l.span(), format!("[{}: {}]", ty, l.value.len())),
                             )));
                         }
+                        flags.set_list(*ty, size);
                     } else {
-                        return Err(Box::new(TypeNotSpecified::new(
-                            l.span(),
-                            "array".to_string(),
+                        return Err(Box::new(TypeMismatch::new(
+                            (
+                                self.let_expected_value.clone().unwrap().span(),
+                                self.let_expected_value
+                                    .clone()
+                                    .unwrap()
+                                    .get_value()
+                                    .unwrap()
+                                    .to_string(),
+                            ),
+                            (l.span(), format!("list of length {}", l.value.len())),
                         )));
                     }
+                } else {
+                    return Err(Box::new(TypeNotSpecified::new(
+                        l.span(),
+                        "array".to_string(),
+                    )));
                 }
                 Ok(flags)
             }
@@ -305,7 +303,7 @@ impl ExprVisitor for ExprAnalyzer {
         let struct_model_value = struct_model.value.get_value().unwrap();
         if let ValueFlag::Struct(ref fields) = struct_model_value {
             let mut sorted_fields = fields.iter().collect::<Vec<_>>();
-            sorted_fields.sort_by(|a, b| a.0.cmp(&b.0));
+            sorted_fields.sort_by(|a, b| a.0.cmp(b.0));
             let mut fields_s = Vec::new();
 
             for field in struct_instance.fields {
@@ -404,10 +402,10 @@ impl ExprVisitor for ExprAnalyzer {
                 )))
             }
         } else {
-            return Err(Box::new(TypeMismatch::new(
+            Err(Box::new(TypeMismatch::new(
                 (index.value.span(), "[unknow: unknow]".to_string()),
                 (index.value.span(), res.get_value().unwrap().to_string()),
-            )));
+            )))
         }
     }
 
