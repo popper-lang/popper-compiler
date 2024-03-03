@@ -31,12 +31,11 @@ impl<'a> LLVMValue<'a> {
     }
 }
 
-impl<'val> Into<BasicValueEnum<'val>> for LLVMValue<'val> {
-    fn into(self) -> BasicValueEnum<'val> {
-        self.value
+impl<'val> From<LLVMValue<'val>> for BasicValueEnum<'val> {
+    fn from(value: LLVMValue<'val>) -> BasicValueEnum<'val> {
+        value.basic_value_enum()
     }
 }
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Flag {
     CantLoad,

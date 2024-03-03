@@ -134,7 +134,7 @@ impl Builder {
     }
 
     pub fn get_entry_block(&self) -> Option<BasicBlock> {
-        self.entry_block.clone()
+        self.entry_block
     }
 
     pub fn set_entry_block(&mut self, basic_block: BasicBlock) {

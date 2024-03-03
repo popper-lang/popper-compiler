@@ -20,8 +20,8 @@ impl PointerTypes {
         FunctionType::new(args, self.to_type_enum(), is_var_args)
     }
 
-    pub fn to_type_enum(&self) -> TypeEnum {
-        TypeEnum::PointerType(*self)
+    pub fn to_type_enum(self) -> TypeEnum {
+        TypeEnum::PointerType(self)
     }
 
     pub fn get_llvm_ref(&self) -> LLVMTypeRef {

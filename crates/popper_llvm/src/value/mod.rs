@@ -51,8 +51,7 @@ pub trait Value {
         let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
             .to_str()
             .unwrap();
-        let string = str_slice.to_owned();
-        string
+        str_slice.to_owned()
     }
     fn print_to_stderr(&self) {
         eprintln!("{}", self.print_to_string());
@@ -163,9 +162,9 @@ impl Into<ValueEnum> for LLVMValueRef {
     }
 }
 
-impl Into<LLVMValueRef> for ValueEnum {
-    fn into(self) -> LLVMValueRef {
-        match self {
+impl From<ValueEnum> for LLVMValueRef {
+    fn from(value: ValueEnum) -> LLVMValueRef {
+        match value {
             ValueEnum::IntValue(int_value) => int_value.as_value_ref(),
             ValueEnum::FloatValue(float_value) => float_value.as_value_ref(),
             ValueEnum::FunctionValue(function_value) => function_value.as_value_ref(),

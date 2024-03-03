@@ -27,7 +27,7 @@ impl IntValue {
     }
 
     pub fn get_int_type(&self) -> int_types::IntType {
-        self.int_type.clone()
+        self.int_type
     }
 
     pub fn get_value(&self) -> u32 {

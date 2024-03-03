@@ -289,7 +289,7 @@ impl<'ctx> Compiler<'ctx> {
         id
     }
 
-    pub fn compile_cdylib(&mut self, path: &String) {
+    pub fn compile_cdylib(&mut self, path: &str) {
         let path = std::path::Path::new(path.as_str());
 
         if !path.exists() {
@@ -315,7 +315,7 @@ impl<'ctx> Compiler<'ctx> {
 
         let file_path = lib_path.join(new_name);
 
-        let output = cmd!(rustc "--crate-type=cdylib" path.to_str().unwrap().to_string() "-o" file_path.to_str().unwrap());
+        let output = cmd!(rustc "--crate-type=cdylib" path.to_str().unwrap() "-o" file_path.to_str().unwrap());
 
         if !output.status.success() {
             panic!("Failed to compile cdylib: {}", output.status);
@@ -407,7 +407,7 @@ impl<'ctx> Compiler<'ctx> {
             let popper_vl = self
                 .builder
                 .build_alloca(
-                    self.llvm_types.get("va_list").unwrap().clone(),
+                    *self.llvm_types.get("va_list").unwrap(),
                     "__popper_vl",
                 )
                 .unwrap()
@@ -416,7 +416,7 @@ impl<'ctx> Compiler<'ctx> {
                 .insert("__popper_vl".to_string(), LLVMValue::new(popper_vl));
             let va_start = self.llvm_functions.get("llvm.va_start").unwrap();
             self.builder
-                .build_call(va_start.clone(), &[popper_vl.into()], "")
+                .build_call(*va_start, &[popper_vl.into()], "")
                 .unwrap();
         }
         for body in func.body.body.iter() {
@@ -523,10 +523,10 @@ impl<'ctx> Compiler<'ctx> {
                 };
                 self.builder
                     .build_call(
-                        self.llvm_functions
+                        *self.llvm_functions
                             .get("popper.va_arg_null_check")
                             .unwrap()
-                            .clone(),
+                        ,
                         &[ptr.into()],
                         "",
                     )
@@ -629,7 +629,7 @@ impl<'ctx> Compiler<'ctx> {
                 .expect("llvm.va_end not found.");
             self.builder
                 .build_call(
-                    va_end.clone(),
+                    *va_end,
                     &[self
                         .env
                         .get("__popper_vl")
@@ -651,7 +651,7 @@ impl<'ctx> Compiler<'ctx> {
     pub fn get_unloaded_var(&self, name: String) -> LLVMValue<'_> {
         self.env
             .get(&name)
-            .expect(&format!("variable {} not found(get_unloaded_var)", name))
+            .unwrap_or_else(|| panic!("variable {} not found(get_unloaded_var)", name.clone()))
             .clone()
     }
 
@@ -659,7 +659,9 @@ impl<'ctx> Compiler<'ctx> {
         let var = self
             .env
             .get(&name)
-            .expect(&format!("variable {} not found(get_var)", name));
+            .unwrap_or_else(
+                || panic!("variable {} not found(get_var)", name.clone()),
+            )
         if var.basic_value_enum().is_pointer_value() && self.can_load && var.can_load() {
             LLVMValue::new(
                 self.builder
@@ -682,7 +684,7 @@ impl<'ctx> Compiler<'ctx> {
                 let var = self
                     .env
                     .get(&v.name)
-                    .expect(&format!("variable {} not found", v.name));
+                    .unwrap_or_else(|| panic!("variable {} not found(compile_value)", v.name.clone()))
                 let ty = self.mir_type_to_llvm_type(v.ty.clone());
                 if var.basic_value_enum().is_pointer_value() {
                     if self.can_load && var.can_load() {
@@ -708,7 +710,7 @@ impl<'ctx> Compiler<'ctx> {
                 .i32_type()
                 .const_int(i.value as u64, false)
                 .into(),
-            Const::Float(f) => self.context.f32_type().const_float(f.value as f64).into(),
+            Const::Float(f) => self.context.f32_type().const_float(f.value).into(),
             Const::String(s) => {
                 let s = &s
                     .string
@@ -752,7 +754,9 @@ impl<'ctx> Compiler<'ctx> {
         let var = self
             .env
             .get_mut(var)
-            .expect(&format!("variable {} not found(add_flag_to_var)", var));
+            .unwrap_or_else(||
+                panic!("variable {} not found(add_flag_to_var)", var)
+            );
         var.add_flag(flag);
     }
 

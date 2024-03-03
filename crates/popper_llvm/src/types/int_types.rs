@@ -8,9 +8,10 @@ use llvm_sys::prelude::LLVMTypeRef;
 
 macro_rules! impl_into_int_type {
     ($type:ty) => {
-        impl Into<IntType> for $type {
-            fn into(self) -> IntType {
-                IntType::new_sized(std::mem::size_of::<Self>() as u32)
+        impl From<$type> for IntType {
+            fn from(_: $type) -> IntType {
+                IntType::new_sized(std::mem::size_of::<$type>() as u32)
+
             }
         }
     };
@@ -23,7 +24,7 @@ pub struct IntType {
 }
 
 impl IntType {
-    pub fn new_with_llvm_ref(llvm_ty: LLVMTypeRef) -> Self {
+    pub unsafe fn new_with_llvm_ref(llvm_ty: LLVMTypeRef) -> Self {
         let size = unsafe { LLVMGetIntTypeWidth(llvm_ty) };
         Self {
             int_type: llvm_ty,
@@ -46,7 +47,7 @@ impl IntType {
     }
 
     pub fn int(&self, value: u32, sign_extend: bool) -> IntValue {
-        IntValue::new_const(value, self.clone(), sign_extend)
+        IntValue::new_const(value, *self, sign_extend)
     }
 
     pub fn array(&self, length: u64) -> ArrayType {
@@ -57,10 +58,10 @@ impl IntType {
     }
 
     pub fn bool(&self, value: bool) -> IntValue {
-        IntValue::new_const(value as u32, self.clone(), false)
+        IntValue::new_const(value as u32, *self, false)
     }
     pub fn void(&self) -> IntValue {
-        IntValue::new_const(0, self.clone(), false)
+        IntValue::new_const(0, *self, false)
     }
 
     pub fn to_type_enum(self) -> TypeEnum {

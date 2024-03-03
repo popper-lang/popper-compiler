@@ -11,7 +11,7 @@ mod pointer_types;
 #[macro_export]
 macro_rules! types {
     (fn($($t:tt),*) -> $r:tt) => {
-        crate::types::function_types::FunctionType::new(
+        $crate::types::function_types::FunctionType::new(
             vec![$(types!($t)),*],
             types!($r),
             false
@@ -19,26 +19,26 @@ macro_rules! types {
     };
 
     ([$t:tt; $s:expr]) => {
-        crate::types::TypeEnum::ArrayType(crate::types::array_types::ArrayType::new(types!($t), $s))
+        $crate::types::TypeEnum::ArrayType(crate::types::array_types::ArrayType::new(types!($t), $s))
     };
     (i1) => {
-        crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(1))
+        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(1))
     };
 
     (i8) => {
-        crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(8))
+        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(8))
     };
 
     (i16) => {
-        crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(16))
+        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(16))
     };
 
     (i32) => {
-        crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(32))
+        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(32))
     };
 
     (i64) => {
-        crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(64))
+        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(64))
     };
 
 
@@ -53,8 +53,7 @@ pub trait Type {
         let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
             .to_str()
             .unwrap();
-        let string = str_slice.to_owned();
-        string
+        str_slice.to_owned()
     }
     fn print_to_stderr(&self) {
         eprintln!("{}", self.print_to_string());
@@ -96,26 +95,28 @@ impl TypeEnum {
     }
 }
 
-impl Into<TypeEnum> for LLVMTypeRef {
-    fn into(self) -> TypeEnum {
-        let type_ = unsafe { llvm_sys::core::LLVMGetTypeKind(self) };
+
+impl From<LLVMTypeRef> for TypeEnum {
+    fn from(value: LLVMTypeRef) -> Self {
+        let type_ = unsafe { llvm_sys::core::LLVMGetTypeKind(value) };
         match type_ {
             llvm_sys::LLVMTypeKind::LLVMIntegerTypeKind => {
-                TypeEnum::IntType(int_types::IntType::new_with_llvm_ref(self))
+                TypeEnum::IntType(int_types::IntType::new_with_llvm_ref(value))
             }
             llvm_sys::LLVMTypeKind::LLVMDoubleTypeKind => {
-                TypeEnum::FloatType(float_types::FloatType::new_with_llvm_ref(self))
+                TypeEnum::FloatType(float_types::FloatType::new_with_llvm_ref(value))
             }
             llvm_sys::LLVMTypeKind::LLVMFunctionTypeKind => {
-                TypeEnum::FunctionType(function_types::FunctionType::new_with_llvm_ref(self))
+                TypeEnum::FunctionType(function_types::FunctionType::new_with_llvm_ref(value))
             }
             llvm_sys::LLVMTypeKind::LLVMArrayTypeKind => {
-                TypeEnum::ArrayType(array_types::ArrayType::new_with_llvm_ref(self))
+                TypeEnum::ArrayType(array_types::ArrayType::new_with_llvm_ref(value))
             }
             llvm_sys::LLVMTypeKind::LLVMPointerTypeKind => {
-                TypeEnum::PointerType(pointer_types::PointerTypes::new_llvm_ref(self))
+                TypeEnum::PointerType(pointer_types::PointerTypes::new_llvm_ref(value))
             }
             _ => panic!("Unknown type"),
         }
+
     }
 }

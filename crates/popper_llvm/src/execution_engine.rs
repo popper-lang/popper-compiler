@@ -63,7 +63,7 @@ impl ExecutionEngine {
     pub fn get_function<T: Copy + Sized>(&self, name: &str) -> T {
         let _ = self
             .find_function(name)
-            .expect(&format!("Function {} not found", name));
+            .unwrap_or_else(|| panic!("Function {} not found", name));
         let address = self.get_function_address(name);
         assert_eq!(
             address % std::mem::align_of::<T>() as u64,

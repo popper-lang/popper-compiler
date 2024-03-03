@@ -31,7 +31,7 @@ impl ArrayType {
         Self { array_type, size }
     }
 
-    pub fn new_with_llvm_ref(array_type: LLVMTypeRef) -> Self {
+    pub unsafe fn new_with_llvm_ref(array_type: LLVMTypeRef) -> Self {
         Self {
             array_type,
             size: unsafe { LLVMGetArrayLength(array_type) },

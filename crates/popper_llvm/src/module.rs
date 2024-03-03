@@ -27,7 +27,6 @@ impl Module {
         unsafe {
             let mut buf_uninit = std::mem::MaybeUninit::uninit();
             let mut mod_uninit = std::mem::MaybeUninit::uninit();
-            let buf: LLVMMemoryBufferRef;
 
             let res_buf = LLVMCreateMemoryBufferWithContentsOfFile(
                 path.as_ptr(),
@@ -42,7 +41,7 @@ impl Module {
                 );
             }
 
-            buf = buf_uninit.assume_init();
+            let buf: LLVMMemoryBufferRef = buf_uninit.assume_init();
 
             let result = LLVMParseBitcodeInContext2(context.context, buf, mod_uninit.as_mut_ptr());
             if result != 0 {
@@ -68,7 +67,7 @@ impl Module {
     }
 
     pub fn get_context(&self) -> Context {
-        self.context.clone()
+        *self.context
     }
 
     pub fn dump(&self) {

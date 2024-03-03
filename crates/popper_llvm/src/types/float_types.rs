@@ -20,7 +20,7 @@ impl FloatType {
     }
 
     pub fn float(&self, value: f64) -> FloatValue {
-        FloatValue::new_const(value, self.clone())
+        FloatValue::new_const(value, *self)
     }
 
     pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {

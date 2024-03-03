@@ -19,36 +19,35 @@ impl Context {
     }
 
     pub fn new_module(&self, name: &str) -> Module {
-        Module::new(name, self.clone())
+        Module::new(name, *self)
     }
 
     pub fn new_builder(&mut self) -> Builder {
-        let builder = Builder::new(self.clone());
-        builder
+         Builder::new(*self)
     }
 
     pub fn void_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(0, self.clone())
+        int_types::IntType::new_with_context(0, *self)
     }
 
     pub fn i1_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(1, self.clone())
+        int_types::IntType::new_with_context(1, *self)
     }
 
     pub fn i8_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(8, self.clone())
+        int_types::IntType::new_with_context(8, *self)
     }
 
     pub fn i16_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(16, self.clone())
+        int_types::IntType::new_with_context(16, *self)
     }
 
     pub fn i32_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(32, self.clone())
+        int_types::IntType::new_with_context(32, *self)
     }
 
     pub fn i64_type(&self) -> int_types::IntType {
-        int_types::IntType::new_with_context(64, self.clone())
+        int_types::IntType::new_with_context(64, *self)
     }
 
     pub fn float_type(&self) -> float_types::FloatType {
@@ -60,6 +59,13 @@ impl Context {
         let block = unsafe {
             LLVMAppendBasicBlockInContext(self.context, fn_value.function_value, name.as_ptr())
         };
-        BasicBlock::new(block, self.clone())
+        BasicBlock::new(block, *self)
+    }
+}
+
+
+impl Default for Context {
+    fn default() -> Self {
+        Self::new()
     }
 }

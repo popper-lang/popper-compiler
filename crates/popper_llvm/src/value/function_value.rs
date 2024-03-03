@@ -13,7 +13,7 @@ pub struct FunctionValue {
 }
 
 impl FunctionValue {
-    pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
+    pub unsafe fn new_llvm_ref(lref: LLVMValueRef) -> Self {
         let function_type =
             function_types::FunctionType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
         Self {
