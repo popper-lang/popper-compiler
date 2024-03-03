@@ -1,5 +1,5 @@
 use crate::Span;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -50,41 +50,54 @@ pub enum TypeKind {
     StructInstance(String),
 }
 
-impl ToString for TypeKind {
-    fn to_string(&self) -> String {
-        match self.clone() {
-            TypeKind::Tuple(tys) => format!(
-                "({})",
-                tys.iter()
-                    .map(|ty| ty.type_kind.to_string())
-                    .collect::<Vec<String>>()
-                    .join(",")
-            ),
-            TypeKind::List(ty, size) => format!("[{}:{}]", ty.type_kind.to_string().clone(), size),
-            TypeKind::Function(tys, ret, varargs) => format!(
-                "func({}{}): {}",
-                tys.iter()
-                    .map(|t| t.type_kind.to_string())
-                    .collect::<Vec<String>>()
-                    .join(","),
-                if varargs { "..." } else { "" },
-                ret.type_kind.to_string()
-            ),
-            TypeKind::Pointer(ty) => format!("*{}", ty.type_kind.to_string()),
-            TypeKind::Unit => String::from("()"),
-            TypeKind::Int => String::from("int"),
-            TypeKind::Float => String::from("float"),
-            TypeKind::Bool => String::from("bool"),
-            TypeKind::Char => String::from("char"),
-            TypeKind::String(len) => format!("string:{}", len),
-            TypeKind::Struct(fields) => {
-                let mut fields_str = String::new();
-                for (name, ty) in fields {
-                    fields_str.push_str(&format!("{}: {},", name, ty.type_kind.to_string()));
+impl Display for TypeKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TypeKind::Tuple(types) => {
+                write!(f, "(")?;
+                for (i, ty) in types.iter().enumerate() {
+                    write!(f, "{}", ty.type_kind)?;
+                    if i != types.len() - 1 {
+                        write!(f, ", ")?;
+                    }
                 }
-                format!("struct {{{}}}", fields_str)
+                write!(f, ")")
             }
-            TypeKind::StructInstance(name) => format!("struct {}", name),
+            TypeKind::List(ty, size) => write!(f, "[{}; {}]", ty.type_kind, size),
+            TypeKind::Function(args, ret, var_args) => {
+                write!(f, "func(")?;
+                for (i, ty) in args.iter().enumerate() {
+                    write!(f, "{}", ty.type_kind)?;
+                    if i != args.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, ") : {}", ret.type_kind)?;
+                if *var_args {
+                    write!(f, "...")
+                } else {
+                    Ok(())
+                }
+            }
+            TypeKind::Pointer(ty) => write!(f, "*{}", ty.type_kind),
+            TypeKind::Unit => write!(f, "()"),
+            TypeKind::Int => write!(f, "int"),
+            TypeKind::Float => write!(f, "float"),
+            TypeKind::Bool => write!(f, "bool"),
+            TypeKind::Char => write!(f, "char"),
+            TypeKind::String(size) => write!(f, "string[{}]", size),
+            TypeKind::Struct(fields) => {
+                write!(f, "struct {{")?;
+                for (i, (name, ty)) in fields.iter().enumerate() {
+                    write!(f, "{}: {}", name, ty.type_kind)?;
+                    if i != fields.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "}}")
+            }
+            TypeKind::StructInstance(name) => write!(f, "struct {}", name),
         }
+
     }
 }

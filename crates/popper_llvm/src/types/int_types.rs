@@ -24,6 +24,8 @@ pub struct IntType {
 }
 
 impl IntType {
+    /// # Safety
+    /// This function is unsafe because it does not check if the LLVMTypeRef is a valid int type.
     pub unsafe fn new_with_llvm_ref(llvm_ty: LLVMTypeRef) -> Self {
         let size = unsafe { LLVMGetIntTypeWidth(llvm_ty) };
         Self {

@@ -24,6 +24,8 @@ impl ArrayValue {
         }
     }
 
+    /// # Safety
+    /// This function is unsafe because it does not check if the LLVMValueRef is a valid array value.
     pub unsafe fn new_llvm_ref(lref: LLVMValueRef) -> Self {
         let array_type =
             types::array_types::ArrayType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });

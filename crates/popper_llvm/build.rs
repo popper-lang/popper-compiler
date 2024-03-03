@@ -1,3 +1,4 @@
+#![allow(clippy::upper_case_acronyms)]
 struct LLVM {
     version: String,
     prefix: String,
@@ -9,7 +10,7 @@ fn found_llvm() -> Option<LLVM> {
         .output();
 
     if llvm_prefix.is_err() {
-        return None;
+        None
     } else {
         let llvm_prefix = llvm_prefix.unwrap();
         let llvm_prefix = std::str::from_utf8(&llvm_prefix.stdout).unwrap();
@@ -45,7 +46,7 @@ fn main() {
     let llvm = llvm.unwrap();
     let llvm_version = llvm.version;
     let llvm_prefix = llvm.prefix;
-    let major_version = llvm_version.split(".").next().unwrap();
+    let major_version = llvm_version.split('.').next().unwrap();
     if major_version != "17" {
         panic!(
             r#"

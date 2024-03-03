@@ -70,6 +70,10 @@ impl StringLiteral {
     pub fn len(&self) -> usize {
         self.value.len()
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.value.is_empty()
+    }
 }
 
 #[cfg_attr(feature = "extra-trait", derive(Debug, PartialEq))]

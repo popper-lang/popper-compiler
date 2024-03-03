@@ -12,5 +12,5 @@ pub fn hash_file(path: &str) -> String {
         .iter()
         .map(|byte| format!("{:02x}", byte))
         .collect::<String>();
-    return hash;
+    hash
 }

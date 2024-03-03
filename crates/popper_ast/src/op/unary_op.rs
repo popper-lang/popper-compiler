@@ -1,3 +1,6 @@
+use std::fmt::Display;
+use std::str::FromStr;
+
 use crate::expr::Expression;
 use crate::span::Span;
 
@@ -35,21 +38,23 @@ pub enum UnaryOpKind {
     Not,
 }
 
-impl ToString for UnaryOpKind {
-    fn to_string(&self) -> String {
+impl Display for UnaryOpKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            UnaryOpKind::Neg => "-".to_string(),
-            UnaryOpKind::Not => "!".to_string(),
+            UnaryOpKind::Neg => write!(f, "-"),
+            UnaryOpKind::Not => write!(f, "!"),
         }
     }
 }
 
-impl UnaryOpKind {
-    pub fn from_str(s: &str) -> Option<Self> {
+impl FromStr for UnaryOpKind {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "-" => Some(UnaryOpKind::Neg),
-            "!" => Some(UnaryOpKind::Not),
-            _ => None,
+            "-" => Ok(UnaryOpKind::Neg),
+            "!" => Ok(UnaryOpKind::Not),
+            _ => Err(()),
         }
     }
 }

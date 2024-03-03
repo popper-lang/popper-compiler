@@ -19,26 +19,26 @@ macro_rules! types {
     };
 
     ([$t:tt; $s:expr]) => {
-        $crate::types::TypeEnum::ArrayType(crate::types::array_types::ArrayType::new(types!($t), $s))
+        $crate::types::TypeEnum::ArrayType($crate::types::array_types::ArrayType::new(types!($t), $s))
     };
     (i1) => {
-        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(1))
+        $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(1))
     };
 
     (i8) => {
-        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(8))
+        $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(8))
     };
 
     (i16) => {
-        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(16))
+        $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(16))
     };
 
     (i32) => {
-        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(32))
+        $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(32))
     };
 
     (i64) => {
-        $crate::types::TypeEnum::IntType(crate::types::int_types::IntType::new_sized(64))
+        $crate::types::TypeEnum::IntType($crate::types::int_types::IntType::new_sized(64))
     };
 
 

@@ -142,31 +142,34 @@ impl ValueEnum {
     }
 }
 
-impl Into<ValueEnum> for LLVMValueRef {
-    fn into(self) -> ValueEnum {
-        let value_type = unsafe { LLVMTypeOf(self) };
-        let value_type_enum = value_type.into();
-        match value_type_enum {
-            TypeEnum::IntType(_) => ValueEnum::IntValue(
-                unsafe { int_value::IntValue::new_llvm_ref(self) }
-            ),
-            TypeEnum::FloatType(_) => {
-                ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(self))
+impl From<LLVMValueRef> for ValueEnum {
+    fn from(value: LLVMValueRef) -> Self {
+        unsafe {
+            let value_type = LLVMTypeOf(value);
+            let value_type_enum = value_type.into();
+            match value_type_enum {
+                TypeEnum::IntType(_) => ValueEnum::IntValue(
+                    int_value::IntValue::new_llvm_ref(value)
+                ),
+                TypeEnum::FloatType(_) => {
+                    ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(value))
+                }
+                TypeEnum::FunctionType(_) => {
+                    ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(value))
+                }
+                TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(ArrayValue::new_llvm_ref(value)),
+                TypeEnum::PointerType(_) => {
+                    ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(value))
+                }
             }
-            TypeEnum::FunctionType(_) => {
-                ValueEnum::FunctionValue(unsafe { function_value::FunctionValue::new_llvm_ref(self) })
-            }
-            TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(unsafe { ArrayValue::new_llvm_ref(self) }),
-            TypeEnum::PointerType(_) => {
-                ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(self))
-            }
+
         }
     }
 }
 
-impl From<ValueEnum> for LLVMValueRef {
-    fn from(value: ValueEnum) -> LLVMValueRef {
-        match value {
+impl AsValueRef for ValueEnum {
+    fn as_value_ref(&self) -> LLVMValueRef {
+        match self {
             ValueEnum::IntValue(int_value) => int_value.as_value_ref(),
             ValueEnum::FloatValue(float_value) => float_value.as_value_ref(),
             ValueEnum::FunctionValue(function_value) => function_value.as_value_ref(),
@@ -174,6 +177,16 @@ impl From<ValueEnum> for LLVMValueRef {
             ValueEnum::PointerValue(pointer_value) => pointer_value.as_value_ref(),
         }
     }
+}
+
+impl From<ValueEnum> for LLVMValueRef {
+    fn from(value: ValueEnum) -> LLVMValueRef {
+        value.as_value_ref()
+    }
+}
+
+pub trait AsValueRef {
+    fn as_value_ref(&self) -> LLVMValueRef;
 }
 
 pub trait ToValue {

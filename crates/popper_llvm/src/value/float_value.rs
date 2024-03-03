@@ -11,9 +11,11 @@ pub struct FloatValue {
 }
 
 impl FloatValue {
-    pub fn new_llvm_ref(lref: LLVMValueRef) -> Self {
+    /// # Safety
+    /// This function is unsafe because it does not check if the LLVMValueRef is a valid float value.
+    pub unsafe fn new_llvm_ref(lref: LLVMValueRef) -> Self {
         let float_type =
-            types::float_types::FloatType::new_with_llvm_ref(unsafe { LLVMTypeOf(lref) });
+            types::float_types::FloatType::new_with_llvm_ref( LLVMTypeOf(lref));
         Self {
             float_value: lref,
             float_type,
