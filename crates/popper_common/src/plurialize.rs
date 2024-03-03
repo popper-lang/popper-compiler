@@ -1,5 +1,3 @@
-
-
 ///
 /// this function takes a word and plurialize if there are many (>1) otherwise do nothing to the word
 /// # Arguments
@@ -21,10 +19,8 @@
 /// assert_eq!(plurialize(word, number_of_dog), "dog")
 /// ```
 pub fn plurialize<T>(word: &str, number: T) -> String
-where T: PartialOrd<usize> {
-    format!(
-        "{}{}", word,
-        if number > 1 { "s" } else { "" }
-    )
+where
+    T: PartialOrd<usize>,
+{
+    format!("{}{}", word, if number > 1 { "s" } else { "" })
 }
-

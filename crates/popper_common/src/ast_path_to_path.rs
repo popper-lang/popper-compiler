@@ -1,5 +1,3 @@
-
-
 /// Converts a path from the AST to a path that can be used by the compiler.
 pub fn ast_path_to_path(path: popper_ast::PathImport) -> std::path::PathBuf {
     let segments = path.segments;
