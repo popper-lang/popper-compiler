@@ -93,8 +93,30 @@ impl StmtVisitor for MirCompiler {
 
     }
 
-    fn visit_if_else_stmt(&mut self, _if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_if_else_stmt(&mut self, if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
+        let cond = self.visit_expr(if_else_stmt.condition)?;
+        let labels = self.new_labels(3);
+        let then_label = labels[0].clone();
+        let else_label = labels[1].clone();
+        let end_label = labels[2].clone();
+        self.push_on_label(BodyFn::CJump(
+            CJump::new(cond, then_label.name.clone(), else_label.name.clone())
+        ));
+        self.add_current_label();
+        self.set_current_label(then_label.clone());
+        self.visit_stmt(*if_else_stmt.body)?;
+        self.push_on_label(BodyFn::Jump(
+            Jump::new(end_label.clone().name)
+        ));
+        self.add_current_label();
+        self.set_current_label(else_label.clone());
+        self.visit_stmt(*if_else_stmt.else_body)?;
+        self.push_on_label(BodyFn::Jump(
+            Jump::new(end_label.clone().name)
+        ));
+        self.add_current_label();
+        self.set_current_label(end_label.clone());
+        Ok(())
     }
 
     fn visit_function(&mut self, function: Function) -> Result<Self::Output, Self::Error> {

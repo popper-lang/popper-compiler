@@ -255,8 +255,8 @@ If: Statement = {
 }
 
 IfElseStmt : (Expression, Statement, Statement) = {
-    <ifstmt: ConditionalStatement<"if">> "else" <else_body:Statement> => {
-        (ifstmt.0, ifstmt.1, else_body)
+    "if" <cond:Expr> <block: BlockStmt> "else" <else_body:Statement> => {
+        (cond, block, else_body)
     }
 }
 
@@ -778,6 +778,7 @@ Comma<T>: Vec<T> = {
 
 
 Statement: Statement = {
+    IfElse,
     BlockStmt,
     While,
     Let,
