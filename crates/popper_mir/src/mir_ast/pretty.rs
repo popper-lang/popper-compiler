@@ -137,7 +137,14 @@ impl Pretty {
                 self.result.push_str(", ");
                 self.pretty_value(add.rhs);
                 self.result.push('\n');
-            }
+            },
+            BodyFn::Sub(sub) => {
+                self.result.push_str(&format!("sub {}, ", sub.name));
+                self.pretty_value(sub.lhs);
+                self.result.push_str(", ");
+                self.pretty_value(sub.rhs);
+                self.result.push('\n');
+            },
             BodyFn::Alloc(alloc) => {
                 self.result.push_str(&format!("alloc {}, ", alloc.name));
                 self.pretty_type(alloc.ty);

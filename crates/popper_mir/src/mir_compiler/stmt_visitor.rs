@@ -64,8 +64,40 @@ impl StmtVisitor for MirCompiler {
         Ok(())
     }
 
-    fn visit_while_stmt(&mut self, _while_stmt: While) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_while_stmt(&mut self, while_stmt: While) -> Result<Self::Output, Self::Error> {
+        let labels = self.new_labels(3);
+        let cond_label = labels[0].clone();
+        let loop_label = labels[1].clone();
+        let end_label = labels[2].clone();
+
+        self.push_on_label(BodyFn::Jump(
+            Jump::new(cond_label.name.clone())
+        ));
+        self.add_current_label();
+
+        self.set_current_label(cond_label.clone());
+
+        let condition = self.visit_expr(while_stmt.condition)?;
+
+        self.push_on_label(BodyFn::CJump(
+            CJump::new(condition, loop_label.name.clone(), end_label.name.clone())
+        ));
+
+        self.add_current_label();
+
+        self.set_current_label(loop_label.clone());
+
+        self.visit_stmt(*while_stmt.body)?;
+
+        self.push_on_label(BodyFn::Jump(
+            Jump::new(cond_label.name.clone())
+        ));
+
+        self.add_current_label();
+        self.set_current_label(end_label.clone());
+
+        Ok(())
+
     }
 
     fn visit_if_stmt(&mut self, if_stmt: If) -> Result<Self::Output, Self::Error> {
@@ -141,6 +173,8 @@ impl StmtVisitor for MirCompiler {
             function.is_var_args,
             Body::new(vec![]),
         );
+        self.global.insert(name.clone(), ret.clone());
+
         self.current_fn = Some(func);
         self.current_label = Some(label);
         for stmt in function.body {
@@ -152,7 +186,7 @@ impl StmtVisitor for MirCompiler {
 
 
         self.local.clear();
-        self.global.insert(name.clone(), ret.clone());
+
 
 
         self.current_label = None;
@@ -167,6 +201,7 @@ impl StmtVisitor for MirCompiler {
         if self.current_label.is_none() {
             return Err(());
         }
+        self.is_returned = true;
         if let Some(expr) = return_expr.expression {
             let expr = self.visit_expr(*expr)?;
             self.current_label

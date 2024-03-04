@@ -1,5 +1,5 @@
 use crate::mir_ast::{
-    Add, BodyFn, Cmp, CmpOp, Const, Deref, Index as MirIndex, List, MirBool, MirFloat, MirInt, MirList, MirString, Ref, Type, VaArg, Value, Variable
+    Add, BodyFn, Cmp, CmpOp, Const, Deref, Index as MirIndex, List, MirBool, MirFloat, MirInt, MirList, MirString, Ref, Sub, Type, VaArg, Value, Variable
 };
 use crate::mir_compiler::MirCompiler;
 use popper_ast::visitor::ExprVisitor;
@@ -97,6 +97,9 @@ impl ExprVisitor for MirCompiler {
             BinOpKind::Add => {
                 body.push(BodyFn::Add(Add::new(out.clone(), lhs, rhs)));
             },
+            BinOpKind::Sub => {
+                body.push(BodyFn::Sub(Sub::new(out.clone(), lhs, rhs)));
+            },
             BinOpKind::Eq => {
                 body.push(BodyFn::Cmp(
                     Cmp::new(
@@ -107,6 +110,37 @@ impl ExprVisitor for MirCompiler {
                     )
                 ))
             },
+            BinOpKind::Lt => {
+                body.push(BodyFn::Cmp(
+                    Cmp::new(
+                        out.clone(),
+                        CmpOp::Lt,
+                        lhs,
+                        rhs
+                    )
+                ))
+            },
+            BinOpKind::Gt => {
+                body.push(BodyFn::Cmp(
+                    Cmp::new(
+                        out.clone(),
+                        CmpOp::Gt,
+                        lhs,
+                        rhs
+                    )
+                ))
+            },
+            BinOpKind::Lte => {
+                body.push(BodyFn::Cmp(
+                    Cmp::new(
+                        out.clone(),
+                        CmpOp::Le,
+                        lhs,
+                        rhs
+                    )
+                ))
+            },
+
             _ => unimplemented!(),
         }
 

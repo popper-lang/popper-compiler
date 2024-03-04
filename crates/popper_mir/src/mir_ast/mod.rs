@@ -2,6 +2,35 @@ pub mod pretty;
 
 use std::fmt::Display;
 
+macro_rules! bin_op_impl {
+    ($ty:ident, $n:ident) => {
+        #[derive(Debug, Clone, PartialEq)]
+        pub struct $ty {
+            pub name: String,
+            pub lhs: Value,
+            pub rhs: Value,
+        }
+
+        impl $ty {
+            pub fn new(name: String, lhs: Value, rhs: Value) -> Self {
+                Self { name, lhs, rhs }
+            }
+        }
+
+        impl MirCompile for $ty {
+            fn compile(&self) -> String {
+                format!(
+                    "{} {}, {}, {}",
+                    stringify!($n),
+                    self.name,
+                    self.lhs.compile(),
+                    self.rhs.compile()
+                )
+            }
+        }
+    };
+}
+
 pub trait MirCompile {
     fn compile(&self) -> String;
 }
@@ -348,6 +377,7 @@ pub enum BodyFn {
     Call(Call),     // call <name>, [<args>], <ret>
     Return(Return), // ret <value>
     Add(Add),       // add <name>, <value>, <res>
+    Sub(Sub),       // sub <name>, <value>, <res>
     Index(Index),   // index <res>, <list>, <index>
     VaArg(VaArg),   // va_arg <res>, <ty>
     Ref(Ref),       // ref <val>, <res>
@@ -355,6 +385,7 @@ pub enum BodyFn {
     Jump(Jump),     // ju <label>
     CJump(CJump),   // cj <cond>, <label>
     Cmp(Cmp),       // cmp <op> <lhs>, <rhs>, <res>
+
 }
 
 impl MirCompile for BodyFn {
@@ -365,6 +396,7 @@ impl MirCompile for BodyFn {
             BodyFn::Call(call) => call.compile(),
             BodyFn::Return(ret) => ret.compile(),
             BodyFn::Add(add) => add.compile(),
+            BodyFn::Sub(sub) => sub.compile(),
             BodyFn::Index(index) => index.compile(),
             BodyFn::VaArg(va_arg) => va_arg.compile(),
             BodyFn::Ref(r#ref) => r#ref.compile(),
@@ -452,29 +484,8 @@ impl MirCompile for Return {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Add {
-    pub name: String,
-    pub lhs: Value,
-    pub rhs: Value,
-}
-
-impl Add {
-    pub fn new(name: String, lhs: Value, rhs: Value) -> Self {
-        Self { name, lhs, rhs }
-    }
-}
-
-impl MirCompile for Add {
-    fn compile(&self) -> String {
-        format!(
-            "add {}, {}, {}",
-            self.name,
-            self.lhs.compile(),
-            self.rhs.compile()
-        )
-    }
-}
+bin_op_impl!(Add, add);
+bin_op_impl!(Sub, sub);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Index {

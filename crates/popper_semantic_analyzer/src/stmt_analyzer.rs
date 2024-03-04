@@ -74,7 +74,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
-        let mut analyzer = StmtAnalyzer::new(self.env.clone());
+        let mut analyzer = StmtAnalyzer::from(self.clone());
 
         let mut result = SymbolFlags::new(block.span());
 
@@ -123,7 +123,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         }
 
         let mut analyzer = StmtAnalyzer::new(self.env.clone());
-
+        analyzer.is_return = self.is_return;
+        analyzer.return_type = self.return_type.clone();
         let _body = analyzer.visit_stmt(*if_stmt.body)?;
 
         Ok(symbol_flag)
@@ -185,19 +186,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
 
         self.return_type = Some(*return_type.clone());
 
-        for stmt in function.body {
-            self.visit_stmt(stmt)?;
-        }
-
-        if !(self.is_return || self.return_type.is_some() && self.return_type.clone().unwrap().is_same(&ValueFlag::None)) {
-            return Err(Box::new(TypeMismatch::new(
-                (function.span, return_type.to_string()),
-                (function.span, ValueFlag::None.to_string()),
-            )));
-        }
-
         let symbol_flag = SymbolFlags::new(function.span)
-            .set_function(args, *return_type, function.is_var_args)
+            .set_function(args, *return_type.clone(), function.is_var_args)
             .clone();
 
         let function_flag = VariableFlag::new(
@@ -209,6 +199,19 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         );
 
         self.env.add_variable(function_flag);
+
+        for stmt in function.body {
+            self.visit_stmt(stmt)?;
+        }
+
+        if !(self.is_return || self.return_type.is_some() && self.return_type.clone().unwrap().is_same(&ValueFlag::None)) {
+            return Err(Box::new(TypeMismatch::new(
+                (function.span, return_type.to_string()),
+                (function.span, ValueFlag::None.to_string()),
+            )));
+        }
+
+
 
         Ok(SymbolFlags::new(function.span))
     }

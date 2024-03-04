@@ -2,10 +2,8 @@ import std.io;
 
 
 func main(): int {
-    if 1 eq 0 {
+    while true {
         printf("Hello, World!\n");
-    } else {
-        printf("Goodbye, World!\n");
     }
     return 0;
 }

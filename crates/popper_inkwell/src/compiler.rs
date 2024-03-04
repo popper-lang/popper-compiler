@@ -605,6 +605,21 @@ impl<'ctx> Compiler<'ctx> {
                 self.builder
                     .build_store(var, val.as_basic_value_enum())
                     .unwrap();
+            },
+            BodyFn::Sub(s) => {
+                let lhs = self.compile_value(&s.lhs).basic_value_enum();
+                let rhs = self.compile_value(&s.rhs).basic_value_enum();
+                let val = self
+                    .builder
+                    .build_int_sub(lhs.into_int_value(), rhs.into_int_value(), "")
+                    .unwrap();
+                let var = self
+                    .get_unloaded_var(s.name.clone())
+                    .basic_value_enum()
+                    .into_pointer_value();
+                self.builder
+                    .build_store(var, val.as_basic_value_enum())
+                    .unwrap();
             }
             BodyFn::Index(i) => {
                 self.can_load = false;

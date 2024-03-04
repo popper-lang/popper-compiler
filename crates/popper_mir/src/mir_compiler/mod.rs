@@ -20,6 +20,7 @@ pub struct MirCompiler {
     pub(crate) can_alloc: bool,
     let_name: Option<String>,
     is_let_name_used: bool,
+    is_returned: bool,
 }
 
 impl MirCompiler {
@@ -43,6 +44,7 @@ impl MirCompiler {
             label_counter: 0,
             let_name: None,
             is_let_name_used: false,
+            is_returned: false,
         }
     }
 
@@ -154,6 +156,9 @@ impl MirCompiler {
     }
 
     pub fn push_on_label(&mut self, f: BodyFn) {
+        if self.is_returned {
+            return;
+        }
         self.current_label.as_mut().unwrap().push(f);
     }
 
