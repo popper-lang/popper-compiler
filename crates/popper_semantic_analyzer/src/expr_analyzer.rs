@@ -177,8 +177,10 @@ impl ExprVisitor for ExprAnalyzer {
     fn visit_bin_op(&mut self, bin_op: BinOp) -> Result<Self::Output, Self::Error> {
         let flag_lhs = self.visit_expr(*bin_op.lhs)?;
         let flag_rhs = self.visit_expr(*bin_op.rhs)?;
-        if flag_lhs.is_same_value(flag_rhs.clone()) {
+        if flag_lhs.is_same_value(flag_rhs.clone()) && bin_op.op.is_arithmetic() {
             Ok(flag_lhs)
+        } else if flag_lhs.is_same_value(flag_rhs.clone()) && bin_op.op.is_comparison() {
+            Ok(SymbolFlags::new(bin_op.span).set_boolean().clone())
         } else {
             Err(Box::new(TypeMismatch::new(
                 (

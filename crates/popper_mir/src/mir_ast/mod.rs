@@ -286,15 +286,15 @@ impl MirCompile for Argument {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Body {
-    pub body: Vec<BodyFn>,
+    pub body: Vec<Label>,
 }
 
 impl Body {
-    pub fn new(body: Vec<BodyFn>) -> Self {
+    pub fn new(body: Vec<Label>) -> Self {
         Self { body }
     }
-    pub fn push(&mut self, body_fn: BodyFn) {
-        self.body.push(body_fn);
+    pub fn push(&mut self, label: Label) {
+        self.body.push(label);
     }
 }
 
@@ -302,9 +302,42 @@ impl MirCompile for Body {
     fn compile(&self) -> String {
         self.body
             .iter()
-            .map(|body_fn| body_fn.compile())
+            .map(|label| label.compile())
             .collect::<Vec<String>>()
             .join("\n\t")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Label {
+    pub name: String,
+    pub body: Vec<BodyFn>,
+}
+
+impl Label {
+    pub fn new(name: String, body: Vec<BodyFn>) -> Self {
+        Self { name, body }
+    }
+    pub fn push(&mut self, body: BodyFn) {
+        self.body.push(body);
+    }
+
+    pub fn is_first(&self) -> bool {
+        self.name == "entry"
+    }
+}
+
+impl MirCompile for Label {
+    fn compile(&self) -> String {
+        format!(
+            "label {} {{\n\t{}\n}}",
+            self.name,
+            self.body
+                .iter()
+                .map(|body| body.compile())
+                .collect::<Vec<String>>()
+                .join("\n\t")
+        )
     }
 }
 
@@ -319,6 +352,9 @@ pub enum BodyFn {
     VaArg(VaArg),   // va_arg <res>, <ty>
     Ref(Ref),       // ref <val>, <res>
     Deref(Deref),   // deref <val>, <res>
+    Jump(Jump),     // ju <label>
+    CJump(CJump),   // cj <cond>, <label>
+    Cmp(Cmp),       // cmp <op> <lhs>, <rhs>, <res>
 }
 
 impl MirCompile for BodyFn {
@@ -333,6 +369,9 @@ impl MirCompile for BodyFn {
             BodyFn::VaArg(va_arg) => va_arg.compile(),
             BodyFn::Ref(r#ref) => r#ref.compile(),
             BodyFn::Deref(deref) => deref.compile(),
+            BodyFn::Jump(jump) => jump.compile(),
+            BodyFn::CJump(cjump) => cjump.compile(),
+            BodyFn::Cmp(cmp) => cmp.compile(),
         }
     }
 }
@@ -514,6 +553,92 @@ impl MirCompile for Deref {
         format!("deref {}, {}", self.ptr.compile(), self.res)
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Jump {
+    pub label: String,
+}
+
+impl Jump {
+    pub fn new(label: String) -> Self {
+        Self { label }
+    }
+}
+
+impl MirCompile for Jump {
+    fn compile(&self) -> String {
+        format!("ju {}", self.label)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CJump {
+    pub cond: Value,
+    pub then: String,
+    pub else_: String
+}
+
+impl CJump {
+    pub fn new(cond: Value, then: String, else_: String) -> Self {
+        Self { cond, then, else_ }
+    }
+}
+
+impl MirCompile for CJump {
+    fn compile(&self) -> String {
+        format!("cj {}, {}, {}", self.cond.compile(), self.then, self.else_)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Cmp {
+    pub res: String,
+    pub op: CmpOp,
+    pub lhs: Value,
+    pub rhs: Value,
+}
+
+impl Cmp {
+    pub fn new(res: String, op: CmpOp, lhs: Value, rhs: Value) -> Self {
+        Self { res, op, lhs, rhs }
+    }
+}
+
+impl MirCompile for Cmp {
+    fn compile(&self) -> String {
+        format!(
+            "cmp {} {}, {}, {}",
+            self.op.compile(),
+            self.res,
+            self.lhs.compile(),
+            self.rhs.compile()
+        )
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum CmpOp {
+    Eq,
+    Ne,
+    Lt,
+    Le,
+    Gt,
+    Ge,
+}
+
+impl MirCompile for CmpOp {
+    fn compile(&self) -> String {
+        match self {
+            CmpOp::Eq => "eq".to_string(),
+            CmpOp::Ne => "ne".to_string(),
+            CmpOp::Lt => "lt".to_string(),
+            CmpOp::Le => "le".to_string(),
+            CmpOp::Gt => "gt".to_string(),
+            CmpOp::Ge => "ge".to_string(),
+        }
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MirPtr {

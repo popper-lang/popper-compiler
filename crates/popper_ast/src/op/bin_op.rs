@@ -6,7 +6,7 @@ use crate::span::Span;
 #[derive(Clone)]
 /// binary operation: `<expr> <op> <expr>`
 pub struct BinOp {
-    span: Span,
+    pub span: Span,
     pub op: BinOpKind,
     pub lhs: Box<Expression>,
     pub rhs: Box<Expression>,
@@ -59,4 +59,29 @@ pub enum BinOpKind {
     And,
     /// ||
     Or,
+}
+
+impl BinOpKind {
+    pub fn is_comparison(&self) -> bool {
+        match self {
+            BinOpKind::Eq | BinOpKind::Neq | BinOpKind::Lt | BinOpKind::Lte | BinOpKind::Gt | BinOpKind::Gte => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_arithmetic(&self) -> bool {
+        match self {
+            BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div | BinOpKind::Mod | BinOpKind::Pow => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_logical(&self) -> bool {
+        match self {
+            BinOpKind::And | BinOpKind::Or => true,
+            _ => false,
+        }
+    }
+
+
 }

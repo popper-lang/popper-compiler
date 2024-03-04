@@ -1,12 +1,9 @@
 import std.io;
 
-func print(s: *int): unit {
-    printf("%d\n", @s);
-    return;
-}
 
 func main(): int {
-    let res = 44;
-    print(ref res);
+    if 1 eq 0 {
+        printf("Hello, World!\n");
+    }
     return 0;
 }

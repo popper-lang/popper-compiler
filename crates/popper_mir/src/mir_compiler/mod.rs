@@ -1,7 +1,7 @@
 mod expr_visitor;
 mod stmt_visitor;
 
-use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Ir, List, Module, Type as MirType, Value};
+use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Function, Ir, Label, List, Module, Type as MirType, Value};
 use popper_ast::visitor::StmtVisitor;
 use popper_ast::{FunctionSign, Statement, Type, TypeKind};
 use std::collections::HashMap;
@@ -11,10 +11,12 @@ use std::path::Path;
 pub struct MirCompiler {
     pub(crate) ast: Vec<Statement>,
     pub(crate) ir: Module,
-    pub(crate) current_fn: Option<Body>,
+    pub(crate) current_label: Option<Label>,
+    pub(crate) current_fn: Option<Function>,
     pub(crate) local: HashMap<String, MirType>,
     pub(crate) global: HashMap<String, MirType>,
     pub(crate) var_id: usize,
+    pub(crate) label_counter: usize,
     pub(crate) can_alloc: bool,
     let_name: Option<String>,
     is_let_name_used: bool,
@@ -33,10 +35,12 @@ impl MirCompiler {
             ast,
             ir: Module::new(module_name, vec![]),
             current_fn: None,
+            current_label: None,
             local: HashMap::new(),
             global: HashMap::new(),
             can_alloc: true,
             var_id: 0,
+            label_counter: 0,
             let_name: None,
             is_let_name_used: false,
         }
@@ -91,7 +95,7 @@ impl MirCompiler {
     }
 
     pub fn new_var_id(&mut self, ty: MirType) -> Result<String, ()> {
-        if self.current_fn.is_none() {
+        if self.current_label.is_none() {
             return Err(());
         }
 
@@ -104,8 +108,8 @@ impl MirCompiler {
             e
         };
         if self.can_alloc {
-            let current_fn = self.current_fn.as_mut().unwrap();
-            current_fn.push(BodyFn::Alloc(Alloc::new(var.clone(), ty)));
+            let current_label = self.current_label.as_mut().unwrap();
+            current_label.push(BodyFn::Alloc(Alloc::new(var.clone(), ty)));
         }
         Ok(var.clone())
     }
@@ -127,48 +131,37 @@ impl MirCompiler {
         }
     }
 
+    pub fn new_label(&mut self) -> Label {
+        let label = Label::new(format!("L{}", self.label_counter), vec![]);
+        self.label_counter += 1;
+        label
+    }
+
+    pub fn new_labels(&mut self, n: usize) -> Vec<Label> {
+        let mut labels = vec![];
+        for _ in 0..n {
+            labels.push(self.new_label());
+        }
+        labels
+    }
+
+    pub fn add_label(&mut self, label: Label) {
+        self.current_fn.as_mut().unwrap().body.push(label);
+    }
+
+    pub fn add_current_label(&mut self) {
+        self.add_label(self.current_label.clone().unwrap());
+    }
+
+    pub fn push_on_label(&mut self, f: BodyFn) {
+        self.current_label.as_mut().unwrap().push(f);
+    }
+
+    pub fn set_current_label(&mut self, label: Label) {
+        self.current_label = Some(label);
+    }
+
     pub fn get_module(&self) -> Module {
         self.ir.clone()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::mir_ast::{
-        Body, Declare, Function as MirFunction, Ir, List, Module, Type as MirType,
-    };
-    use popper_ast::{
-        Argument, Arguments, Constant, Expression, Function, Int, Return, Statement, Type, TypeKind,
-    };
-
-    #[test]
-    fn test_function() {
-        let ast = vec![Statement::Function(Function::new(
-            "main".to_string(),
-            Arguments::new(
-                vec![Argument::new(
-                    "a".to_string(),
-                    Type::new(Default::default(), TypeKind::Int, Default::default()),
-                    Default::default(),
-                )],
-                Default::default(),
-            ),
-            Type::new(Default::default(), TypeKind::Int, Default::default()),
-            vec![Statement::Return(Return::new(
-                Some(Expression::Constant(Constant::Int(Int::new(
-                    Default::default(),
-                    1,
-                )))),
-                Default::default(),
-            ))],
-            Default::default(),
-        ))];
-
-        let mut compiler = MirCompiler::new(ast, "test".to_string());
-
-        let ir = compiler.compile();
-
-        assert_eq!(ir, Module::new("ss".to_string(), vec![]))
     }
 }

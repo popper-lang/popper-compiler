@@ -177,9 +177,9 @@ impl Compiler {
         let basic_block = self.context.append_basic_block("entry", fn_val);
         self.builder.position_at_end(basic_block);
 
-        for stmt in func.body.body {
-            self.compile_stmt(stmt);
-        }
+        // for stmt in func.body.body {
+        //     self.compile_stmt(stmt);
+        // }
     }
 
     pub fn compile_stmt(&mut self, stmt: BodyFn) -> PopObject {

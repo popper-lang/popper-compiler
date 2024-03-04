@@ -1,13 +1,9 @@
 use inkwell::{
-    builder::Builder,
-    context::Context,
-    module::Module,
-    types::{BasicType, BasicTypeEnum},
-    values::{BasicValue, BasicValueEnum, IntValue, PointerValue},
+    basic_block::BasicBlock, builder::Builder, context::Context, module::Module, types::{BasicType, BasicTypeEnum}, values::{BasicValue, BasicValueEnum, FunctionValue, IntValue, PointerValue}, IntPredicate
 };
 use popper_common::hash::hash_file;
 use popper_mir::mir_ast::{
-    BodyFn, Const, Function as MirFunction, Ir, Module as MirModule, Type as MirType, Value,
+    BodyFn, CmpOp, Const, Function as MirFunction, Ir, Label, Module as MirModule, Type as MirType, Value
 };
 use std::{collections::HashMap, env::var};
 
@@ -37,7 +33,10 @@ pub struct Compiler<'ctx> {
     is_current_fn_var_args: bool,
     llvm_functions: HashMap<String, inkwell::values::FunctionValue<'ctx>>,
     llvm_types: HashMap<String, inkwell::types::BasicTypeEnum<'ctx>>,
+    llvm_blocks: HashMap<String, BasicBlock<'ctx>>,
     id_counter: usize,
+    current_function: Option<FunctionValue<'ctx>>,
+
 }
 
 impl<'ctx> Compiler<'ctx> {
@@ -56,8 +55,10 @@ impl<'ctx> Compiler<'ctx> {
             is_llvm_va_arg_fn_decl: false,
             llvm_functions: HashMap::new(),
             llvm_types: HashMap::new(),
+            llvm_blocks: HashMap::new(),
             old_basic_block: None,
             id_counter: 0,
+            current_function: None
         }
     }
 
@@ -372,6 +373,8 @@ impl<'ctx> Compiler<'ctx> {
             .iter()
             .map(|arg| self.mir_type_to_llvm_type(arg.ty.clone()).into())
             .collect::<Vec<_>>();
+
+
         let function = if func.ret == MirType::Void {
             let ret_ty = self.context.void_type();
             let fn_ty = ret_ty.fn_type(args.as_slice(), func.is_var_args);
@@ -381,13 +384,15 @@ impl<'ctx> Compiler<'ctx> {
             let fn_ty = ret_ty.fn_type(args.as_slice(), func.is_var_args);
             self.module.add_function(name.as_str(), fn_ty, None)
         };
+        self.current_function = Some(function);
 
-        let basic_block = self.context.append_basic_block(function, "entry");
-        self.old_basic_block = Some(basic_block);
 
-        self.builder.position_at_end(basic_block);
+        let labels = func.body.body.clone();
+        for label in labels.clone() {
+            let basic_block = self.context.append_basic_block(function, &label.name);
+            self.llvm_blocks.insert(label.name.clone(), basic_block);
+        }
 
-        self.id_counter = function.count_params() as usize + 1;
 
         for (i, arg) in function.get_param_iter().enumerate() {
             let mut val = LLVMValue::new(arg);
@@ -419,16 +424,48 @@ impl<'ctx> Compiler<'ctx> {
                 .build_call(*va_start, &[popper_vl.into()], "")
                 .unwrap();
         }
-        for body in func.body.body.iter() {
-            self.compile_body_fn(body);
+        for body in labels.iter() {
+            self.compile_label(body);
         }
 
-        self.old_basic_block = None;
+        self.llvm_blocks.clear();
+
 
         if func.is_var_args {
             self.is_current_fn_var_args = false;
         }
         self.env.clear();
+    }
+
+    pub fn compile_label(&mut self, label: &Label) {
+        let bb = self.llvm_blocks.get(&label.name).unwrap();
+        self.builder.position_at_end(*bb);
+        self.old_basic_block = Some(*bb);
+        if label.is_first() && self.is_current_fn_var_args {
+            if !self.is_llvm_va_arg_fn_decl {
+                self.declare_llvm_va_arg_fn();
+            }
+
+            let popper_vl = self
+                .builder
+                .build_alloca(
+                    *self.llvm_types.get("va_list").unwrap(),
+                    "__popper_vl",
+                )
+                .unwrap()
+                .as_basic_value_enum();
+            self.env
+                .insert("__popper_vl".to_string(), LLVMValue::new(popper_vl));
+            let va_start = self.llvm_functions.get("llvm.va_start").unwrap();
+            self.builder
+                .build_call(*va_start, &[popper_vl.into()], "")
+                .unwrap();
+        }
+
+        for body in label.body.iter() {
+            self.compile_body_fn(body);
+        }
+        self.old_basic_block = None;
     }
 
     pub fn compile_unloaded_value(&self, val: &Value) -> LLVMValue {
@@ -613,7 +650,56 @@ impl<'ctx> Compiler<'ctx> {
                 self.builder.build_store(ptr, val).unwrap();
 
                 self.add_flag_to_var(&r.res.clone(), Flag::CantLoad)
-            }
+            },
+            BodyFn::Jump(j) => {
+                let block = self
+                    .llvm_blocks
+                    .get(&j.label)
+                    .expect("block not found")
+                    .clone();
+                self.builder.build_unconditional_branch(block).unwrap();
+            },
+            BodyFn::CJump(c) => {
+                let cond = self.compile_value(&c.cond).basic_value_enum().into_int_value();
+                let then_block = self
+                    .llvm_blocks
+                    .get(&c.then)
+                    .expect("block not found")
+                    .clone();
+                let else_block = self
+                    .llvm_blocks
+                    .get(&c.else_)
+                    .expect("block not found")
+                    .clone();
+                self.builder
+                    .build_conditional_branch(cond, then_block, else_block).unwrap();
+            },
+            BodyFn::Cmp(c) => {
+                let lhs = self.compile_value(&c.lhs).basic_value_enum();
+                let rhs = self.compile_value(&c.rhs).basic_value_enum();
+                let predicate = match c.op {
+                    CmpOp::Eq => IntPredicate::EQ,
+                    CmpOp::Ne => IntPredicate::NE,
+                    CmpOp::Lt => IntPredicate::SLT,
+                    CmpOp::Le => IntPredicate::SLE,
+                    CmpOp::Gt => IntPredicate::SGT,
+                    CmpOp::Ge => IntPredicate::SGE,
+                };
+                let val = self
+                    .builder
+                    .build_int_compare(
+                        predicate,
+                        lhs.into_int_value(),
+                        rhs.into_int_value(),
+                        "",
+                    )
+                    .unwrap();
+                let var = self
+                    .get_unloaded_var(c.res.clone())
+                    .basic_value_enum()
+                    .into_pointer_value();
+                self.builder.build_store(var, val.as_basic_value_enum()).unwrap();
+            },
         };
     }
 

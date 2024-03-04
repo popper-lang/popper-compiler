@@ -1,6 +1,5 @@
 use crate::mir_ast::{
-    Alloc, Argument, Arguments, Body, BodyFn, Function as MirFunction, Ir, MirString,
-    Return as MirReturn, Store,
+    Alloc, Argument, Arguments, Body, BodyFn, CJump, Function as MirFunction, Ir, Jump, Label, MirString, Return as MirReturn, Store
 };
 use crate::mir_compiler::MirCompiler;
 use popper_ast::visitor::{ExprVisitor, StmtVisitor};
@@ -19,7 +18,7 @@ impl StmtVisitor for MirCompiler {
     }
 
     fn visit_let_stmt(&mut self, let_stmt: LetStmt) -> Result<Self::Output, Self::Error> {
-        if self.current_fn.is_none() {
+        if self.current_label.is_none() {
             return Err(());
         }
         let name = let_stmt.name.name.clone();
@@ -29,7 +28,7 @@ impl StmtVisitor for MirCompiler {
         let ty = expr.get_type();
         self.local.insert(name.clone(), ty.clone());
         if !self.is_let_name_used {
-            let current_fn = self.current_fn.as_mut().unwrap();
+            let current_fn = self.current_label.as_mut().unwrap();
             current_fn.push(BodyFn::Alloc(Alloc::new(name.clone(), ty)));
 
             current_fn.push(BodyFn::Store(Store::new(name, expr)))
@@ -58,16 +57,40 @@ impl StmtVisitor for MirCompiler {
         }
     }
 
-    fn visit_block(&mut self, _block: Block) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
+        for stmt in block.statements {
+            self.visit_stmt(stmt)?;
+        }
+        Ok(())
     }
 
     fn visit_while_stmt(&mut self, _while_stmt: While) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 
-    fn visit_if_stmt(&mut self, _if_stmt: If) -> Result<Self::Output, Self::Error> {
-        todo!()
+    fn visit_if_stmt(&mut self, if_stmt: If) -> Result<Self::Output, Self::Error> {
+        let cond = self.visit_expr(if_stmt.condition)?;
+        let labels = self.new_labels(2);
+        let then_label = labels[0].clone();
+        let else_label = labels[1].clone();
+        self.push_on_label(BodyFn::CJump(
+            CJump::new(cond, then_label.name.clone(), else_label.name.clone())
+        ));
+        self.add_current_label();
+
+        self.set_current_label(then_label.clone());
+
+        self.visit_stmt(*if_stmt.body)?;
+
+
+
+        self.push_on_label(BodyFn::Jump(
+            Jump::new(else_label.clone().name)
+        ));
+        self.add_current_label();
+        self.set_current_label(else_label.clone());
+        Ok(())
+
     }
 
     fn visit_if_else_stmt(&mut self, _if_else_stmt: IfElse) -> Result<Self::Output, Self::Error> {
@@ -88,44 +111,48 @@ impl StmtVisitor for MirCompiler {
             self.local.insert(arg.name.clone(), arg.ty.clone());
         });
         let ret = self.compile_type(function.returntype);
-
-        let body = Body::new(Vec::new());
-        self.current_fn = Some(body);
+        let label = Label::new("entry".to_string(), vec![]);
+        let func = MirFunction::new(
+            name.clone(),
+            Arguments::new(args),
+            ret.clone(),
+            function.is_var_args,
+            Body::new(vec![]),
+        );
+        self.current_fn = Some(func);
+        self.current_label = Some(label);
         for stmt in function.body {
             self.visit_stmt(stmt)?;
         }
 
+        self.current_fn.as_mut().unwrap().body.body.push(self.current_label.as_ref().unwrap().clone());
+
+
+
         self.local.clear();
         self.global.insert(name.clone(), ret.clone());
-        let function = MirFunction::new(
-            name,
-            Arguments::new(args),
-            ret,
-            function.is_var_args,
-            self.current_fn.clone().unwrap(),
-        );
 
-        self.current_fn = None;
 
-        self.ir.push(Ir::Function(function));
+        self.current_label = None;
 
+        self.ir.push(Ir::Function(self.current_fn.as_ref().unwrap().clone()));
         self.current_fn = None;
 
         Ok(())
     }
 
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
-        if self.current_fn.is_none() {
+        if self.current_label.is_none() {
             return Err(());
         }
         if let Some(expr) = return_expr.expression {
             let expr = self.visit_expr(*expr)?;
-            self.current_fn
+            self.current_label
                 .as_mut()
                 .unwrap()
                 .push(BodyFn::Return(MirReturn::new(Some(expr))));
         } else {
-            self.current_fn
+            self.current_label
                 .as_mut()
                 .unwrap()
                 .push(BodyFn::Return(MirReturn::new(None)));

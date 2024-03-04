@@ -1,6 +1,5 @@
 use crate::mir_ast::{
-    Add, BodyFn, Const, Deref, Index as MirIndex, List, MirFloat, MirInt, MirList, MirString, Ref,
-    Type, VaArg, Value, Variable,
+    Add, BodyFn, Cmp, CmpOp, Const, Deref, Index as MirIndex, List, MirBool, MirFloat, MirInt, MirList, MirString, Ref, Type, VaArg, Value, Variable
 };
 use crate::mir_compiler::MirCompiler;
 use popper_ast::visitor::ExprVisitor;
@@ -31,6 +30,9 @@ impl ExprVisitor for MirCompiler {
                     .map(|x| self.visit_expr(x.clone()).unwrap())
                     .collect(),
             ))),
+            Constant::Bool(b) => Value::Const(Const::Bool(
+                MirBool::new(b.value),
+            )),
 
             _ => unimplemented!(),
         })
@@ -40,7 +42,7 @@ impl ExprVisitor for MirCompiler {
         let mir_val = self.visit_expr(*pointer.expr)?;
         let out = self.new_var_id(mir_val.get_minor_type().unwrap())?;
         let minor_type = mir_val.get_minor_type().unwrap();
-        let body = self.current_fn.as_mut().unwrap();
+        let body = self.current_label.as_mut().unwrap();
 
         body.push(BodyFn::Deref(Deref::new(mir_val.clone(), out.clone())));
 
@@ -55,7 +57,7 @@ impl ExprVisitor for MirCompiler {
         let ty = Type::Pointer(Box::new(mir_val.get_type()));
         let out = self.new_var_id(ty.clone())?;
 
-        let body = self.current_fn.as_mut().unwrap();
+        let body = self.current_label.as_mut().unwrap();
 
         body.push(BodyFn::Ref(Ref::new(mir_val.clone(), out.clone())));
 
@@ -67,7 +69,7 @@ impl ExprVisitor for MirCompiler {
 
         let out = self.new_var_id_no_alloc(mir_type.clone())?;
 
-        let body = self.current_fn.as_mut().unwrap();
+        let body = self.current_label.as_mut().unwrap();
 
         body.push(BodyFn::VaArg(VaArg::new(out.clone(), mir_type.clone())));
 
@@ -78,17 +80,37 @@ impl ExprVisitor for MirCompiler {
         let lhs = self.visit_expr(*bin_op.lhs)?;
         let rhs = self.visit_expr(*bin_op.rhs)?;
         let lhs_ty = lhs.get_type();
-        let out = self.new_var_id(lhs_ty.clone())?;
-        let body = self.current_fn.as_mut().unwrap();
+        let out = if bin_op.op.is_arithmetic() {
+            self.new_var_id(lhs_ty.clone())?
+        } else {
+            self.new_var_id(Type::Bool)?
+        };
+
+        let res_ty = if bin_op.op.is_arithmetic() {
+            lhs_ty.clone()
+        } else {
+            Type::Bool
+        };
+        let body = self.current_label.as_mut().unwrap();
 
         match bin_op.op {
             BinOpKind::Add => {
                 body.push(BodyFn::Add(Add::new(out.clone(), lhs, rhs)));
-            }
+            },
+            BinOpKind::Eq => {
+                body.push(BodyFn::Cmp(
+                    Cmp::new(
+                        out.clone(),
+                        CmpOp::Eq,
+                        lhs,
+                        rhs
+                    )
+                ))
+            },
             _ => unimplemented!(),
         }
 
-        Ok(Value::Variable(Variable::new(out, lhs_ty)))
+        Ok(Value::Variable(Variable::new(out, res_ty)))
     }
 
     fn visit_unary_op(&mut self, _unary_op: UnaryOp) -> Result<Self::Output, Self::Error> {
@@ -120,7 +142,7 @@ impl ExprVisitor for MirCompiler {
     }
 
     fn visit_call(&mut self, call: Call) -> Result<Self::Output, Self::Error> {
-        if self.current_fn.is_none() {
+        if self.current_label.is_none() {
             return Err(());
         }
         let name = call.name.clone();
@@ -136,7 +158,7 @@ impl ExprVisitor for MirCompiler {
             .collect::<Result<Vec<Value>, ()>>()?;
 
         let list = List::new(args);
-        let current_fn = self.current_fn.as_mut().unwrap();
+        let current_fn = self.current_label.as_mut().unwrap();
 
         current_fn.push(BodyFn::Call(crate::mir_ast::Call::new(
             name,
@@ -148,7 +170,7 @@ impl ExprVisitor for MirCompiler {
     }
 
     fn visit_index(&mut self, index: popper_ast::Index) -> Result<Self::Output, Self::Error> {
-        if self.current_fn.is_none() {
+        if self.current_label.is_none() {
             return Err(());
         }
 
@@ -159,7 +181,7 @@ impl ExprVisitor for MirCompiler {
         let index = self.visit_expr(*index.index)?;
 
         let id = self.new_var_id_no_alloc(mirlist.clone())?;
-        let current_fn = self.current_fn.as_mut().unwrap();
+        let current_fn = self.current_label.as_mut().unwrap();
 
         current_fn.push(BodyFn::Index(MirIndex::new(
             id.clone(),

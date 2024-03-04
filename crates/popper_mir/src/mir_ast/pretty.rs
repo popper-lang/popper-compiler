@@ -1,5 +1,7 @@
 use crate::mir_ast::{Argument, Body, BodyFn, Ir, List, MirCompile, Module, Type, Value};
 
+use super::Label;
+
 #[derive(Debug, Clone)]
 pub struct Pretty {
     pub indent: usize,
@@ -107,8 +109,23 @@ impl Pretty {
 
     pub fn pretty_body_fn(&mut self, body: &Body) {
         for stmt in &body.body {
+            self.pretty_label(stmt);
+        }
+    }
+
+    pub fn pretty_label(&mut self, label: &Label) {
+        self.tab();
+        self.result.push_str(&format!("label {} {{\n ", label.name));
+        self.newline();
+        self.indent();
+
+        for stmt in &label.body {
             self.pretty_stmt(stmt.clone());
         }
+        self.unindent();
+        self.tab();
+        self.result.push_str("}\n");
+
     }
 
     pub fn pretty_stmt(&mut self, body_fn: BodyFn) {
@@ -165,7 +182,23 @@ impl Pretty {
                 self.result.push_str(&format!("deref {}, ", d.res));
                 self.pretty_value(d.ptr);
                 self.result.push('\n');
-            }
+            },
+            BodyFn::Cmp(c) => {
+                self.result.push_str(&format!("cmp {} {}, ", c.op.compile(), c.res));
+                self.pretty_value(c.lhs);
+                self.result.push_str(", ");
+                self.pretty_value(c.rhs);
+                self.result.push('\n');
+            },
+            BodyFn::Jump(j) => {
+                self.result.push_str(&format!("ju {}\n", j.label));
+            },
+            BodyFn::CJump(cj) => {
+                self.result.push_str("cj ");
+                self.pretty_value(cj.cond);
+                self.result.push_str(&format!(", {}, {}\n", cj.then, cj.else_));
+                self.result.push('\n');
+            },
         }
     }
 
