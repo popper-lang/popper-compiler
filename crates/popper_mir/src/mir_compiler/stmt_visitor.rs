@@ -54,6 +54,7 @@ impl StmtVisitor for MirCompiler {
             Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
             Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
             Statement::Extern(enum_stmt) => self.visit_extern(enum_stmt),
+            Statement::BreakStmt(break_stmt) => self.visit_break(break_stmt),
         }
     }
 
@@ -86,16 +87,30 @@ impl StmtVisitor for MirCompiler {
         self.add_current_label();
 
         self.set_current_label(loop_label.clone());
-
+        self.exit_loop = Some(end_label.clone());
+        self.loop_depth += 1;
         self.visit_stmt(*while_stmt.body)?;
 
         self.push_on_label(BodyFn::Jump(
             Jump::new(cond_label.name.clone())
         ));
 
+        self.exit_loop = None;
+        self.loop_depth -= 1;
+
         self.add_current_label();
         self.set_current_label(end_label.clone());
 
+        Ok(())
+
+    }
+
+    fn visit_break(&mut self, _: popper_ast::BreakStmt) -> Result<Self::Output, Self::Error> {
+        let current_fn = self.current_label.as_mut().unwrap();
+        current_fn.push(BodyFn::Jump(
+            Jump::new(self.exit_loop.as_ref().unwrap().name.clone())
+        ));
+        self.break_depth = self.loop_depth;
         Ok(())
 
     }

@@ -21,6 +21,9 @@ pub struct MirCompiler {
     let_name: Option<String>,
     is_let_name_used: bool,
     is_returned: bool,
+    break_depth: i32,
+    loop_depth: i32,
+    exit_loop: Option<Label>,
 }
 
 impl MirCompiler {
@@ -45,6 +48,9 @@ impl MirCompiler {
             let_name: None,
             is_let_name_used: false,
             is_returned: false,
+            break_depth: -1,
+            loop_depth: 0,
+            exit_loop: None
         }
     }
 
@@ -156,7 +162,7 @@ impl MirCompiler {
     }
 
     pub fn push_on_label(&mut self, f: BodyFn) {
-        if self.is_returned {
+        if self.is_returned || self.break_depth == self.loop_depth {
             return;
         }
         self.current_label.as_mut().unwrap().push(f);

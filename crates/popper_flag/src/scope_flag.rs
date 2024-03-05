@@ -6,6 +6,7 @@ pub enum ScopeFlag {
     Local,
     Function,
     Block,
+    Loop
 }
 
 impl ScopeFlag {
@@ -24,5 +25,9 @@ impl ScopeFlag {
     /// check if it is in block
     pub fn is_block(&self) -> bool {
         matches!(self, ScopeFlag::Block)
+    }
+
+    pub fn is_loop(&self) -> bool {
+        matches!(self, ScopeFlag::Loop)
     }
 }

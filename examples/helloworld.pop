@@ -4,6 +4,15 @@ import std.io;
 func main(): int {
     while true {
         printf("Hello, World!\n");
+        break;
     }
+    if false {
+        printf("Foo\n");
+    } else if true {
+        printf("Bar\n");
+    } else {
+        printf("Baz\n");
+    }
+    printf("Goodbye, World!\n");
     return 0;
 }

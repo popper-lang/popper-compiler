@@ -1,11 +1,12 @@
 use popper_ast::*;
+use popper_error::notallowed::NotAllowed;
 use std::collections::HashMap;
 
 use crate::expr_analyzer::ExprAnalyzer;
 use popper_ast::visitor::ExprVisitor;
 use popper_error::modulenotfound::ModuleNotFound;
 use popper_error::{
-    alreadyexist::AlreadyExist, returnnotallowed::ReturnNotAllowed, typemismatch::TypeMismatch,
+    alreadyexist::AlreadyExist, typemismatch::TypeMismatch,
     Error,
 };
 use popper_flag::{Environment, Flag, ScopeFlag, SymbolFlags, ValueFlag, VariableFlag};
@@ -90,6 +91,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let symbol_flag = SymbolFlags::new(while_stmt.span());
         let condition = analyzer.visit_expr(while_stmt.condition.clone())?;
 
+        let old_scope = self.current_scope.clone();
+
         if !condition.is_boolean() {
             return Err(Box::new(TypeMismatch::new(
                 (while_stmt.condition.span(), ValueFlag::Boolean.to_string()),
@@ -99,10 +102,11 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 ),
             )));
         }
+        self.current_scope = ScopeFlag::Loop;
 
-        let mut analyzer = StmtAnalyzer::new(self.env.clone());
+        let _body = self.visit_stmt(*while_stmt.body)?;
 
-        let _body = analyzer.visit_stmt(*while_stmt.body)?;
+        self.current_scope = old_scope;
 
         Ok(symbol_flag)
     }
@@ -153,6 +157,18 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let _body = analyzer.visit_stmt(*if_else_stmt.body)?;
         let _else_body = analyzer.visit_stmt(*if_else_stmt.else_body)?;
 
+        Ok(symbol_flag)
+    }
+
+    fn visit_break(&mut self, break_stmt: BreakStmt) -> Result<Self::Output, Self::Error> {
+        if !self.current_scope.is_loop() {
+            return Err(Box::new(NotAllowed::new(
+                break_stmt.span,
+                "loop",
+                "break"
+            )));
+        }
+        let symbol_flag = SymbolFlags::new(break_stmt.span);
         Ok(symbol_flag)
     }
 
@@ -253,7 +269,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
         let mut expr_analyzer = ExprAnalyzer::new(self.env.clone());
         if self.return_type.is_none() {
-            return Err(Box::new(ReturnNotAllowed::new(return_expr.span)));
+            return Err(Box::new(NotAllowed::new(return_expr.span, "function", "return")));
         }
         let val = return_expr
             .expression
@@ -303,6 +319,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::While(while_stmt) => self.visit_while_stmt(while_stmt),
             Statement::If(if_stmt) => self.visit_if_stmt(if_stmt),
             Statement::IfElse(if_else_stmt) => self.visit_if_else_stmt(if_else_stmt),
+            Statement::BreakStmt(b) => self.visit_break(b),
             Statement::Function(fn_stmt) => self.visit_function(fn_stmt),
             Statement::Return(ret_stmt) => self.visit_return(ret_stmt),
             Statement::Import(import) => self.visit_import(import),

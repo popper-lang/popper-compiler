@@ -44,4 +44,5 @@ pub trait StmtVisitor {
     visit!(visit_extern, extern_stmt => Extern);
     visit!(visit_for_stmt, for_stmt => ForStmt);
     visit!(visit_struct_stmt, struct_stmt => StructStmt);
+    visit!(visit_break, break_stmt => BreakStmt);
 }

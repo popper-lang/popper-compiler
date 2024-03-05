@@ -37,6 +37,7 @@ use popper_ast::Extern;
 use popper_ast::VaArg;
 use popper_ast::Reference;
 use popper_ast::Deref;
+use popper_ast::BreakStmt;
 
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
@@ -116,6 +117,10 @@ While: Statement = {
             )
         )
     }
+}
+
+BreakStmt: Statement = {
+    Span<("break" ";")>=> Statement::BreakStmt(BreakStmt::new(<>.0))
 }
 
 GenericTypes: (Type, Vec<Type>) = {
@@ -778,6 +783,7 @@ Comma<T>: Vec<T> = {
 
 
 Statement: Statement = {
+    BreakStmt,
     IfElse,
     BlockStmt,
     While,
