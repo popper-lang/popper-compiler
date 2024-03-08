@@ -151,7 +151,9 @@ impl Pretty {
                 self.result.push('\n');
             }
             BodyFn::Store(store) => {
-                self.result.push_str(&format!("store {}, ", store.name));
+                self.result.push_str("store ");
+                self.pretty_value(store.name);
+                self.result.push_str(", ");
                 self.pretty_value(store.value);
                 self.result.push('\n');
             }
@@ -206,6 +208,14 @@ impl Pretty {
                 self.result.push_str(&format!(", {}, {}\n", cj.then, cj.else_));
                 self.result.push('\n');
             },
+            BodyFn::Assign(a) => {
+                self.result.push_str("assign ");
+                self.pretty_value(a.name);
+                self.result.push_str(", ");
+                self.pretty_value(a.value);
+                self.result.push('\n');
+            },
+
         }
     }
 

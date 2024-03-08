@@ -5,7 +5,7 @@ use popper_common::hash::hash_file;
 use popper_mir::mir_ast::{
     BodyFn, CmpOp, Const, Function as MirFunction, Ir, Label, Module as MirModule, Type as MirType, Value
 };
-use std::{collections::HashMap, env::var};
+use std::{cell::{Cell, RefCell}, collections::HashMap, env::var, sync::Arc};
 
 use crate::value::{Flag, LLVMValue};
 use std::rc::Rc;
@@ -468,14 +468,14 @@ impl<'ctx> Compiler<'ctx> {
         self.old_basic_block = None;
     }
 
-    pub fn compile_unloaded_value(&self, val: &Value) -> LLVMValue {
+    pub fn compile_unloaded_value(&mut self, val: Value) -> LLVMValue {
         match val {
-            Value::Variable(v) => self.env.get(&v.name).unwrap().clone(),
+            Value::Variable(v) => self.env.get(&v.name).expect(&format!("variable not found {}(compile_unloaded_value)", v.name)).clone(),
             Value::Const(c) => self.compile_const(c),
         }
     }
 
-    pub fn compile_body_fn(&mut self, body_fn: &BodyFn) {
+    pub fn compile_body_fn(&'ctx mut self, body_fn: &BodyFn) {
         match body_fn {
             BodyFn::Return(ret) => {
                 let ret = ret
@@ -572,24 +572,25 @@ impl<'ctx> Compiler<'ctx> {
                 val.add_flag(Flag::CantLoad);
 
                 self.env.insert(v.res.clone(), val);
+
             }
             BodyFn::Alloc(a) => {
                 let ty = self.mir_type_to_llvm_type(a.ty.clone());
                 let val = self.alloc(ty);
                 self.env
                     .insert(a.name.clone(), LLVMValue::new(val.as_basic_value_enum()));
+
             }
             BodyFn::Store(s) => {
-                let val = self.compile_value(&s.value);
                 let var = self
-                    .env
-                    .get(&s.name)
-                    .unwrap()
+                    .compile_unloaded_value(&s.name)
                     .basic_value_enum()
                     .into_pointer_value();
+                let val = self.compile_value(&s.value);
                 self.builder
                     .build_store(var, val.basic_value_enum())
                     .unwrap();
+
             }
             BodyFn::Add(a) => {
                 let lhs = self.compile_value(&a.lhs).basic_value_enum();
@@ -625,35 +626,32 @@ impl<'ctx> Compiler<'ctx> {
                 self.can_load = false;
                 let minor_type = self.mir_type_to_llvm_type(i.list.get_minor_type().unwrap());
                 let val = self
-                    .compile_value(&i.list)
+                    .compile_value(i.list)
                     .basic_value_enum()
                     .into_pointer_value();
                 let idx = self
-                    .compile_value(&i.index)
+                    .compile_value(i.index)
                     .basic_value_enum()
                     .into_int_value();
                 let _ = unsafe { self.builder.build_gep(minor_type, val, &[idx], "").unwrap() };
             }
             BodyFn::Deref(d) => {
                 let ptr = self
-                    .compile_unloaded_value(&d.ptr)
+                    .clone()
+                    .compile_unloaded_value(d.ptr)
                     .basic_value_enum()
-                    .into_pointer_value();
+                    .into_pointer_value()
+                    ;
+
+                let alloc = self.builder.build_alloca(ptr.get_type(), "").unwrap();
 
                 let ty = ptr.get_type().as_basic_type_enum();
-                let minor_type = self.mir_type_to_llvm_type(d.ptr.get_minor_type().unwrap());
                 let val = self
                     .builder
                     .build_load(ty, ptr, "")
-                    .unwrap()
-                    .into_pointer_value();
-                let val = self.builder.build_load(minor_type, val, "").unwrap();
-                let var = self
-                    .get_unloaded_var(d.res.clone())
-                    .basic_value_enum()
-                    .into_pointer_value();
+                    .unwrap();
 
-                self.builder.build_store(var, val).unwrap();
+                self.store(&d.res, ptr, val);
             }
             BodyFn::Ref(r) => {
                 let val = self.compile_unloaded_value(&r.val).basic_value_enum();
@@ -690,8 +688,8 @@ impl<'ctx> Compiler<'ctx> {
                     .build_conditional_branch(cond, then_block, else_block).unwrap();
             },
             BodyFn::Cmp(c) => {
-                let lhs = self.compile_value(&c.lhs).basic_value_enum();
-                let rhs = self.compile_value(&c.rhs).basic_value_enum();
+                let lhs = self.compile_value(c.lhs).basic_value_enum();
+                let rhs = self.compile_value(c.rhs).basic_value_enum();
                 let predicate = match c.op {
                     CmpOp::Eq => IntPredicate::EQ,
                     CmpOp::Ne => IntPredicate::NE,
@@ -715,7 +713,20 @@ impl<'ctx> Compiler<'ctx> {
                     .into_pointer_value();
                 self.builder.build_store(var, val.as_basic_value_enum()).unwrap();
             },
+            BodyFn::Assign(a) => {
+                let name = self.compile_unloaded_value(&a.name)
+                    .basic_value_enum()
+                    .into_pointer_value();
+                let val = self.compile_value(&a.value).basic_value_enum();
+                self.builder.build_store(name, val).unwrap();
+            }
         };
+    }
+
+    pub fn store(&mut self, res: &str, ptr: PointerValue<'ctx>, val: BasicValueEnum)  {
+        self.builder.build_store(ptr, val).unwrap();
+
+        self.env.insert(res.to_string(), LLVMValue::new(ptr.as_basic_value_enum()));
     }
 
     pub fn compile_value_mut(&mut self, val: Value) -> LLVMValue<'_> {
@@ -778,7 +789,7 @@ impl<'ctx> Compiler<'ctx> {
         }
     }
 
-    pub fn compile_value(&self, val: &Value) -> LLVMValue {
+    pub fn compile_value(&self, val: Value) -> LLVMValue {
         match val {
             Value::Const(c) => self.compile_const(c),
             Value::Variable(v) => {
@@ -804,7 +815,7 @@ impl<'ctx> Compiler<'ctx> {
         }
     }
 
-    pub fn compile_const(&self, c: &Const) -> LLVMValue {
+    pub fn compile_const(&self, c: Const) -> LLVMValue {
         LLVMValue::new(match c {
             Const::Int(i) => self
                 .context

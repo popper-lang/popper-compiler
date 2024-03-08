@@ -1,4 +1,7 @@
 use popper_ast::*;
+use popper_common::name_similarity::find_similar_name;
+use popper_error::cantmut::CantMut;
+use popper_error::namenotfound::NameNotFound;
 use popper_error::notallowed::NotAllowed;
 use std::collections::HashMap;
 
@@ -72,6 +75,34 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         self.env.add_variable(variable);
 
         Ok(value)
+    }
+
+    fn visit_assign(&mut self,assign: Assign) -> Result<Self::Output,Self::Error> {
+
+        if !assign.name.is_assignable() {
+            return Err(Box::new(NotAllowed::new(
+                assign.name.span(),
+                "",
+                "",
+                "expression",
+            )));
+        }
+
+        let mut analyzer = ExprAnalyzer::new(self.env.clone());
+        let name = analyzer.visit_expr(assign.name.clone())?;
+        let value = analyzer.visit_expr(assign.value.clone())?;
+
+        if name.get_value().unwrap() != value.get_value().unwrap() {
+            return Err(Box::new(TypeMismatch::new(
+                (assign.span, name.get_value().unwrap().to_string()),
+                (assign.value.span(), value.get_value().unwrap().to_string()),
+            )));
+        }
+
+
+        Ok(SymbolFlags::new(assign.span))
+
+
     }
 
     fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
@@ -165,7 +196,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             return Err(Box::new(NotAllowed::new(
                 break_stmt.span,
                 "loop",
-                "break"
+                "break",
+                "keyword"
             )));
         }
         let symbol_flag = SymbolFlags::new(break_stmt.span);
@@ -269,7 +301,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     fn visit_return(&mut self, return_expr: Return) -> Result<Self::Output, Self::Error> {
         let mut expr_analyzer = ExprAnalyzer::new(self.env.clone());
         if self.return_type.is_none() {
-            return Err(Box::new(NotAllowed::new(return_expr.span, "function", "return")));
+            return Err(Box::new(NotAllowed::new(return_expr.span, "function", "return", "keyword")));
         }
         let val = return_expr
             .expression
@@ -327,6 +359,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             Statement::For(for_stmt) => self.visit_for_stmt(for_stmt),
             Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
             Statement::Extern(ext) => self.visit_extern(ext),
+            Statement::Assign(a) => self.visit_assign(a),
         }
     }
 

@@ -14,6 +14,10 @@ impl<'a> LLVMValue<'a> {
         }
     }
 
+    pub fn set_value(&mut self, value: BasicValueEnum<'a>) {
+        self.value = value;
+    }
+
     pub fn add_flag(&mut self, flag: Flag) {
         self.flags.push(flag);
     }

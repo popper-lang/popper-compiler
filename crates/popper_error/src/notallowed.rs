@@ -5,27 +5,37 @@ use thiserror::Error;
 use crate::{ColorConfig, Error};
 use popper_ast::Span;
 
+
 #[derive(Error, Debug)]
 #[error("not allowed")]
 pub struct NotAllowed {
     span: Span,
     outside: String,
-    keyword: String,
+    datatype: String,
+    data: String,
 }
 
 impl NotAllowed {
-    pub fn new(span: Span, outside: &str, keyword: &str) -> Self {
+    pub fn new(span: Span, outside: &str, data: &str, datatype: &str) -> Self {
         Self {
             span,
             outside: outside.to_string(),
-            keyword: keyword.to_string(),
+            data: data.to_string(),
+            datatype: datatype.to_string(),
         }
     }
 }
 
 impl Error for NotAllowed {
     fn report(&self, color: ColorConfig, source: &str, file: &str) {
-        let keyword = color.get("keyword").expect("keyword color not found");
+        let msg = if self.outside.is_empty() {
+            format!("The {} `{}` is not allowed here", self.datatype, self.data)
+        } else {
+            format!(
+                "The {} `{}` is not allowed outside `{}`",
+                self.datatype, self.data, self.outside
+            )
+        };
         let mut report = ariadne::Report::build(
             ariadne::ReportKind::Error,
             file,
@@ -34,17 +44,10 @@ impl Error for NotAllowed {
 
         report = report
             .with_code(24)
-            .with_message(format!(
-                "The keyword `{}` is not allowed outside `{}`",
-                self.keyword, self.outside
-            ))
+            .with_message(msg.clone())
             .with_label(
                 ariadne::Label::new((file, self.span.into()))
-                    .with_message(format!(
-                        "The keyword `{}` is not allowed outside `{}`",
-                        self.keyword.clone().fg(*keyword),
-                        self.outside.clone().fg(*keyword)
-                    )),
+                    .with_message(msg),
             );
 
         report.finish().print((file, Source::from(source))).unwrap();

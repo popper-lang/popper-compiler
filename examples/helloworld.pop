@@ -2,17 +2,10 @@ import std.io;
 
 
 func main(): int {
-    while true {
-        printf("Hello, World!\n");
-        break;
-    }
-    if false {
-        printf("Foo\n");
-    } else if true {
-        printf("Bar\n");
-    } else {
-        printf("Baz\n");
-    }
-    printf("Goodbye, World!\n");
+    let a = 3;
+    let b = ref a;
+    @b = 4;
+
+    printf("%d\n", a);
     return 0;
 }

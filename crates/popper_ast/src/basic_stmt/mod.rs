@@ -6,6 +6,7 @@ mod import_stmt;
 mod let_stmt;
 mod while_stmt;
 mod break_stmt;
+mod assign;
 
 pub use self::block::Block;
 pub use self::external::*;
@@ -17,3 +18,4 @@ pub use self::import_stmt::PathImport;
 pub use self::let_stmt::LetStmt;
 pub use self::while_stmt::While;
 pub use self::break_stmt::BreakStmt;
+pub use self::assign::*;

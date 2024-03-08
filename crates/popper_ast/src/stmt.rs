@@ -1,3 +1,4 @@
+use crate::Assign;
 use crate::Block;
 use crate::BreakStmt;
 use crate::Expression;
@@ -31,7 +32,8 @@ pub enum Statement {
     Extern(Extern),
     For(ForStmt),
     Struct(StructStmt),
-    BreakStmt(BreakStmt)
+    BreakStmt(BreakStmt),
+    Assign(Assign)
 }
 
 impl Statement {
@@ -50,7 +52,8 @@ impl Statement {
             Statement::For(for_stmt) => for_stmt.span(),
             Statement::Struct(struct_stmt) => struct_stmt.span,
             Statement::Extern(extern_stmt) => extern_stmt.span(),
-            Statement::BreakStmt(break_stmt) => break_stmt.span
+            Statement::BreakStmt(break_stmt) => break_stmt.span,
+            Statement::Assign(assign) => assign.span,
         }
     }
 }

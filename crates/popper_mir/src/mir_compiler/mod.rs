@@ -1,7 +1,7 @@
 mod expr_visitor;
 mod stmt_visitor;
 
-use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Function, Ir, Label, List, Module, Type as MirType, Value};
+use crate::mir_ast::{Alloc, Body, BodyFn, Declare, Function, Ir, Label, List, Module, Type as MirType, Value, Variable};
 use popper_ast::visitor::StmtVisitor;
 use popper_ast::{FunctionSign, Statement, Type, TypeKind};
 use std::collections::HashMap;
@@ -24,6 +24,7 @@ pub struct MirCompiler {
     break_depth: i32,
     loop_depth: i32,
     exit_loop: Option<Label>,
+    current_dt: i32,
 }
 
 impl MirCompiler {
@@ -50,7 +51,8 @@ impl MirCompiler {
             is_returned: false,
             break_depth: -1,
             loop_depth: 0,
-            exit_loop: None
+            exit_loop: None,
+            current_dt: 2,
         }
     }
 
@@ -121,6 +123,7 @@ impl MirCompiler {
         }
         Ok(var.clone())
     }
+
 
     pub fn new_var_id_no_alloc(&mut self, ty: MirType) -> Result<String, ()> {
         self.can_alloc = false;

@@ -95,6 +95,14 @@ impl ValueFlag {
         }
     }
 
+    pub fn get_minor_type(&self) -> Option<&ValueFlag> {
+        match self {
+            ValueFlag::List(ty, _) => Some(ty),
+            ValueFlag::Pointer(ty) => Some(ty),
+            _ => None,
+        }
+    }
+
     pub fn is_same(&self, other: &Self) -> bool {
         self == other
     }

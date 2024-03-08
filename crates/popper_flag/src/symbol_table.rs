@@ -19,6 +19,20 @@ impl SymbolFlags {
         }
     }
 
+    pub fn set_actual_value(&mut self, value: ValueFlag) -> &mut Self {
+        self.symbols.iter_mut().for_each(|flag| {
+            if let Flag::Value(v) = flag {
+                *v = value.clone();
+            } else if let Flag::Variable(v) = flag {
+                (*v).value = SymbolFlags::new(self.span).add_flag(
+                    Flag::Value(value.clone()),
+                ).clone();
+            }
+        });
+
+        self
+    }
+
     pub fn add_flag(&mut self, flag: Flag) -> &mut Self {
         self.symbols.push(flag);
         self
@@ -150,15 +164,13 @@ impl SymbolFlags {
     }
 
     pub fn is_pointer(&self) -> bool {
-        self.symbols
-            .iter()
-            .any(|s| matches!(s, Flag::Value(ValueFlag::Pointer(_))))
+        self.get_value().map(|x| matches!(x, ValueFlag::Pointer(_))).unwrap_or(false)
     }
 
     pub fn get_value(&self) -> Option<ValueFlag> {
         self.symbols.iter().find_map(|s| match s {
             Flag::Value(v) => Some(v.clone()),
-            _ => None,
+            Flag::Variable(b) => b.value.get_value(),
         })
     }
 
@@ -172,6 +184,7 @@ impl SymbolFlags {
     pub fn get_minor_type(&self) -> Option<ValueFlag> {
         self.symbols.iter().find_map(|s| match s {
             Flag::Value(ValueFlag::Pointer(v)) => Some(*v.clone()),
+            Flag::Variable(v) => v.value.get_minor_type(),
             _ => None,
         })
     }
@@ -182,6 +195,13 @@ impl SymbolFlags {
         }
 
         self.get_value() == other.get_value()
+    }
+
+    pub fn expect_variable(&self) -> Option<VariableFlag> {
+        self.symbols.iter().find_map(|s| match s {
+            Flag::Variable(v) => Some(v.clone()),
+            _ => None,
+        })
     }
 
     pub fn span(self) -> Span {

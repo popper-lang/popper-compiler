@@ -228,12 +228,12 @@ impl Compiler {
                 PopObject::new(val, val.get_type())
             }
             BodyFn::Store(store) => {
+                let out = self.compile_value(store.name);
                 let val = self.compile_value(store.value);
-                let out = self.env.get(store.name.as_str()).unwrap();
 
-                self.builder.build_store(val, out.value.into_ptr_value());
+                self.builder.build_store(val, out.into_ptr_value());
 
-                out.clone()
+                PopObject::new(out.clone(), out.get_type())
             }
             _ => todo!(),
         }

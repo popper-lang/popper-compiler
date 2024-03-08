@@ -1,4 +1,5 @@
 use popper_ast::*;
+use popper_error::notallowed::NotAllowed;
 use popper_error::{
     diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound,
     typemismatch::TypeMismatch, typenotspecified::TypeNotSpecified,
@@ -63,9 +64,7 @@ impl ExprVisitor for ExprAnalyzer {
             Constant::Bool(bool) => Ok(SymbolFlags::new(bool.span()).set_boolean().clone()),
             Constant::Ident(ref ident) => match self.env.get_variable(&ident.name) {
                 Some(v) => Ok({
-                    let mut s = SymbolFlags::new(ident.span);
-                    s.symbols.extend(v.value.symbols.clone());
-                    s
+                    v.value.clone()
                 }),
                 None => {
                     let name_candidates = self.env.get_all_variables_name();

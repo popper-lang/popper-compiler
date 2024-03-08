@@ -1,5 +1,5 @@
 use crate::mir_ast::{
-    Alloc, Argument, Arguments, Body, BodyFn, CJump, Function as MirFunction, Ir, Jump, Label, MirString, Return as MirReturn, Store
+    Alloc, Argument, Arguments, Assign, Body, BodyFn, CJump, Function as MirFunction, Ir, Jump, Label, MirString, Return as MirReturn, Store, Value, Variable
 };
 use crate::mir_compiler::MirCompiler;
 use popper_ast::visitor::{ExprVisitor, StmtVisitor};
@@ -29,14 +29,28 @@ impl StmtVisitor for MirCompiler {
         self.local.insert(name.clone(), ty.clone());
         if !self.is_let_name_used {
             let current_fn = self.current_label.as_mut().unwrap();
-            current_fn.push(BodyFn::Alloc(Alloc::new(name.clone(), ty)));
-
+            current_fn.push(BodyFn::Alloc(Alloc::new(name.clone(), ty.clone())));
+            let name = Value::Variable(
+                Variable::new(name, ty)
+            );
             current_fn.push(BodyFn::Store(Store::new(name, expr)))
         } else {
             self.is_let_name_used = false
         }
 
         Ok(())
+    }
+
+    fn visit_assign(&mut self,assign: popper_ast::Assign) -> Result<Self::Output, Self::Error> {
+        let name = self.visit_expr(assign.name)?;
+        let expr = self.visit_expr(assign.value)?;
+        let current_fn = self.current_label.as_mut().unwrap();
+        current_fn.push(BodyFn::Assign(
+            Assign::new(name, expr)
+        ));
+
+        Ok(())
+
     }
 
     fn visit_stmt(&mut self, stmt: Statement) -> Result<Self::Output, Self::Error> {
@@ -55,6 +69,7 @@ impl StmtVisitor for MirCompiler {
             Statement::Struct(struct_stmt) => self.visit_struct_stmt(struct_stmt),
             Statement::Extern(enum_stmt) => self.visit_extern(enum_stmt),
             Statement::BreakStmt(break_stmt) => self.visit_break(break_stmt),
+            Statement::Assign(a) => self.visit_assign(a),
         }
     }
 

@@ -40,4 +40,14 @@ impl Expression {
             Expression::Deref(p) => p.span,
         }
     }
+
+    pub fn is_assignable(&self) -> bool {
+        match self {
+            Expression::Reference(_) | Expression::Deref(_) | Expression::Index(_) => true,
+            Expression::Group(g) => g.expr.is_assignable(),
+            Expression::StructFieldAccess(s) => true,
+            Expression::Constant(Constant::Ident(_)) => true,
+            _ => false,
+        }
+    }
 }

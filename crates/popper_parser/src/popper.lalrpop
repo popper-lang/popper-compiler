@@ -38,7 +38,7 @@ use popper_ast::VaArg;
 use popper_ast::Reference;
 use popper_ast::Deref;
 use popper_ast::BreakStmt;
-
+use popper_ast::Assign;
 use popper_common::ast_path_to_path::ast_path_to_path;
 use crate::parser::parse;
 
@@ -245,6 +245,23 @@ Let: Statement = {
     }
 }
 
+AssignSyn: (Expression, Expression) = {
+    <t:Expr> "=" <e:Expr> ";" => {
+        (t, e)
+    }
+}
+
+Assign: Statement = {
+    <t:Span<AssignSyn>> => {
+        Statement::Assign(
+            Assign::new(
+                t.1.0,
+                t.1.1,
+                t.0
+            )
+        )
+    }
+}
 
 If: Statement = {
     <t:Span<ConditionalStatement<"if">>> => {
@@ -390,12 +407,18 @@ RefSyntax: Expression = {
 }
 
 RefExpr: Expression = {
-    <t:Span<RefSyntax>> => {
+    RefRule => {
         Expression::Reference(
-            Reference::new(
-                t.1,
-                t.0
-            )
+            <>
+        )
+    }
+}
+
+RefRule: Reference = {
+    <t:Span<RefSyntax>> => {
+        Reference::new(
+            t.1,
+            t.0
         )
     }
 }
@@ -796,6 +819,7 @@ Statement: Statement = {
     For,
     StructStmt,
     Extern,
+    Assign,
     <e:Expr> ";" =>  Statement::Expression(e)
 }
 

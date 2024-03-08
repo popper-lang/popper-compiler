@@ -385,6 +385,7 @@ pub enum BodyFn {
     Jump(Jump),     // ju <label>
     CJump(CJump),   // cj <cond>, <label>
     Cmp(Cmp),       // cmp <op> <lhs>, <rhs>, <res>
+    Assign(Assign), // assign <name>, <value>
 
 }
 
@@ -404,6 +405,7 @@ impl MirCompile for BodyFn {
             BodyFn::Jump(jump) => jump.compile(),
             BodyFn::CJump(cjump) => cjump.compile(),
             BodyFn::Cmp(cmp) => cmp.compile(),
+            BodyFn::Assign(assign) => assign.compile(),
         }
     }
 }
@@ -428,19 +430,19 @@ impl MirCompile for Alloc {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Store {
-    pub name: String,
+    pub name: Value,
     pub value: Value,
 }
 
 impl Store {
-    pub fn new(name: String, value: Value) -> Self {
+    pub fn new(name: Value, value: Value) -> Self {
         Self { name, value }
     }
 }
 
 impl MirCompile for Store {
     fn compile(&self) -> String {
-        format!("store {}, {}", self.name, self.value.compile())
+        format!("store {}, {}", self.name.compile(), self.value.compile())
     }
 }
 
@@ -462,6 +464,25 @@ impl MirCompile for Call {
         format!("call {}, {}, {}", self.name, self.args.compile(), self.ret)
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Assign {
+    pub name: Value,
+    pub value: Value,
+}
+
+impl Assign {
+    pub fn new(name: Value, value: Value) -> Self {
+        Self { name, value }
+    }
+}
+
+impl MirCompile for Assign {
+    fn compile(&self) -> String {
+        format!("{} = {}", self.name.compile(), self.value.compile())
+    }
+}
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Return {
@@ -550,18 +571,19 @@ impl MirCompile for Ref {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Deref {
     pub ptr: Value,
+    pub dt: i32,
     pub res: String,
 }
 
 impl Deref {
-    pub fn new(ptr: Value, res: String) -> Self {
-        Self { ptr, res }
+    pub fn new(ptr: Value, dt: i32, res: String) -> Self {
+        Self { ptr, dt, res }
     }
 }
 
 impl MirCompile for Deref {
     fn compile(&self) -> String {
-        format!("deref {}, {}", self.ptr.compile(), self.res)
+        format!("deref {}, {}, {}", self.ptr.compile(),self.dt, self.res)
     }
 }
 

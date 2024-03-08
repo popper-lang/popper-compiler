@@ -45,4 +45,5 @@ pub trait StmtVisitor {
     visit!(visit_for_stmt, for_stmt => ForStmt);
     visit!(visit_struct_stmt, struct_stmt => StructStmt);
     visit!(visit_break, break_stmt => BreakStmt);
+    visit!(visit_assign, assign => Assign);
 }

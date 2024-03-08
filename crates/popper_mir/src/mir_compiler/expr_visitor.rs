@@ -40,11 +40,11 @@ impl ExprVisitor for MirCompiler {
 
     fn visit_deref(&mut self, pointer: popper_ast::Deref) -> Result<Self::Output, Self::Error> {
         let mir_val = self.visit_expr(*pointer.expr)?;
-        let out = self.new_var_id(mir_val.get_minor_type().unwrap())?;
+        let out = self.new_var_id_no_alloc(mir_val.get_minor_type().unwrap())?;
         let minor_type = mir_val.get_minor_type().unwrap();
         let body = self.current_label.as_mut().unwrap();
 
-        body.push(BodyFn::Deref(Deref::new(mir_val.clone(), out.clone())));
+        body.push(BodyFn::Deref(Deref::new(mir_val.clone(), self.current_dt, out.clone())));
 
         Ok(Value::Variable(Variable::new(out, minor_type)))
     }
