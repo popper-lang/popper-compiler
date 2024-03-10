@@ -524,16 +524,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "popper_codegen"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "popper_common",
- "popper_llvm",
- "popper_mir",
-]
-
-[[package]]
 name = "popper_common"
 version = "0.1.0"
 dependencies = [
@@ -550,10 +540,8 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "popper_ast",
- "popper_codegen",
  "popper_common",
  "popper_error",
- "popper_inkwell",
  "popper_libc",
  "popper_mir",
  "popper_parser",

@@ -1,11 +1,7 @@
-import std.io;
-
 
 func main(): int {
     let a = 3;
-    let b = ref a;
-    @b = 4;
-
-    printf("%d\n", a);
+    let b = 4;
+    let c = a + b;
     return 0;
 }
