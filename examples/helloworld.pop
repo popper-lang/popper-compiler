@@ -1,7 +1,13 @@
+extern {
+    func printf(format: string ...): int
+};
+func add(a: int, b: int): int {
+    return a + b;
+}
 
 func main(): int {
-    let a = 3;
-    let b = 4;
-    let c = a + b;
+    let a = add(1, 1);
+    let b = 2 + 2 + 1;
+    printf("Hello, World! %d %d\n", a, b);
     return 0;
 }

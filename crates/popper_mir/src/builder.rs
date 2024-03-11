@@ -5,6 +5,7 @@ use crate::debug::VarDebugKind;
 use crate::expr::Expr;
 use crate::function::Function;
 use crate::labels::Label;
+use crate::marks::{Mark, MarkKind};
 use crate::program::{ExternalFunction, Program};
 use crate::stmt::Statement;
 use crate::types::Types;
@@ -15,7 +16,7 @@ pub struct Builder {
     current_function: Option<Function>,
     last_ident: Option<Ident>,
     program: Program,
-    let_decl_index: usize
+    let_decl_index: usize,
 }
 
 impl Builder {
@@ -24,11 +25,11 @@ impl Builder {
             current_function: None,
             last_ident: None,
             program: Program::new(),
-            let_decl_index: 0
+            let_decl_index: 0,
         }
     }
 
-    fn new_ident(&mut self, types: Types) -> Ident {
+    pub fn new_ident(&mut self, types: Types) -> Ident {
         let ident = if let Some(ident) = &self.last_ident {
             Ident::new(ident.clone(), types)
         } else {
@@ -43,9 +44,10 @@ impl Builder {
         self.current_function = Some(function);
     }
 
-    pub fn build_external_function(&mut self, name: &str, args: Vec<Types>, ret: Types, is_var_arg: bool) {
+    pub fn build_external_function(&mut self, name: &str, args: Vec<Types>, ret: Types, is_var_arg: bool) -> ExternalFunction {
         let function = ExternalFunction::new(name.to_string(), args, ret, is_var_arg);
-        self.program.add_external_function(function);
+        self.program.add_external_function(function.clone());
+        return function;
     }
 
     pub fn start_function(&mut self, function: Function) {
@@ -54,13 +56,20 @@ impl Builder {
 
     pub fn end_function(&mut self) -> Function {
         let func = self.current_function.take().unwrap();
+        self.last_ident = None;
         self.program.add_function(func.clone());
         func
+    }
+    
+    fn len(&self) -> usize {
+        self.current_function.as_ref().unwrap().stmts.len()
     }
 
     pub fn build_let_decl(&mut self, ty: Types) -> Ident {
         let ident = self.new_ident(ty.clone());
-
+        if self.let_decl_index > self.len() {
+            self.let_decl_index = self.len();
+        }
         self.current_function
             .as_mut()
             .unwrap()
@@ -344,6 +353,16 @@ impl Builder {
             .as_mut()
             .unwrap()
             .remove_debug_info(id);
+    }
+    
+    pub fn marks_ident(&mut self, id: Ident, marks: MarkKind) {
+        self.current_function
+            .as_mut()
+            .unwrap()
+            .marks
+            .add_mark(
+                Mark::new(id, marks)
+            )
     }
 
     pub fn print_to_string(&self) -> String {

@@ -35,7 +35,7 @@ impl Label {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub struct LabelId {
     id: usize,
 }

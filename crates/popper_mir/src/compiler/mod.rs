@@ -5,7 +5,10 @@ use crate::consts::{ConstKind, Ident};
 use crate::debug::VarDebugKind;
 use crate::expr::Expr;
 use crate::function::Function;
+use crate::marks::MarkKind;
 use crate::types::Types;
+
+mod const_table;
 
 #[derive(Debug, Clone)]
 pub struct Compiler {
@@ -13,7 +16,9 @@ pub struct Compiler {
     program: Vec<AstStatement>,
     env: HashMap<String, Ident>,
     function_env: HashMap<String, Function>,
-    current_var: Option<Ident>
+    const_table: const_table::ConstTable,
+    const_id: usize
+    
 }
 
 impl Compiler {
@@ -22,11 +27,12 @@ impl Compiler {
             builder: Builder::new(),
             program,
             env: HashMap::new(),
-            current_var: None,
-            function_env: HashMap::new()
+            function_env: HashMap::new(),
+            const_table: const_table::ConstTable::new(),
+            const_id: 0
         }
     }
-    
+
     pub fn remove_debug(&mut self, id: Ident) {
         self.builder.remove_debug_info(id);
     }
@@ -40,15 +46,6 @@ impl Compiler {
     }
 
     pub fn new_internal_ident(&mut self, ty: Types) -> Ident {
-        if let Some(id) = self.current_var.clone() {
-            let mut id = id;
-            self.current_var = None;
-            id.set_type(ty.clone());
-            self.env.iter_mut().filter(|x| x.1 == &id).for_each(|x| {
-                x.1.set_type(ty.clone());
-            });
-            return id;
-        }
         let id =  self.builder.build_let_decl(ty);
         self.debug_internal(id.clone());
         id
@@ -58,6 +55,17 @@ impl Compiler {
         let id = self.builder.build_let_decl(ty);
         self.env.insert(name.to_string(), id.clone());
         self.debug_var(id.clone(), name);
+        id
+    }
+    pub fn new_const(&mut self, c: ConstKind) -> Ident {
+        if let Some(c) = self.const_table.search(&c) {
+            self.builder.marks_ident(c.clone(), MarkKind::ConstTable);
+            return c.clone();
+        }
+        
+        let id = self.new_internal_ident(c.get_type());
+        self.builder.build_const_command(id.clone(), c.clone());
+        self.const_table.insert(id.clone(), c.clone());
         id
     }
 
@@ -74,7 +82,19 @@ impl Compiler {
             },
             AstStatement::Extern(ex) => {
                 for sign in ex.signs.clone() {
-                    self.builder.build_external_function(&sign.name, sign.arguments.args.iter().map(|x| x.ty.clone().into()).collect(), sign.return_type.clone().into(), sign.is_var_args);
+                    let f = self.builder.build_external_function(
+                        &sign.name,
+                        sign.arguments.args
+                            .iter()
+                            .map(|x| x.ty.clone().into())
+                            .collect(),
+                        sign.return_type
+                            .clone()
+                            .into(), 
+                        sign.is_var_args
+                    );
+                    
+                    self.function_env.insert(sign.name.clone(), f.into());
                 }
             },
             AstStatement::Expression(expr) => {
@@ -106,13 +126,15 @@ impl Compiler {
             .iter()
             .map(|x| x.ty.clone().into())
             .collect(), f.returntype.clone().into());
-
-
+        for arg in f.arguments.args.iter() {
+            let id = self.builder.new_ident(arg.ty.clone().into());
+            self.env.insert(arg.name.clone(), id.clone());
+            self.debug_var(id, &arg.name);
+        }
         for stmt in f.body.iter() {
             self.compile_stmt(stmt);
         }
         let func = self.builder.end_function();
-
         self.function_env.insert(f.name.clone(), func);
     }
 
@@ -149,28 +171,23 @@ impl Compiler {
                         )
                     },
                     Constant::Int(i) => {
-                        let res = self.new_internal_ident(Types::Int);
-                        self.builder.build_const_command(res.clone(), ConstKind::Int(i.value));
+                        let res = self.new_const(ConstKind::Int(i.value));
                         Expr::Ident(res)
                     },
                     Constant::Bool(b) => {
-                        let res = self.new_internal_ident(Types::Bool);
-                        self.builder.build_const_command(res.clone(), ConstKind::Bool(b.value));
+                        let res = self.new_const(ConstKind::Bool(b.value));
                         Expr::Ident(res)
                     },
                     Constant::StringLiteral(s) => {
-                        let res = self.new_internal_ident(Types::String(s.value.len()));
-                        self.builder.build_const_command(res.clone(), ConstKind::Str(s.value));
+                        let res = self.new_const(ConstKind::Str(s.value));
                         Expr::Ident(res)
                     },
                     Constant::Float(f) => {
-                        let res = self.new_internal_ident(Types::Float);
-                        self.builder.build_const_command(res.clone(), ConstKind::Float(f.value));
+                        let res = self.new_const(ConstKind::Float(f.value));
                         Expr::Ident(res)
                     },
                     Constant::Null(_) => {
-                        let res = self.new_internal_ident(Types::Unit);
-                        self.builder.build_const_command(res.clone(), ConstKind::Null);
+                        let res = self.new_const(ConstKind::Null);
                         Expr::Ident(res)
                     },
                     Constant::List(l) => {
@@ -178,8 +195,7 @@ impl Compiler {
                         for e in l.value.iter() {
                             list.push(self.compile_expression(e.clone()));
                         }
-                        let res = self.new_internal_ident(Types::List(Box::new(list[0].get_type()), l.value.len()));
-                        self.builder.build_const_command(res.clone(), ConstKind::List(list.to_vec()));
+                        let res = self.new_const(ConstKind::List(list));
                         Expr::Ident(res)
                     },
                     _ => todo!()

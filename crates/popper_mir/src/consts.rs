@@ -1,7 +1,7 @@
 use crate::expr::Expr;
 use crate::types::Types;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConstKind {
     Int(i64),
     Float(f64),
@@ -35,7 +35,7 @@ impl std::fmt::Display for ConstKind {
         match self {
             ConstKind::Int(i) => write!(f, "{}", i),
             ConstKind::Float(fl) => write!(f, "{}", fl),
-            ConstKind::Str(s) => write!(f, "{}", s),
+            ConstKind::Str(s) => write!(f, "\"{}\"", s),
             ConstKind::Bool(b) => write!(f, "{}", b),
             ConstKind::List(l) => {
                 write!(f, "[")?;
@@ -51,6 +51,7 @@ impl std::fmt::Display for ConstKind {
         }
     }
 }
+
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ident {

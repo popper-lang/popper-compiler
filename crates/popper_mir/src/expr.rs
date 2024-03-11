@@ -2,7 +2,7 @@ use std::fmt::Display;
 use crate::labels::LabelId;
 use crate::types::Types;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
     Const(crate::consts::ConstKind),
     Ident(crate::consts::Ident),
@@ -30,14 +30,14 @@ impl Expr {
             _ => panic!("Not a label")
         }
     }
-    
+
     pub fn get_type(&self) -> Types {
         match self {
             Expr::Const(c) => c.get_type(),
             Expr::Ident(i) => i.get_type(),
             Expr::Label(_) => Types::Label
         }
-    
+
     }
 }
 

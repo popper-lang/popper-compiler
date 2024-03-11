@@ -69,3 +69,9 @@ impl ExternalFunction {
         }
     }
 }
+
+impl From<ExternalFunction> for Function {
+    fn from(external_function: ExternalFunction) -> Self {
+        Self::new(external_function.name, external_function.args, external_function.ret)
+    }
+}

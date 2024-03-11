@@ -1,8 +1,15 @@
+use std::fmt::Display;
 use crate::consts::Ident;
 
 #[derive(Debug, Clone)]
 pub struct MarksSection {
     marks: Vec<Mark>
+}
+
+impl MarksSection {
+    pub fn get_all_marks(&self) -> &Vec<Mark> {
+        &self.marks
+    }
 }
 
 impl MarksSection {
@@ -13,14 +20,17 @@ impl MarksSection {
     }
 
     pub fn add_mark(&mut self, mark: Mark) {
+        if self.marks.contains(&mark) {
+            return;
+        }
         self.marks.push(mark);
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Mark {
-    id: Ident,
-    kind: MarkKind
+    pub id: Ident,
+    pub kind: MarkKind
 }
 
 impl Mark {
@@ -32,7 +42,15 @@ impl Mark {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum MarkKind {
     ConstTable
+}
+
+impl Display for MarkKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MarkKind::ConstTable => write!(f, "ConstTable")
+        }
+    }
 }

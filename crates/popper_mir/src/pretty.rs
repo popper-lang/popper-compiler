@@ -1,5 +1,6 @@
 use crate::command::CommandEnum;
 use crate::debug::{DebugSection, VarDebugKind};
+use crate::marks::MarksSection;
 use crate::program::{Program, ProgramSection};
 use crate::stmt::{Statement, StmtKind};
 
@@ -58,6 +59,8 @@ impl Pretty {
         }
         self.add_line("");
         self.pretty_dbg_section(function.dbg.clone());
+        self.add_line("");
+        self.pretty_mark_section(function.marks.clone());
         self.remove_tab();
         self.add_line("}");
     }
@@ -79,6 +82,15 @@ impl Pretty {
                 }
 
             }
+        }
+        self.remove_tab();
+    }
+    
+    fn pretty_mark_section(&mut self, marks_section: MarksSection) {
+        self.add_line("marks:");
+        self.add_tab();
+        for mark in marks_section.get_all_marks() {
+            self.add_line(&format!("mark {}, {}", mark.id, mark.kind));
         }
         self.remove_tab();
     }
@@ -156,7 +168,9 @@ impl Pretty {
                         .args
                         .iter()
                         .map(|x| x.to_string())
-                        .collect::<String>()
+                        .collect::<Vec<String>>()
+                        .join(", ")
+
                 )
             },
 
