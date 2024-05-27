@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [ "crates/popper_inkwell", "crates/popper_libc", "crates/popper_llvm", "crates/popper_mir","crates/popper_parser"]
+members = [ "crates/popper_inkwell", "crates/popper_libc", "crates/popper_llvm", "crates/popper_mem", "crates/popper_mir","crates/popper_parser"]
 
 [dependencies]
 clap = { version = "4.3.5", features = ["derive", "color"] }
@@ -12,7 +12,7 @@ clap = { version = "4.3.5", features = ["derive", "color"] }
 popper_semantic_analyzer = { path = "crates/popper_semantic_analyzer" }
 popper_parser = { path = "crates/popper_parser" }
 popper_ast = { path = "crates/popper_ast", features = ["extra-trait", "serde"]}
-#popper_codegen = { path = "crates/popper_codegen" }
+popper_codegen = { path = "crates/popper_codegen" }
 popper_mir = { path = "crates/popper_mir" }
 popper_common = { path = "crates/popper_common" }
 popper_error = { path = "crates/popper_error" }

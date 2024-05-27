@@ -1,9 +1,10 @@
 use crate::types;
-use crate::value::{Value, ValueEnum};
+use crate::value::{AsValueRef, Value, ValueEnum};
 use llvm_sys::core::{LLVMConstArray2, LLVMTypeOf};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+use crate::types::check_same_ty;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ArrayValue {
     pub(crate) array_value: LLVMValueRef,
     pub(crate) array_type: types::array_types::ArrayType,
@@ -11,10 +12,11 @@ pub struct ArrayValue {
 
 impl ArrayValue {
     pub fn new_const(value: &[ValueEnum], array_type: types::array_types::ArrayType) -> Self {
+        let mut value = value.iter().map(|v| v.as_value_ref()).collect::<Vec<_>>();
         let array_value = unsafe {
             LLVMConstArray2(
                 array_type.array_type,
-                value.as_ptr() as *mut LLVMValueRef,
+                value.as_mut_ptr(),
                 value.len() as u64,
             )
         };
@@ -52,7 +54,7 @@ impl Value for ArrayValue {
         types::TypeEnum::ArrayType(self.array_type)
     }
 
-    fn as_value_ref(&self) -> LLVMValueRef {
+    fn as_raw_ref(&self) -> LLVMValueRef {
         self.array_value
     }
 

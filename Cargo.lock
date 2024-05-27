@@ -150,9 +150,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "clap"
-version = "4.5.1"
+version = "4.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c918d541ef2913577a0f9566e9ce27cb35b6df072075769e0b26cb5a554520da"
+checksum = "b230ab84b0ffdf890d5a10abdbc8b83ae1c4918275daea1ab8801f71536b2651"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -160,9 +160,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.1"
+version = "4.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f3e7391dad68afb0c2ede1bf619f579a3dc9c2ec67f089baa397123a2f3d1eb"
+checksum = "ae129e2e766ae0ec03484e609954119f123cc1fe650337e155d03b022f24f7b4"
 dependencies = [
  "anstream",
  "anstyle",
@@ -328,7 +328,7 @@ dependencies = [
  "either",
  "inkwell_internals",
  "libc",
- "llvm-sys",
+ "llvm-sys 170.0.1",
  "once_cell",
  "thiserror",
 ]
@@ -418,6 +418,20 @@ name = "llvm-sys"
 version = "170.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eed90f72df5504c0af2e3a08ee7762a4a3e42ec2605811fc19f64879de40c50a"
+dependencies = [
+ "anyhow",
+ "cc",
+ "lazy_static",
+ "libc",
+ "regex-lite",
+ "semver",
+]
+
+[[package]]
+name = "llvm-sys"
+version = "180.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "778fa5fa02e32728e718f11eec147e6f134137399ab02fd2c13d32476337affa"
 dependencies = [
  "anyhow",
  "cc",
@@ -524,6 +538,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "popper_codegen"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "popper_common",
+ "popper_llvm",
+ "popper_mir",
+]
+
+[[package]]
 name = "popper_common"
 version = "0.1.0"
 dependencies = [
@@ -540,6 +564,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "popper_ast",
+ "popper_codegen",
  "popper_common",
  "popper_error",
  "popper_libc",
@@ -587,7 +612,16 @@ dependencies = [
 name = "popper_llvm"
 version = "0.1.0"
 dependencies = [
- "llvm-sys",
+ "clap",
+ "llvm-sys 180.0.0",
+ "popper_mem",
+]
+
+[[package]]
+name = "popper_mem"
+version = "0.1.0"
+dependencies = [
+ "libc",
 ]
 
 [[package]]

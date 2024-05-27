@@ -4,8 +4,9 @@ use crate::types::{Type, TypeEnum};
 use crate::value::float_value::FloatValue;
 use llvm_sys::core::LLVMDoubleTypeInContext;
 use llvm_sys::prelude::LLVMTypeRef;
+use crate::types::array_types::ArrayType;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FloatType {
     pub(crate) float_type: LLVMTypeRef,
 }
@@ -22,14 +23,8 @@ impl FloatType {
     pub fn float(&self, value: f64) -> FloatValue {
         FloatValue::new_const(value, *self)
     }
+    
 
-    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> FunctionType {
-        FunctionType::new(args, self.to_type_enum(), is_var_args)
-    }
-
-    pub fn to_type_enum(&self) -> TypeEnum {
-        TypeEnum::FloatType(*self)
-    }
 }
 
 impl Type for FloatType {
@@ -39,5 +34,8 @@ impl Type for FloatType {
 
     fn get_type_ref(&self) -> LLVMTypeRef {
         self.float_type
+    }
+    fn to_type_enum(&self) -> TypeEnum {
+        TypeEnum::FloatType(*self)
     }
 }

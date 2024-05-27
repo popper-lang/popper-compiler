@@ -10,6 +10,10 @@ impl MarksSection {
     pub fn get_all_marks(&self) -> &Vec<Mark> {
         &self.marks
     }
+    
+    pub fn contains_mark(&self, ident: &Ident, mark: MarkKind) -> bool {
+        self.marks.iter().any(|m| m.kind == mark && &m.id == ident)
+    }
 }
 
 impl MarksSection {

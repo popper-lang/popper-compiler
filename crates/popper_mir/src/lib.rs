@@ -3,21 +3,22 @@
 
 use crate::compiler::Compiler;
 
-mod consts;
-mod expr;
-mod command;
-mod stmt;
-mod types;
-mod function;
-mod debug;
-mod marks;
-mod labels;
-mod builder;
-mod pretty;
-mod program;
-mod compiler;
+pub mod consts;
+pub mod expr;
+pub mod command;
+pub mod stmt;
+pub mod types;
+pub mod function;
+pub mod debug;
+pub mod marks;
+pub mod labels;
+pub mod builder;
+pub mod pretty;
+pub mod program;
+pub mod compiler;
+mod bytecode;
 
-pub use crate::program::Program;
+pub use program::Program;
 
 pub fn compile(program: Vec<popper_ast::Statement>) -> Program {
     let mut compiler = Compiler::new(program);

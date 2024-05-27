@@ -1,6 +1,7 @@
 use llvm_sys::core::{
     LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString,
     LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf,
+    LLVMInstructionEraseFromParent
 };
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
@@ -35,19 +36,19 @@ use crate::value::array_value::ArrayValue;
 
 pub trait Value {
     fn get_type_ref(&self) -> LLVMTypeRef {
-        unsafe { LLVMTypeOf(self.as_value_ref()) }
+        unsafe { LLVMTypeOf(self.as_raw_ref()) }
     }
     fn get_type(&self) -> TypeEnum {
         self.get_type_ref().into()
     }
 
-    fn as_value_ref(&self) -> LLVMValueRef;
+    fn as_raw_ref(&self) -> LLVMValueRef;
     fn is_null_or_undef(&self) -> bool;
     fn is_const(&self) -> bool;
     fn is_null(&self) -> bool;
     fn is_undef(&self) -> bool;
     fn print_to_string(&self) -> String {
-        let llvm_str = unsafe { LLVMPrintValueToString(self.as_value_ref()) };
+        let llvm_str = unsafe { LLVMPrintValueToString(self.as_raw_ref()) };
         let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
             .to_str()
             .unwrap();
@@ -57,20 +58,20 @@ pub trait Value {
         eprintln!("{}", self.print_to_string());
     }
     fn replace_all_uses_with(&self, other: &dyn Value) {
-        unsafe { LLVMReplaceAllUsesWith(self.as_value_ref(), other.as_value_ref()) };
+        unsafe { LLVMReplaceAllUsesWith(self.as_raw_ref(), other.as_raw_ref()) };
     }
     fn set_name(&self, name: &str) {
         let name = std::ffi::CString::new(name).unwrap();
-        unsafe { LLVMSetValueName(self.as_value_ref(), name.as_ptr(), name.as_bytes().len()) }
+        unsafe { LLVMSetValueName(self.as_raw_ref(), name.as_ptr(), name.as_bytes().len()) }
     }
     fn get_name(&self) -> &str {
-        let name = unsafe { LLVMGetValueName(self.as_value_ref(), &mut 0) };
+        let name = unsafe { LLVMGetValueName(self.as_raw_ref(), &mut 0) };
         let name = unsafe { std::ffi::CStr::from_ptr(name) };
         let name = name.to_str().unwrap();
         name
     }
     fn dump(&self) {
-        unsafe { LLVMDumpValue(self.as_value_ref()) }
+        unsafe { LLVMDumpValue(self.as_raw_ref()) }
     }
 }
 
@@ -80,7 +81,7 @@ pub mod function_value;
 pub mod int_value;
 pub mod pointer_value;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueEnum {
     IntValue(int_value::IntValue),
     FloatValue(float_value::FloatValue),
@@ -102,6 +103,7 @@ impl ValueEnum {
             ValueEnum::PointerValue(pointer_value) => pointer_value.get_type(),
         }
     }
+
 
     pub fn print_to_string(&self) -> String {
         match self {
@@ -140,6 +142,10 @@ impl ValueEnum {
             ValueEnum::PointerValue(pointer_value) => pointer_value.dump(),
         }
     }
+
+    pub fn erase_from_parent(&self) {
+        unsafe { LLVMInstructionEraseFromParent(self.as_llvm_ref()) }
+    }
 }
 
 impl From<LLVMValueRef> for ValueEnum {
@@ -155,12 +161,13 @@ impl From<LLVMValueRef> for ValueEnum {
                     ValueEnum::FloatValue(float_value::FloatValue::new_llvm_ref(value))
                 }
                 TypeEnum::FunctionType(_) => {
-                    ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(value))
+                    ValueEnum::FunctionValue(function_value::FunctionValue::new_llvm_ref(value, None))
                 }
                 TypeEnum::ArrayType(_) => ValueEnum::ArrayValue(ArrayValue::new_llvm_ref(value)),
                 TypeEnum::PointerType(_) => {
                     ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(value))
-                }
+                },
+                _ => panic!("Unknown type"),
             }
 
         }
@@ -170,11 +177,11 @@ impl From<LLVMValueRef> for ValueEnum {
 impl AsValueRef for ValueEnum {
     fn as_value_ref(&self) -> LLVMValueRef {
         match self {
-            ValueEnum::IntValue(int_value) => int_value.as_value_ref(),
-            ValueEnum::FloatValue(float_value) => float_value.as_value_ref(),
-            ValueEnum::FunctionValue(function_value) => function_value.as_value_ref(),
-            ValueEnum::ArrayValue(array_value) => array_value.as_value_ref(),
-            ValueEnum::PointerValue(pointer_value) => pointer_value.as_value_ref(),
+            ValueEnum::IntValue(int_value) => int_value.as_raw_ref(),
+            ValueEnum::FloatValue(float_value) => float_value.as_raw_ref(),
+            ValueEnum::FunctionValue(function_value) => function_value.as_raw_ref(),
+            ValueEnum::ArrayValue(array_value) => array_value.as_raw_ref(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.as_raw_ref(),
         }
     }
 }
@@ -187,6 +194,12 @@ impl From<ValueEnum> for LLVMValueRef {
 
 pub trait AsValueRef {
     fn as_value_ref(&self) -> LLVMValueRef;
+}
+
+impl<T: Value> AsValueRef for T {
+    fn as_value_ref(&self) -> LLVMValueRef {
+        <Self as Value>::as_raw_ref(self)
+    }
 }
 
 pub trait ToValue {
@@ -261,3 +274,10 @@ impl ToValue for i64 {
 pub fn to_value<T: ToValue>(t: T) -> ValueEnum {
     t.to_value()
 }
+
+
+pub(crate) trait MathValue: Value {}
+
+
+impl MathValue for int_value::IntValue {}
+impl MathValue for float_value::FloatValue {}

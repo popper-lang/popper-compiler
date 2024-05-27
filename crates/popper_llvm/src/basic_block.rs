@@ -20,7 +20,7 @@ impl BasicBlock {
         self.context
     }
 
-    pub fn get_basic_block(&self) -> LLVMBasicBlockRef {
+    pub fn get_basic_block_ref(&self) -> LLVMBasicBlockRef {
         self.basic_block
     }
 

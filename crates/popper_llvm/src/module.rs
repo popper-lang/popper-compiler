@@ -3,14 +3,16 @@ use llvm_sys::bit_reader::LLVMParseBitcodeInContext2;
 use llvm_sys::core::{
     LLVMAddFunction, LLVMAppendModuleInlineAsm, LLVMCreateMemoryBufferWithContentsOfFile,
     LLVMDumpModule, LLVMGetNamedFunction, LLVMModuleCreateWithNameInContext,
-    LLVMPrintModuleToString,
+    LLVMPrintModuleToString, LLVMDumpType
 };
 use llvm_sys::linker::LLVMLinkModules2;
 use llvm_sys::prelude::{LLVMMemoryBufferRef, LLVMModuleRef};
 use std::ffi::CString;
+use popper_mem::string::to_c_str;
 
 use crate::context::Context;
 use crate::types::function_types::FunctionType;
+use crate::types::Type;
 use crate::value::function_value::FunctionValue;
 
 #[derive(Debug, Copy, Clone)]
@@ -54,7 +56,7 @@ impl Module {
     }
 
     pub fn new(name: &str, context: Context) -> Self {
-        let name = std::ffi::CString::new(name).unwrap();
+        let name = to_c_str(name);
         let module = unsafe { LLVMModuleCreateWithNameInContext(name.as_ptr(), context.context) };
         Self { module, context }
     }
@@ -83,19 +85,19 @@ impl Module {
     }
 
     pub fn add_function(&self, name: &str, function_type: FunctionType) -> FunctionValue {
-        let name = CString::new(name).unwrap();
+        let name = to_c_str(name);
         let function =
             unsafe { LLVMAddFunction(self.module, name.as_ptr(), function_type.get_type_ref()) };
-        unsafe { FunctionValue::new_llvm_ref(function) }
+        unsafe { FunctionValue::new_llvm_ref(function, Some(function_type.get_type_ref())) }
     }
 
     pub fn get_function(&self, name: &str) -> Option<FunctionValue> {
-        let name = std::ffi::CString::new(name).unwrap();
+        let name = to_c_str(name);
         let function = unsafe { LLVMGetNamedFunction(self.module, name.as_ptr()) };
         if function.is_null() {
             None
         } else {
-            Some(unsafe { FunctionValue::new_llvm_ref(function) })
+            Some(unsafe { FunctionValue::new_llvm_ref(function, None) })
         }
     }
 

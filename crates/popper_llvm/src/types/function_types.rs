@@ -1,7 +1,7 @@
 use crate::types::{Type, TypeEnum};
-use llvm_sys::core::LLVMFunctionType;
+use llvm_sys::core::*;
 use llvm_sys::prelude::LLVMTypeRef;
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FunctionType {
     pub(crate) function_type: LLVMTypeRef,
 }
@@ -21,21 +21,43 @@ impl FunctionType {
         Self { function_type }
     }
 
-    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> Self {
-        FunctionType::new(args, self.to_type_enum(), is_var_args)
-    }
-
     pub fn new_with_llvm_ref(function_type: LLVMTypeRef) -> Self {
         Self { function_type }
     }
 
-    pub fn get_type_ref(&self) -> LLVMTypeRef {
-        self.function_type
+    pub fn print_to_string(&self) -> String {
+        unsafe {
+            dbg!();
+            let return_ty = LLVMGetReturnType(self.function_type);
+            dbg!();
+            let return_c_str = LLVMPrintTypeToString(return_ty) ;
+            let return_ty_str = std::ffi::CStr::from_ptr(return_c_str).to_str().unwrap();
+            let mut args_str = String::new();
+            let num_args = LLVMCountParamTypes(self.function_type);
+            for i in 0..num_args {
+                let arg_ty: *mut LLVMTypeRef = std::ptr::null_mut();
+                LLVMGetParamTypes(self.function_type, arg_ty);
+                let arg_c_str = LLVMPrintTypeToString(*arg_ty);
+                let arg_ty_str = std::ffi::CStr::from_ptr(arg_c_str).to_str().unwrap();
+                args_str.push_str(arg_ty_str);
+                if i != num_args - 1 {
+                    args_str.push_str(", ");
+                }
+            }
+            dbg!();
+
+            let var_args = LLVMIsFunctionVarArg(self.function_type);
+            let var_args_str = if var_args == 1 {
+                "varargs"
+            } else {
+                "no varargs"
+            };
+            format!("function {} ({}) {}", return_ty_str, args_str, var_args_str)
+        }
+
     }
 
-    pub fn to_type_enum(&self) -> TypeEnum {
-        TypeEnum::FunctionType(*self)
-    }
+
 }
 
 impl Type for FunctionType {
@@ -44,5 +66,8 @@ impl Type for FunctionType {
     }
     fn get_type_ref(&self) -> LLVMTypeRef {
         self.function_type
+    }
+    fn to_type_enum(&self) -> TypeEnum {
+        TypeEnum::FunctionType(*self)
     }
 }

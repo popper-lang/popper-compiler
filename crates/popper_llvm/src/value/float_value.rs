@@ -4,7 +4,7 @@ use crate::value::{Value, ValueEnum};
 use llvm_sys::core::{LLVMConstReal, LLVMConstRealGetDouble, LLVMTypeOf};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FloatValue {
     pub(crate) float_value: LLVMValueRef,
     pub(crate) float_type: types::float_types::FloatType,
@@ -48,7 +48,7 @@ impl Value for FloatValue {
         TypeEnum::FloatType(self.float_type)
     }
 
-    fn as_value_ref(&self) -> LLVMValueRef {
+    fn as_raw_ref(&self) -> LLVMValueRef {
         self.float_value
     }
 

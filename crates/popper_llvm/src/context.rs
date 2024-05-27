@@ -1,11 +1,13 @@
 use crate::basic_block::BasicBlock;
 use crate::builder::Builder;
-use llvm_sys::core::{LLVMAppendBasicBlockInContext, LLVMContextCreate};
+use llvm_sys::core::{LLVMAppendBasicBlockInContext, LLVMConstStringInContext, LLVMContextCreate};
 use llvm_sys::prelude::LLVMContextRef;
 
 use crate::module::Module;
 use crate::types::{float_types, int_types};
+use crate::value::array_value::ArrayValue;
 use crate::value::function_value::FunctionValue;
+use crate::value::ValueEnum;
 
 #[derive(Clone, Copy, Debug)]
 pub struct Context {
@@ -22,7 +24,7 @@ impl Context {
         Module::new(name, *self)
     }
 
-    pub fn new_builder(&mut self) -> Builder {
+    pub fn new_builder(&self) -> Builder {
          Builder::new(*self)
     }
 
@@ -32,6 +34,9 @@ impl Context {
 
     pub fn i1_type(&self) -> int_types::IntType {
         int_types::IntType::new_with_context(1, *self)
+    }
+    pub fn bool_type(&self) -> int_types::IntType {
+        self.i1_type()
     }
 
     pub fn i8_type(&self) -> int_types::IntType {
@@ -52,6 +57,17 @@ impl Context {
 
     pub fn float_type(&self) -> float_types::FloatType {
         float_types::FloatType::new_with_context(*self)
+    }
+
+    pub fn const_string(&self, s: &str) -> ValueEnum {
+        let s = std::ffi::CString::new(s).unwrap();
+        unsafe {
+            ValueEnum::ArrayValue(
+                ArrayValue::new_llvm_ref(
+                    LLVMConstStringInContext(self.context, s.as_ptr(), s.as_bytes().len() as u32, 0)
+                )
+            )
+        }
     }
 
     pub fn append_basic_block(&self, name: &str, fn_value: FunctionValue) -> BasicBlock {

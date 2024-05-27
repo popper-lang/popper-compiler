@@ -21,6 +21,17 @@ impl Program {
     pub fn add_function(&mut self, function: Function) {
         self.programs.push(ProgramSection::Function(function));
     }
+    
+    pub fn get_function(&self, name: &str) -> Option<&Function> {
+        for program in &self.programs {
+            if let ProgramSection::Function(function) = program {
+                if function.name == name {
+                    return Some(function);
+                }
+            }
+        }
+        None
+    }
 
     pub fn add_external_function(&mut self, external_function: ExternalFunction) {
         self.programs.push(ProgramSection::ExternalFunction(external_function));

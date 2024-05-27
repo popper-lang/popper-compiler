@@ -1,13 +1,9 @@
 extern {
-    func printf(format: string ...): int
+    func printf(format: string...): int
 };
-func add(a: int, b: int): int {
-    return a + b;
-}
 
 func main(): int {
-    let a = add(1, 1);
-    let b = 2 + 2 + 1;
-    printf("Hello, World! %d %d\n", a, b);
+    let a = 22 + 33;
+    printf("22 + 33 = %d\n", a);
     return 0;
 }

@@ -3,7 +3,7 @@ use crate::value::{Value, ValueEnum};
 use llvm_sys::core::{LLVMConstPointerCast, LLVMIsNull};
 use llvm_sys::prelude::LLVMValueRef;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PointerValue {
     pub(crate) pointer_value: LLVMValueRef,
 }
@@ -26,12 +26,12 @@ impl PointerValue {
     }
 }
 impl Value for PointerValue {
-    fn as_value_ref(&self) -> LLVMValueRef {
-        self.get_llvm_ref()
+    fn is_null_or_undef(&self) -> bool {
+        unsafe { LLVMIsNull(self.as_raw_ref()) != 0 }
     }
 
-    fn is_null_or_undef(&self) -> bool {
-        unsafe { LLVMIsNull(self.as_value_ref()) != 0 }
+    fn as_raw_ref(&self) -> LLVMValueRef {
+        self.pointer_value
     }
 
     fn is_const(&self) -> bool {

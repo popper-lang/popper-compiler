@@ -1,9 +1,9 @@
 use crate::types::{int_types, TypeEnum};
-use crate::value::{Value, ValueEnum};
+use crate::value::{AsValueRef, Value, ValueEnum};
 use llvm_sys::core::{LLVMConstInt, LLVMConstIntGetZExtValue, LLVMTypeOf};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct IntValue {
     pub(crate) int_value: LLVMValueRef,
     pub(crate) int_type: int_types::IntType,
@@ -42,16 +42,15 @@ impl IntValue {
 }
 
 impl Value for IntValue {
+    fn as_raw_ref(&self) -> LLVMValueRef {
+        self.int_value
+    }
     fn get_type_ref(&self) -> LLVMTypeRef {
         self.int_type.int_type
     }
 
     fn get_type(&self) -> TypeEnum {
         TypeEnum::IntType(self.int_type)
-    }
-
-    fn as_value_ref(&self) -> LLVMValueRef {
-        self.int_value
     }
 
     fn is_null_or_undef(&self) -> bool {

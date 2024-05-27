@@ -85,7 +85,7 @@ impl ExecutionEngine {
         let result =
             unsafe { LLVMFindFunction(self.execution_engine, name.as_ptr(), f.as_mut_ptr()) };
         if result == 0 {
-            Some(unsafe { FunctionValue::new_llvm_ref(f.assume_init()) })
+            Some(unsafe { FunctionValue::new_llvm_ref(f.assume_init(), None) })
         } else {
             None
         }

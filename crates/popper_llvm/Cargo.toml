@@ -3,11 +3,8 @@ name = "popper_llvm"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-llvm-sys = { version = "170.0.0"  }
-
-
-
-
+llvm-sys = { version = "180.0.0"  }
+clap = { version = "4.5.2", features = ["derive"] }
+popper_mem = { path = "../popper_mem" }
