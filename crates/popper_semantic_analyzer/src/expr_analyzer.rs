@@ -356,11 +356,8 @@ impl ExprVisitor for ExprAnalyzer {
         &mut self,
         struct_field_access: StructFieldAccess,
     ) -> Result<Self::Output, Self::Error> {
-        let struct_model = self
-            .env
-            .get_variable(struct_field_access.name.as_str())
-            .unwrap();
-        let struct_model_value = struct_model.value.get_value().unwrap();
+        let struct_model = self.visit_expr(*struct_field_access.name.clone())?;
+        let struct_model_value = struct_model.get_value().unwrap();
         if let ValueFlag::Struct(ref fields) = struct_model_value {
             match fields.get(&struct_field_access.field) {
                 Some(flag) => Ok(SymbolFlags::new(struct_field_access.span)

@@ -14,6 +14,8 @@ use popper_mir::program::ProgramSection;
 use popper_mir::stmt::{Statement, StmtKind};
 use crate::cast::cast_type;
 use std::collections::HashMap;
+use popper_llvm::types::struct_type::StructType;
+use popper_mir::types::Types;
 
 
 #[derive(Debug, Clone)]
@@ -25,12 +27,13 @@ pub struct Compiler {
     env: Vec<ValueEnum>,
     current_function: Option<Function>,
     functions_map: HashMap<String, FunctionValue>,
+    struct_map: HashMap<String, StructType>,
     allocas_ptr: Vec<ValueEnum>
 }
 
 impl Compiler {
     pub fn new(program: Program, file: &str) -> Self {
-        let context = Context::new();
+        let context = Context::create();
         let builder = context.new_builder();
         let module = context.new_module(file);
         Compiler {
@@ -41,6 +44,7 @@ impl Compiler {
             env: vec![],
             current_function: None,
             functions_map: HashMap::new(),
+            struct_map: HashMap::new(),
             allocas_ptr: vec![],
         }
     }
@@ -54,9 +58,6 @@ impl Compiler {
             self.compile_section(&section);
         }
 
-        for allocas in self.allocas_ptr.clone().into_iter() {
-            allocas.erase_from_parent();
-        }
     }
 
     fn compile_section(&mut self, section: &ProgramSection) {
@@ -66,7 +67,16 @@ impl Compiler {
             },
             ProgramSection::ExternalFunction(func) => {
                 self.compile_external_function(func);
+            },
+            ProgramSection::TypeDecl(e, f) => {
+                let tys = cast_type(self.context, f.clone());
+                self.struct_map.insert(e.get_ident(), tys.into_struct_type());
+                
             }
+        }
+
+        for ptr in self.allocas_ptr.clone() {
+            ptr.erase_from_parent();
         }
     }
 
@@ -122,17 +132,18 @@ impl Compiler {
                 let ident = assign.ident;
                 let val = self.compile_command(&assign.command, Some(ident.clone())).unwrap();
                 let index = ident.get_index() as usize;
-                self.env[index] = val;
+                self.env.insert(index, val);
+                
             },
             StmtKind::Command(command) => {
                 self.compile_command(&command, None);
             },
             StmtKind::LetDecl(decl) => {
-                let ty = cast_type(self.context, decl.ty.clone());
-                let val = self.builder.build_alloca(ty, "");
-                self.allocas_ptr.push(val.to_value_enum());
-                let index = decl.ident.get_index() as usize;
-                self.env.insert(index, val.to_value_enum());
+                // let ty = cast_type(self.context, decl.ty.clone());
+                // let val = self.builder.build_alloca(ty, "");
+                // self.allocas_ptr.push(val.to_value_enum());
+                // let index = decl.ident.get_index() as usize;
+                // self.env.insert(index, val.to_value_enum());
             }
         }
     }
@@ -148,10 +159,6 @@ impl Compiler {
                 let ptr_ty = self.context.i8_type().ptr().to_type_enum();
                 self.builder.build_load(ptr_ty, ptr.into_ptr_value(), "")
             },
-            CommandEnum::LLVMStore(ptr) => {
-                let ptr = self.env[ptr.ptr.get_index() as usize];
-                ptr
-            },
             CommandEnum::Call(func) => {
                 let l_func = self.functions_map.get(&func.function).unwrap().clone();
                 let args = func.args.iter().map(|arg| self.compile_expr(arg)).collect::<Vec<_>>();
@@ -159,6 +166,12 @@ impl Compiler {
             },
             CommandEnum::CopyVal(val) => {
                 self.compile_expr(&val.val)
+            },
+            CommandEnum::LLVMStore(ptr) => {
+                let val = self.env[ptr.ptr.get_index() as usize];
+                let ptr = self.builder.build_alloca(val.get_type(), "");
+                self.builder.build_store(val, ptr);
+                ptr.to_value_enum()
             },
             CommandEnum::Ret(val) => {
                 let val = self.compile_expr(&val.value);
@@ -169,7 +182,6 @@ impl Compiler {
                 let lhs = self.compile_expr(&add.left).into_int_value();
                 let rhs = self.compile_expr(&add.right).into_int_value();
                 let res = self.builder.build_int_add(lhs, rhs, MathOpType::None, "");
-
                 res
             },
             CommandEnum::Sub(sub) => {
@@ -181,6 +193,16 @@ impl Compiler {
                 let lhs = self.compile_expr(&mul.left).into_int_value();
                 let rhs = self.compile_expr(&mul.right).into_int_value();
                 self.builder.build_int_mul(lhs, rhs, MathOpType::None, "")
+            },
+            CommandEnum::GetElementPtr(gep) => {
+                let target_type = cast_type(self.context, gep.target_type.clone());
+                let ptr = self.env.get(gep.ptr.get_index() as usize).unwrap().clone().into_ptr_value();
+                let index = self.compile_expr(&gep.index);
+                //let zero = self.context.i64_type().int(0, false);
+                let array = vec![index.into_int_value()];
+                let ptr = self.builder.build_inbound_get_element_ptr(target_type, ptr, &array, "");
+                let loaded = self.builder.build_load(target_type, ptr.into_ptr_value(), "");
+                loaded
             },
             _ => unimplemented!()
 
@@ -197,8 +219,8 @@ impl Compiler {
                 let val = self.env[ident.get_index() as usize];
                 if let Some(e) = self.allocas_ptr.iter().position(|x| x == &val) {
                     self.allocas_ptr.remove(e);
-
                 }
+
                 val
             },
             _ => unimplemented!()
@@ -221,7 +243,12 @@ impl Compiler {
                 let arr = arr.const_array(l.iter().map(|c| self.compile_expr(c)).collect::<Vec<_>>().as_slice());
                 arr.to_value_enum()
             },
-            ConstKind::Null => self.context.void_type().void().to_value_enum(),
+            ConstKind::Struct(s, elt) => {
+                let args = elt.iter().map(|c| self.compile_expr(c)).collect::<Vec<_>>();
+                let s = self.struct_map.get(&s.get_ident()).unwrap();
+                s.const_struct(&args)
+            },
+            _ => unimplemented!()
         }
     }
 

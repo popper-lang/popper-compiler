@@ -1,13 +1,10 @@
 use crate::context::Context;
-use crate::types::array_types::ArrayType;
-use crate::types::function_types::FunctionType;
 use crate::types::{Type, TypeEnum};
 use crate::value::int_value::IntValue;
 use llvm_sys::core::{LLVMGetIntTypeWidth, LLVMIntType, LLVMIntTypeInContext};
 use llvm_sys::prelude::LLVMTypeRef;
-use crate::types::pointer_types::PointerTypes;
 
-use super::check_same_ty;
+use super::{check_same_ty, RawType};
 
 macro_rules! impl_into_int_type {
     ($type:ty) => {
@@ -22,7 +19,7 @@ macro_rules! impl_into_int_type {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct IntType {
-    pub(crate) int_type: LLVMTypeRef,
+    pub(crate) int_type: RawType,
     pub(crate) size: u32,
 }
 
@@ -41,7 +38,7 @@ impl IntType {
         check_same_ty(llvm_ty, "int");
         let size = unsafe { LLVMGetIntTypeWidth(llvm_ty) };
         Self {
-            int_type: llvm_ty,
+            int_type: RawType::new(llvm_ty),
             size,
         }
     }
@@ -52,7 +49,7 @@ impl IntType {
     pub fn new_sized(size: u32) -> Self {
         Self::check_size(size);
         let int_type = unsafe { LLVMIntType(size) };
-        Self { int_type, size }
+        Self { int_type: RawType::new(int_type), size }
     }
 
     /// Creates a new `IntType` with the given size and `Context`.
@@ -61,11 +58,15 @@ impl IntType {
     pub fn new_with_context(size: u32, context: Context) -> Self {
         Self::check_size(size);
         let int_type = unsafe { LLVMIntTypeInContext(context.context, size) };
-        Self { int_type, size }
+        Self { int_type: RawType::new(int_type), size }
     }
 
     pub fn get_size(&self) -> u32 {
         self.size
+    }
+    
+    pub fn get_int_width(&self) -> u32 {
+        unsafe { LLVMGetIntTypeWidth(self.int_type.as_llvm_ref()) }
     }
 
     pub fn int(&self, value: u32, sign_extend: bool) -> IntValue {
@@ -75,10 +76,7 @@ impl IntType {
     pub fn bool(&self, value: bool) -> IntValue {
         IntValue::new_const(value as u32, *self, false)
     }
-    pub fn void(&self) -> IntValue {
-        IntValue::new_const(0, *self, false)
-    }
-    
+
 }
 
 impl_into_int_type!(u8);
@@ -91,7 +89,7 @@ impl Type for IntType {
         true
     }
 
-    fn get_type_ref(&self) -> LLVMTypeRef {
+    fn as_raw(&self) -> RawType {
         self.int_type
     }
 

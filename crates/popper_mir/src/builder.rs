@@ -1,6 +1,6 @@
 use crate::command::{Add, Br, Call, CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, CmpNe, CommandEnum, Const, CopyVal, Div, LLVMLoadPtr, LLVMStore, Mul, Ref, Ret, Sub};
 
-use crate::consts::{ConstKind, Ident};
+use crate::consts::{ConstKind, Ident, TypeId};
 use crate::debug::VarDebugKind;
 use crate::expr::Expr;
 use crate::function::Function;
@@ -60,7 +60,7 @@ impl Builder {
         self.program.add_function(func.clone());
         func
     }
-    
+
     fn len(&self) -> usize {
         self.current_function.as_ref().unwrap().stmts.len()
     }
@@ -340,6 +340,24 @@ impl Builder {
                 )
             );
     }
+    
+    pub fn build_type_decl(&mut self, id: TypeId, ty: Types) {
+        self.program.add_type_decl(id, ty);
+    }
+    
+    pub fn build_gep_command(&mut self, id: Ident, ptr: Ident, target_type: Types, index: Expr) {
+        self.current_function
+            .as_mut()
+            .unwrap()
+            .add_stmt(
+                Statement::new_assign(
+                    id,
+                    CommandEnum::GetElementPtr(
+                        crate::command::GetElementPtr::new(ptr, index, target_type)
+                    )
+                )
+            );
+    }
 
     pub fn set_debug_info(&mut self, id: Ident, dbg_kind: VarDebugKind) {
         self.current_function
@@ -347,14 +365,21 @@ impl Builder {
             .unwrap()
             .set_debug_info(id, dbg_kind);
     }
-    
+
+    pub fn use_ident(&mut self, id: Ident) {
+        self.current_function
+            .as_mut()
+            .unwrap()
+            .use_ident(id);
+    }
+
     pub fn remove_debug_info(&mut self, id: Ident) {
         self.current_function
             .as_mut()
             .unwrap()
             .remove_debug_info(id);
     }
-    
+
     pub fn marks_ident(&mut self, id: Ident, marks: MarkKind) {
         self.current_function
             .as_mut()

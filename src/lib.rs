@@ -61,7 +61,7 @@ pub fn check_program(ast: Vec<Statement>, source: &str, file_name: &str) -> bool
 
 }
 
-pub fn compile_to_mir(ast: Vec<Statement>, file_name: &str) -> Program {
+pub fn compile_to_mir(ast: Vec<Statement>, _file_name: &str) -> Program {
     compile(ast)
 }
 

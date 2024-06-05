@@ -1,7 +1,8 @@
 use std::collections::HashMap;
-use popper_ast::{BinOpKind, Constant, Expression as AstExpression, Statement as AstStatement, Type as AstType, TypeKind as AstTypeKind};
+use std::rc::Rc;
+use popper_ast::{BinOpKind, Constant, Expression as AstExpression, Statement as AstStatement, StructStmt as AstStructStmt, Type as AstType, TypeKind as AstTypeKind};
 use crate::builder::Builder;
-use crate::consts::{ConstKind, Ident};
+use crate::consts::{ConstKind, Ident, TypeId};
 use crate::debug::VarDebugKind;
 use crate::expr::Expr;
 use crate::function::Function;
@@ -15,10 +16,11 @@ pub struct Compiler {
     builder: Builder,
     program: Vec<AstStatement>,
     env: HashMap<String, Ident>,
+    ty_env: HashMap<String, AstStructStmt>,
     function_env: HashMap<String, Function>,
     const_table: const_table::ConstTable,
     const_id: usize
-    
+
 }
 
 impl Compiler {
@@ -28,6 +30,7 @@ impl Compiler {
             program,
             env: HashMap::new(),
             function_env: HashMap::new(),
+            ty_env: HashMap::new(),
             const_table: const_table::ConstTable::new(),
             const_id: 0
         }
@@ -57,12 +60,18 @@ impl Compiler {
         self.debug_var(id.clone(), name);
         id
     }
+
+    pub fn use_id(&mut self, id: Ident, n: i64) {
+        for _ in 0..n {
+            self.builder.use_ident(id.clone());
+        }
+    }
     pub fn new_const(&mut self, c: ConstKind) -> Ident {
         if let Some(c) = self.const_table.search(&c) {
             self.builder.marks_ident(c.clone(), MarkKind::ConstTable);
             return c.clone();
         }
-        
+
         let id = self.new_internal_ident(c.get_type());
         self.builder.build_const_command(id.clone(), c.clone());
         self.const_table.insert(id.clone(), c.clone());
@@ -90,10 +99,10 @@ impl Compiler {
                             .collect(),
                         sign.return_type
                             .clone()
-                            .into(), 
+                            .into(),
                         sign.is_var_args
                     );
-                    
+
                     self.function_env.insert(sign.name.clone(), f.into());
                 }
             },
@@ -114,6 +123,14 @@ impl Compiler {
                     Expr::Const(ConstKind::Null)
                 };
                 self.builder.build_ret_command(expr);
+            },
+            AstStatement::Struct(s) => {
+                self.ty_env.insert(s.name.clone(), s.clone());
+                let mut fields = Vec::new();
+                for field in s.fields.iter() {
+                    fields.push(field.ty.clone().into());
+                }
+                self.builder.build_type_decl(TypeId::new(s.name.clone()), Types::Struct(s.name.clone(), fields));
             },
             _ => todo!()
         }
@@ -166,8 +183,9 @@ impl Compiler {
             AstExpression::Constant(e) => {
                 match e {
                     Constant::Ident(i) => {
+                        let name = self.env.get(&i.name).unwrap();
                         Expr::Ident(
-                            self.env.get(&i.name).unwrap().clone()
+                            name.clone()
                         )
                     },
                     Constant::Int(i) => {
@@ -207,7 +225,30 @@ impl Compiler {
                 let res = self.new_internal_ident(func.ret.clone());
                 self.builder.build_call_command(call.name, args, res.clone());
                 Expr::Ident(res)
-            }
+            },
+            AstExpression::StructInstance(s) => {
+                let mut fields = Vec::new();
+                for field in s.fields.iter() {
+                    fields.push(self.compile_expression(field.clone().value));
+                }
+                let const_ = ConstKind::Struct(TypeId::new(s.name.clone()), fields);
+                let res = self.new_const(const_);
+                let id = self.new_internal_ident(
+                    Types::Ptr(Box::new(res.get_type()))
+                );
+                self.builder.build_llvm_store_command(id.clone(), res);
+                Expr::Ident(id)
+            },
+            AstExpression::StructFieldAccess(s) => {
+                let struct_ = self.compile_expression(*s.name);
+                let struct_ty = struct_.clone().expect_ident().get_type().get_ptr_inner_type().into_struct();
+                let ty = self.ty_env.get(&struct_ty.0).unwrap();
+                let s = ty.fields.iter().position(|x| x.name == s.field).unwrap();
+                let ty: Types = ty.fields[s].ty.clone().into();
+                let res = self.new_internal_ident(ty.clone());
+                self.builder.build_gep_command(res.clone(), struct_.expect_ident(), ty, Expr::Const(ConstKind::Int(s as i64)));
+                Expr::Ident(res)
+            },
             _ => todo!()
         }
 

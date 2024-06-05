@@ -9,6 +9,7 @@ pub enum ConstKind {
     Bool(bool),
     List(Vec<Expr>),
     Null,
+    Struct(TypeId, Vec<Expr>),
 }
 
 impl ConstKind {
@@ -26,6 +27,13 @@ impl ConstKind {
                 Types::List(Box::new(ty), l.len())
             },
             ConstKind::Null => Types::Unit,
+            ConstKind::Struct(n, s) => {
+                let mut ty = vec![];
+                for c in s {
+                    ty.push(c.get_type());
+                }
+                Types::Struct(n.ident.clone(), ty)
+            }
         }
     }
 }
@@ -48,6 +56,16 @@ impl std::fmt::Display for ConstKind {
                 write!(f, "]")
             },
             ConstKind::Null => write!(f, "null"),
+            ConstKind::Struct(_, s) => {
+                write!(f, "{{")?;
+                for (i, c) in s.iter().enumerate() {
+                    write!(f, "{}", c)?;
+                    if i < s.len() - 1 {
+                        write!(f, ", ")?;
+                    }
+                }
+                write!(f, "}}")
+            }
         }
     }
 }
@@ -91,5 +109,28 @@ impl Ident {
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "_{}", self.index_table)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeId {
+    ident: String,
+}
+
+impl TypeId {
+    pub fn new(ident: String) -> Self {
+        Self {
+            ident
+        }
+    }
+
+    pub fn get_ident(&self) -> String {
+        self.ident.clone()
+    }
+}
+
+impl std::fmt::Display for TypeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "@{}", self.ident)
     }
 }

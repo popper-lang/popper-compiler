@@ -18,7 +18,7 @@ impl DebugSection {
     pub fn remove_entry(&mut self, id: Ident) {
         self.debug_table.retain(|x| x.id != id);
     }
-    
+
     pub fn get_debug_info(&self, id: &Ident) -> Option<&VarDebugKind> {
         for entry in &self.debug_table {
             if &entry.id == id {
@@ -27,9 +27,26 @@ impl DebugSection {
         }
         None
     }
-    
+
+    pub fn get_mut_debug_info(&mut self, id: &Ident) -> Option<&mut VarDebugKind> {
+        for entry in &mut self.debug_table {
+            if &entry.id == id {
+                return Some(&mut entry.kind);
+            }
+        }
+        None
+    }
+
     pub fn get_all_debug_info(&self) -> &Vec<DebugEntry> {
         &self.debug_table
+    }
+
+    pub fn set_uses(&mut self, id: Ident, uses: i64) {
+        if let Some(entry) = self.get_mut_debug_info(&id) {
+            if let VarDebugKind::Use(n) = entry {
+                *n = uses;
+            }
+        }
     }
 }
 
@@ -51,7 +68,8 @@ impl DebugEntry {
 #[derive(Debug, Clone)]
 pub enum VarDebugKind {
     Var(String),
-    Internal
+    Internal,
+    Use(i64)
 }
 
 impl VarDebugKind {
@@ -61,7 +79,14 @@ impl VarDebugKind {
             _ => None
         }
     }
-    
+
+    pub fn get_use(&self) -> Option<i64> {
+        match self {
+            VarDebugKind::Use(use_id) => Some(*use_id),
+            _ => None
+        }
+    }
+
     pub fn is_internal(&self) -> bool {
         matches!(self, VarDebugKind::Internal)
     }

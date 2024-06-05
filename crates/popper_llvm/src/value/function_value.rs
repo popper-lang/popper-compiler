@@ -2,14 +2,14 @@ use crate::module::Module;
 use llvm_sys::core::{LLVMDumpValue, LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName, LLVMTypeOf};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use popper_mem::string::to_c_str;
-
+use crate::analysis::FailureAction;
 use crate::types::{function_types, TypeEnum};
 
-use crate::value::{Value, ValueEnum};
+use crate::value::{RawValue, Value, ValueEnum};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FunctionValue {
-    pub(crate) function_value: LLVMValueRef,
+    pub(crate) function_value: RawValue,
     pub(crate) function_type: Option<function_types::FunctionType>,
 }
 
@@ -25,7 +25,7 @@ impl FunctionValue {
             ;
 
         Self {
-            function_value: lref,
+            function_value: RawValue::new(lref),
             function_type,
         }
     }
@@ -39,11 +39,11 @@ impl FunctionValue {
             llvm_sys::core::LLVMAddFunction(
                 module.module,
                 name.as_ptr(),
-                function_type.function_type,
+                function_type.function_type.as_llvm_ref(),
             )
         };
         Self {
-            function_value,
+            function_value: RawValue::new(function_value),
             function_type: Some(function_type),
         }
     }
@@ -53,14 +53,14 @@ impl FunctionValue {
         use std::str;
 
         unsafe {
-            let ptr = LLVMGetValueName(self.function_value, std::ptr::null_mut());
+            let ptr = LLVMGetValueName(self.function_value.as_llvm_ref(), std::ptr::null_mut());
             let cstr = CStr::from_ptr(ptr);
             str::from_utf8_unchecked(cstr.to_bytes())
         }
     }
 
     pub fn get_nth_param(&self, index: u32) -> Option<ValueEnum> {
-        let param = unsafe { LLVMGetParam(self.function_value, index) };
+        let param = unsafe { LLVMGetParam(self.function_value.as_llvm_ref(), index) };
         if param.is_null() {
             None
         } else {
@@ -83,25 +83,25 @@ impl FunctionValue {
         params
     }
 
-    pub fn verify(&self) -> bool {
+    pub fn verify(&self, failure_action: FailureAction) -> bool {
         let result = unsafe {
             llvm_sys::analysis::LLVMVerifyFunction(
-                self.function_value,
-                llvm_sys::analysis::LLVMVerifierFailureAction::LLVMPrintMessageAction,
+                self.function_value.as_llvm_ref(),
+                failure_action.into()
             )
         };
         result == 0
     }
 
     pub fn get_raw_function_type(&self) -> Option<LLVMTypeRef> {
-        self.function_type.map(|x| x.function_type)
+        self.function_type.map(|x| x.function_type.as_llvm_ref())
     }
 
 }
 
 impl Value for FunctionValue {
 
-    fn as_raw_ref(&self) -> LLVMValueRef {
+    fn as_raw(&self) -> RawValue {
         self.function_value
     }
     fn is_null_or_undef(&self) -> bool {

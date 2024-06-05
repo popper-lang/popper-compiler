@@ -1,6 +1,7 @@
 use crate::consts::{ConstKind, Ident};
 use crate::expr::Expr;
 use crate::labels::{Label, LabelId};
+use crate::types::Types;
 
 
 macro_rules! commands {
@@ -180,6 +181,12 @@ commands! {
     struct CopyVal(copy_val) {
         val: Expr [Expr]
     }
+    
+    struct GetElementPtr(get_element_ptr) {
+        ptr: Ident [Ident],
+        index: Expr [Expr],
+        target_type: Types [None]
+    }
 
 }
 
@@ -202,6 +209,7 @@ pub enum CommandEnum {
     Call(Call),
     Br(Br),
     Ret(Ret),
-    CopyVal(CopyVal)
+    CopyVal(CopyVal),
+    GetElementPtr(GetElementPtr)
 }
 

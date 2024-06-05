@@ -11,6 +11,7 @@ pub enum Types {
     LLVMPtr,
     Ptr(Box<Types>),
     Label,
+    Struct(String, Vec<Types>),
 }
 
 impl Display for Types {
@@ -25,6 +26,13 @@ impl Display for Types {
             Types::LLVMPtr => write!(f, "llvm_ptr"),
             Types::Ptr(t) => write!(f, "ptr<{}>", t),
             Types::Label => write!(f, "label"),
+            Types::Struct(n, s) => {
+                write!(f, "struct {} {{", n)?;
+                for i in s {
+                    write!(f, "{}, ", i)?;
+                }
+                write!(f, "}}")
+            }
         }
 
     }
@@ -55,6 +63,29 @@ impl Types {
                 bytes
             }
             Types::Label => vec![8],
+            Types::Struct(_, s) => {
+                let mut bytes = vec![9];
+                for i in s {
+                    bytes.extend(i.to_bytes());
+                }
+                bytes
+            }
+        }
+        
+        
+    }
+    
+    pub fn into_struct(self) -> (String, Vec<Types>) {
+        match self {
+            Types::Struct(n, s) => (n, s),
+            _ => panic!("Not a struct")
+        }
+    }
+    
+    pub fn get_ptr_inner_type(&self) -> Types {
+        match self {
+            Types::Ptr(t) => *t.clone(),
+            _ => panic!("Not a pointer")
         }
     }
 }

@@ -1,3 +1,4 @@
+use crate::consts::TypeId;
 use crate::function::Function;
 use crate::pretty::Pretty;
 use crate::types::Types;
@@ -20,6 +21,10 @@ impl Program {
 
     pub fn add_function(&mut self, function: Function) {
         self.programs.push(ProgramSection::Function(function));
+    }
+    
+    pub fn add_type_decl(&mut self, ident: TypeId, ty: Types) {
+        self.programs.push(ProgramSection::TypeDecl(ident, ty));
     }
     
     pub fn get_function(&self, name: &str) -> Option<&Function> {
@@ -59,7 +64,8 @@ impl Program {
 #[derive(Debug, Clone)]
 pub enum ProgramSection {
     Function(Function),
-    ExternalFunction(ExternalFunction)
+    ExternalFunction(ExternalFunction),
+    TypeDecl(TypeId, Types)
 }
 
 #[derive(Debug, Clone)]

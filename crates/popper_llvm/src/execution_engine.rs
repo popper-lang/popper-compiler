@@ -20,7 +20,7 @@ pub struct ExecutionEngine {
 }
 
 impl ExecutionEngine {
-    pub fn init() {
+    fn init() {
         unsafe {
             LLVMLinkInMCJIT();
             assert_eq!(LLVM_InitializeNativeTarget(), 0);

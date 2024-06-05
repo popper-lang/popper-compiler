@@ -65,13 +65,13 @@ impl StructFieldInstance {
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Clone)]
 pub struct StructFieldAccess {
-    pub name: String,
+    pub name: Box<Expression>,
     pub field: String,
     pub span: Span,
 }
 
 impl StructFieldAccess {
-    pub fn new(name: String, field: String, span: Span) -> Self {
-        Self { name, field, span }
+    pub fn new(name: Expression, field: String, span: Span) -> Self {
+        Self { name: Box::new(name), field, span }
     }
 }

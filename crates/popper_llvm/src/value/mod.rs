@@ -1,8 +1,4 @@
-use llvm_sys::core::{
-    LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString,
-    LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf,
-    LLVMInstructionEraseFromParent
-};
+use llvm_sys::core::{LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString, LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf, LLVMInstructionEraseFromParent, LLVMValueAsBasicBlock};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 trait UnsignedInt: Sized + Into<u32> {}
@@ -31,47 +27,34 @@ macro_rules! values {
     };
 }
 
-use crate::types::{int_types, TypeEnum};
+use crate::types::{int_types, RawType, TypeEnum};
+use crate::util::to_c_str;
 use crate::value::array_value::ArrayValue;
 
 pub trait Value {
-    fn get_type_ref(&self) -> LLVMTypeRef {
-        unsafe { LLVMTypeOf(self.as_raw_ref()) }
-    }
     fn get_type(&self) -> TypeEnum {
-        self.get_type_ref().into()
+        unsafe {
+            self
+                .as_raw()
+                .get_type()
+                .as_type_enum()
+        }
     }
 
-    fn as_raw_ref(&self) -> LLVMValueRef;
+    fn as_raw(&self) -> RawValue;
     fn is_null_or_undef(&self) -> bool;
     fn is_const(&self) -> bool;
     fn is_null(&self) -> bool;
     fn is_undef(&self) -> bool;
-    fn print_to_string(&self) -> String {
-        let llvm_str = unsafe { LLVMPrintValueToString(self.as_raw_ref()) };
-        let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
-            .to_str()
-            .unwrap();
-        str_slice.to_owned()
-    }
-    fn print_to_stderr(&self) {
-        eprintln!("{}", self.print_to_string());
-    }
-    fn replace_all_uses_with(&self, other: &dyn Value) {
-        unsafe { LLVMReplaceAllUsesWith(self.as_raw_ref(), other.as_raw_ref()) };
-    }
     fn set_name(&self, name: &str) {
         let name = std::ffi::CString::new(name).unwrap();
-        unsafe { LLVMSetValueName(self.as_raw_ref(), name.as_ptr(), name.as_bytes().len()) }
+        unsafe { LLVMSetValueName(self.as_raw().as_llvm_ref(), name.as_ptr(), name.as_bytes().len()) }
     }
-    fn get_name(&self) -> &str {
-        let name = unsafe { LLVMGetValueName(self.as_raw_ref(), &mut 0) };
-        let name = unsafe { std::ffi::CStr::from_ptr(name) };
-        let name = name.to_str().unwrap();
-        name
+    fn get_name(&self) -> Option<String> {
+        self.as_raw().get_named_value()
     }
     fn dump(&self) {
-        unsafe { LLVMDumpValue(self.as_raw_ref()) }
+        unsafe { LLVMDumpValue(self.as_raw().as_llvm_ref()) }
     }
 }
 
@@ -80,6 +63,7 @@ pub mod float_value;
 pub mod function_value;
 pub mod int_value;
 pub mod pointer_value;
+pub mod struct_value;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ValueEnum {
@@ -88,6 +72,7 @@ pub enum ValueEnum {
     FunctionValue(function_value::FunctionValue),
     ArrayValue(ArrayValue),
     PointerValue(pointer_value::PointerValue),
+    StructValue(struct_value::StructValue),
 }
 
 impl ValueEnum {
@@ -101,22 +86,17 @@ impl ValueEnum {
             ValueEnum::FunctionValue(function_value) => function_value.get_type(),
             ValueEnum::ArrayValue(array_value) => array_value.get_type(),
             ValueEnum::PointerValue(pointer_value) => pointer_value.get_type(),
+            ValueEnum::StructValue(struct_value) => struct_value.get_type(),
         }
     }
 
 
     pub fn print_to_string(&self) -> String {
-        match self {
-            ValueEnum::IntValue(int_value) => int_value.print_to_string(),
-            ValueEnum::FloatValue(float_value) => float_value.print_to_string(),
-            ValueEnum::FunctionValue(function_value) => function_value.print_to_string(),
-            ValueEnum::ArrayValue(array_value) => array_value.print_to_string(),
-            ValueEnum::PointerValue(pointer_value) => pointer_value.print_to_string(),
-        }
+        self.as_raw().print_to_string()
     }
 
     pub fn as_llvm_ref(&self) -> LLVMValueRef {
-        (*self).into()
+        self.as_raw().as_llvm_ref()
     }
 
     pub fn into_int_value(self) -> int_value::IntValue {
@@ -140,11 +120,24 @@ impl ValueEnum {
             ValueEnum::FunctionValue(function_value) => function_value.dump(),
             ValueEnum::ArrayValue(array_value) => array_value.dump(),
             ValueEnum::PointerValue(pointer_value) => pointer_value.dump(),
+            ValueEnum::StructValue(struct_value) => struct_value.dump(),
         }
     }
 
     pub fn erase_from_parent(&self) {
         unsafe { LLVMInstructionEraseFromParent(self.as_llvm_ref()) }
+    }
+
+    pub fn as_raw(&self) -> RawValue {
+        match self {
+            ValueEnum::IntValue(int_value) => int_value.as_raw(),
+            ValueEnum::FloatValue(float_value) => float_value.as_raw(),
+            ValueEnum::FunctionValue(function_value) => function_value.as_raw(),
+            ValueEnum::ArrayValue(array_value) => array_value.as_raw(),
+            ValueEnum::PointerValue(pointer_value) => pointer_value.as_raw(),
+            ValueEnum::StructValue(struct_value) => struct_value.as_raw(),
+
+        }
     }
 }
 
@@ -167,6 +160,9 @@ impl From<LLVMValueRef> for ValueEnum {
                 TypeEnum::PointerType(_) => {
                     ValueEnum::PointerValue(pointer_value::PointerValue::new_llvm_ref(value))
                 },
+                TypeEnum::StructType(_) => {
+                    ValueEnum::StructValue(struct_value::StructValue::new_llvm_ref(value))
+                }
                 _ => panic!("Unknown type"),
             }
 
@@ -174,31 +170,11 @@ impl From<LLVMValueRef> for ValueEnum {
     }
 }
 
-impl AsValueRef for ValueEnum {
-    fn as_value_ref(&self) -> LLVMValueRef {
-        match self {
-            ValueEnum::IntValue(int_value) => int_value.as_raw_ref(),
-            ValueEnum::FloatValue(float_value) => float_value.as_raw_ref(),
-            ValueEnum::FunctionValue(function_value) => function_value.as_raw_ref(),
-            ValueEnum::ArrayValue(array_value) => array_value.as_raw_ref(),
-            ValueEnum::PointerValue(pointer_value) => pointer_value.as_raw_ref(),
-        }
-    }
-}
+
 
 impl From<ValueEnum> for LLVMValueRef {
     fn from(value: ValueEnum) -> LLVMValueRef {
-        value.as_value_ref()
-    }
-}
-
-pub trait AsValueRef {
-    fn as_value_ref(&self) -> LLVMValueRef;
-}
-
-impl<T: Value> AsValueRef for T {
-    fn as_value_ref(&self) -> LLVMValueRef {
-        <Self as Value>::as_raw_ref(self)
+        value.as_raw().as_llvm_ref()
     }
 }
 
@@ -281,3 +257,101 @@ pub(crate) trait MathValue: Value {}
 
 impl MathValue for int_value::IntValue {}
 impl MathValue for float_value::FloatValue {}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RawValue {
+    raw: LLVMValueRef
+}
+
+impl RawValue {
+    pub fn new(raw: LLVMValueRef) -> Self {
+        RawValue { raw }
+    }
+
+    pub fn as_llvm_ref(&self) -> LLVMValueRef {
+        self.raw
+    }
+
+    pub fn dump(&self) {
+        unsafe { LLVMDumpValue(self.raw) }
+    }
+
+
+    pub fn erase_from_parent(&self) {
+        unsafe { LLVMInstructionEraseFromParent(self.raw) }
+    }
+
+    pub fn print_to_string(&self) -> String {
+        unsafe {
+            let llvm_str = LLVMPrintValueToString(self.raw);
+            let str_slice = std::ffi::CStr::from_ptr(llvm_str)
+                .to_str()
+                .unwrap();
+            str_slice.to_owned()
+        }
+    }
+
+    pub fn replace_all_uses_with(&self, new_value: RawValue) {
+        unsafe { LLVMReplaceAllUsesWith(self.raw, new_value.raw) }
+    }
+
+    /// # Safety
+    /// ValueEnum::from use LLVMTypeOf which can be invalid if the value is a function
+    unsafe fn into_value_enum(self) -> ValueEnum {
+        ValueEnum::from(self.raw)
+    }
+
+    pub fn get_type(&self) -> RawType {
+        unsafe {
+            let value_type = LLVMTypeOf(self.raw);
+            RawType::new(value_type)
+        }
+    }
+
+
+    pub fn get_named_value(&self) -> Option<String> {
+        unsafe {
+            let mut name_length = 0;
+            let name = LLVMGetValueName(self.raw, &mut name_length);
+            if name.is_null() {
+                None
+            } else {
+                Some(std::ffi::CStr::from_ptr(name).to_str().unwrap().to_owned())
+            }
+        }
+    }
+
+    pub fn set_name(&self, name: &str) {
+        let length = name.len();
+        let c_str = to_c_str(name);
+        unsafe {
+            LLVMSetValueName(self.raw, c_str.as_ptr(), length);
+        }
+    }
+    
+    pub fn try_as_basic_block(&self) -> Option<crate::basic_block::BasicBlock> {
+        unsafe {
+            let value = LLVMValueAsBasicBlock(self.raw);
+            if value.is_null() {
+                None
+            } else {
+                Some(crate::basic_block::BasicBlock::new(value))
+            }
+        }
+    }
+    
+    
+    /// # Safety
+    /// This function is unsafe because the value may not be a valid debug location
+    pub unsafe fn as_debug_loc(&self) -> crate::debug::DebugLoc {
+        crate::debug::DebugLoc::new(*self)
+    }
+    
+    /// # Safety
+    /// This function is unsafe because the value may not be a valid inline asm
+    pub unsafe fn as_inline_asm(&self) -> crate::asm::InlineAsm {
+        crate::asm::InlineAsm::new(self.as_llvm_ref())
+    }
+
+
+}

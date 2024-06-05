@@ -1,24 +1,28 @@
-use crate::types::function_types::FunctionType;
 use crate::types::{Type, TypeEnum};
 use llvm_sys::prelude::LLVMTypeRef;
+use llvm_sys::core::*;
+
+use super::RawType;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct PointerTypes {
-    pub(crate) ty: LLVMTypeRef,
+    pub(crate) ty: RawType,
 }
 
 impl PointerTypes {
     pub fn new_const(ty: TypeEnum) -> Self {
-        let ty = unsafe { llvm_sys::core::LLVMPointerType(ty.get_type_ref(), 0) };
-        Self { ty }
+        let ty = unsafe { LLVMPointerType(ty.as_raw().raw, 0) };
+        Self { ty: RawType::new(ty) }
     }
     pub fn new_llvm_ref(ty: LLVMTypeRef) -> Self {
-        Self { ty }
+        Self { ty: RawType::new(ty) }
     }
-
-
-
-    pub fn get_llvm_ref(&self) -> LLVMTypeRef {
-        self.ty
+    
+    pub fn is_opaque(&self) -> bool {
+        unsafe { LLVMPointerTypeIsOpaque(self.ty.as_llvm_ref()) == 1 }
+    }
+    
+    pub fn get_address_space(&self) -> u32 {
+        unsafe { LLVMGetPointerAddressSpace(self.ty.as_llvm_ref()) }
     }
 }
 
@@ -27,8 +31,8 @@ impl Type for PointerTypes {
         false
     }
 
-    fn get_type_ref(&self) -> LLVMTypeRef {
-        self.get_llvm_ref()
+    fn as_raw(&self) -> RawType {
+        self.ty
     }
 
     fn to_type_enum(&self) -> TypeEnum {

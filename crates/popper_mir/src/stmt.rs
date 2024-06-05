@@ -1,5 +1,5 @@
 use crate::command::CommandEnum;
-use crate::consts::Ident;
+use crate::consts::{Ident, TypeId};
 use crate::expr::Expr;
 use crate::function::Function;
 use crate::types::Types;
@@ -34,6 +34,7 @@ impl Statement {
             kind: StmtKind::Command(command)
         }
     }
+    
 }
 
 #[derive(Debug, Clone)]

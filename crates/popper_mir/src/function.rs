@@ -20,9 +20,22 @@ impl Function {
     pub fn set_debug_info(&mut self, id: Ident, dbg_info: VarDebugKind) {
         self.dbg.add_entry(DebugEntry::new(id, dbg_info));
     }
-    
+
     pub fn remove_debug_info(&mut self, id: Ident) {
         self.dbg.remove_entry(id);
+    }
+
+    pub fn get_use_dbg(&mut self, id: Ident) -> Option<i64> {
+        match self.dbg.get_debug_info(&id) {
+            Some(VarDebugKind::Use(n)) => Some(*n),
+            _ => None
+        }
+    }
+
+    pub fn use_ident(&mut self, id: Ident) {
+        if let Some(s) = self.get_use_dbg(id.clone())  {
+            self.dbg.set_uses(id, s + 1);
+        }
     }
 }
 

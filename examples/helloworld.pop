@@ -1,9 +1,14 @@
 extern {
-    func printf(format: string...): int
+    func printf(s: string 0...) : int
 };
 
+struct Hello {
+    a = int,
+    b = int
+}
+
 func main(): int {
-    let a = 22 + 33;
-    printf("22 + 33 = %d\n", a);
+    let x = init Hello {a = 133, b = 2};
+    printf("a + b = %d\n", {x}.b + {x}.a);
     return 0;
 }

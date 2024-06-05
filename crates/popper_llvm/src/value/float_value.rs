@@ -1,12 +1,12 @@
 use crate::types;
 use crate::types::TypeEnum;
-use crate::value::{Value, ValueEnum};
+use crate::value::{RawValue, Value, ValueEnum};
 use llvm_sys::core::{LLVMConstReal, LLVMConstRealGetDouble, LLVMTypeOf};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FloatValue {
-    pub(crate) float_value: LLVMValueRef,
+    pub(crate) float_value: RawValue,
     pub(crate) float_type: types::float_types::FloatType,
 }
 
@@ -17,20 +17,20 @@ impl FloatValue {
         let float_type =
             types::float_types::FloatType::new_with_llvm_ref( LLVMTypeOf(lref));
         Self {
-            float_value: lref,
+            float_value: RawValue::new(lref),
             float_type,
         }
     }
     pub fn new_const(value: f64, float_type: types::float_types::FloatType) -> Self {
-        let float_value = unsafe { LLVMConstReal(float_type.float_type, value) };
+        let float_value = unsafe { LLVMConstReal(float_type.float_type.as_llvm_ref(), value) };
         Self {
-            float_value,
+            float_value: RawValue::new(float_value),
             float_type,
         }
     }
 
     pub fn get_value(&self) -> f64 {
-        let double = unsafe { LLVMConstRealGetDouble(self.float_value, &mut 0) };
+        let double = unsafe { LLVMConstRealGetDouble(self.float_value.as_llvm_ref(), &mut 0) };
         double as f64
     }
 
@@ -40,15 +40,12 @@ impl FloatValue {
 }
 
 impl Value for FloatValue {
-    fn get_type_ref(&self) -> LLVMTypeRef {
-        self.float_type.float_type
-    }
-
+    
     fn get_type(&self) -> TypeEnum {
         TypeEnum::FloatType(self.float_type)
     }
 
-    fn as_raw_ref(&self) -> LLVMValueRef {
+    fn as_raw(&self) -> RawValue {
         self.float_value
     }
 

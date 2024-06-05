@@ -44,7 +44,10 @@ impl Pretty {
                 },
                 ProgramSection::ExternalFunction(ref external_function) => {
                     self.add_line(&format!("extern func {}({}): {};", external_function.name, self.pretty_args(&external_function.args), external_function.ret));
-                }
+                },
+                ProgramSection::TypeDecl(id, ty) => {
+                    self.add_line(&format!("type {} = {};", id, ty));
+                },
             }
         }
     }
@@ -79,13 +82,15 @@ impl Pretty {
                 },
                 VarDebugKind::Internal => {
                     self.add_line(&format!("{}: internal", entry.id));
+                },
+                VarDebugKind::Use(n) => {
+                    self.add_line(&format!("{}: use {}", entry.id, n));
                 }
-
             }
         }
         self.remove_tab();
     }
-    
+
     fn pretty_mark_section(&mut self, marks_section: MarksSection) {
         self.add_line("marks:");
         self.add_tab();
@@ -185,6 +190,10 @@ impl Pretty {
             CommandEnum::CopyVal(copy_val) => {
                 format!("copy_val {}", copy_val.val)
             },
+            
+            CommandEnum::GetElementPtr(gep) => {
+                format!("get_element_ptr {}, {}", gep.ptr, gep.index)
+            },
 
 
         }
@@ -207,4 +216,3 @@ impl Pretty {
     }
 
 }
-

@@ -364,8 +364,8 @@ StructInstanceExpr: Expression = {
     }
 }
 
-FieldAccessSyn: (Ident, Ident) = {
-    <e:Ident> "." <t:Ident> => {
+FieldAccessSyn: (Expression, Ident) = {
+    "{" <e:Expr> "}" "." <t:Ident> => {
         (e, t)
     }
 }
@@ -374,7 +374,7 @@ FieldAccessExpr: Expression = {
     <t:Span<FieldAccessSyn>> => {
         Expression::StructFieldAccess(
             StructFieldAccess::new(
-                t.1.0.name,
+                t.1.0,
                 t.1.1.name,
                 t.0
             )

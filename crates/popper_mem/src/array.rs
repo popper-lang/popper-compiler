@@ -1,6 +1,6 @@
 use std::ffi::{c_void, CString};
 use std::ptr::NonNull;
-use libc::{malloc, memcpy, proc_bsdinfo};
+use libc::malloc;
 use libc::free;
 
 pub struct RawArray<T> {
