@@ -63,24 +63,15 @@ pub enum BinOpKind {
 
 impl BinOpKind {
     pub fn is_comparison(&self) -> bool {
-        match self {
-            BinOpKind::Eq | BinOpKind::Neq | BinOpKind::Lt | BinOpKind::Lte | BinOpKind::Gt | BinOpKind::Gte => true,
-            _ => false,
-        }
+        matches!(self, BinOpKind::Eq | BinOpKind::Neq | BinOpKind::Lt | BinOpKind::Lte | BinOpKind::Gt | BinOpKind::Gte)
     }
 
     pub fn is_arithmetic(&self) -> bool {
-        match self {
-            BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div | BinOpKind::Mod | BinOpKind::Pow => true,
-            _ => false,
-        }
+        matches!(self, BinOpKind::Add | BinOpKind::Sub | BinOpKind::Mul | BinOpKind::Div | BinOpKind::Mod | BinOpKind::Pow)
     }
 
     pub fn is_logical(&self) -> bool {
-        match self {
-            BinOpKind::And | BinOpKind::Or => true,
-            _ => false,
-        }
+        matches!(self, BinOpKind::And | BinOpKind::Or)
     }
 
 

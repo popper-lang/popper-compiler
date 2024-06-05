@@ -27,7 +27,7 @@ impl NotAllowed {
 }
 
 impl Error for NotAllowed {
-    fn report(&self, color: ColorConfig, source: &str, file: &str) {
+    fn report(&self, _color: ColorConfig, source: &str, file: &str) {
         let msg = if self.outside.is_empty() {
             format!("The {} `{}` is not allowed here", self.datatype, self.data)
         } else {

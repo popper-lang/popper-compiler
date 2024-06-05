@@ -5,6 +5,12 @@ pub struct DebugSection {
     debug_table: Vec<DebugEntry>
 }
 
+impl Default for DebugSection {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DebugSection {
     pub fn new() -> Self {
         Self {
@@ -42,10 +48,8 @@ impl DebugSection {
     }
 
     pub fn set_uses(&mut self, id: Ident, uses: i64) {
-        if let Some(entry) = self.get_mut_debug_info(&id) {
-            if let VarDebugKind::Use(n) = entry {
-                *n = uses;
-            }
+        if let Some(VarDebugKind::Use(n)) = self.get_mut_debug_info(&id) {
+            *n = uses;
         }
     }
 }

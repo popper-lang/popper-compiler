@@ -21,9 +21,9 @@ impl From<LLVMInlineAsmDialect> for InlineAsmDialect {
     }
 }
 
-impl Into<LLVMInlineAsmDialect> for InlineAsmDialect {
-    fn into(self) -> LLVMInlineAsmDialect {
-        match self {
+impl From<InlineAsmDialect> for LLVMInlineAsmDialect {
+    fn from(value: InlineAsmDialect) -> Self {
+        match value {
             InlineAsmDialect::ATT => LLVMInlineAsmDialect::LLVMInlineAsmDialectATT,
             InlineAsmDialect::Intel => LLVMInlineAsmDialect::LLVMInlineAsmDialectIntel
         }

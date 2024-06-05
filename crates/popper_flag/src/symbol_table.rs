@@ -24,7 +24,7 @@ impl SymbolFlags {
             if let Flag::Value(v) = flag {
                 *v = value.clone();
             } else if let Flag::Variable(v) = flag {
-                (*v).value = SymbolFlags::new(self.span).add_flag(
+                v.value = SymbolFlags::new(self.span).add_flag(
                     Flag::Value(value.clone()),
                 ).clone();
             }

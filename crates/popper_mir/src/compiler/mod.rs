@@ -259,9 +259,9 @@ impl Compiler {
     }
 }
 
-impl Into<Types> for AstType {
-    fn into(self) -> Types {
-        match self.type_kind {
+impl From<AstType> for Types {
+    fn from(val: AstType) -> Self {
+        match val.type_kind {
             AstTypeKind::Int => Types::Int,
             AstTypeKind::Bool => Types::Bool,
             AstTypeKind::Unit => Types::Unit,

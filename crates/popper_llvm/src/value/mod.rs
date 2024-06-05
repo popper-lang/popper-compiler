@@ -1,4 +1,6 @@
+use std::ptr::NonNull;
 use llvm_sys::core::{LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString, LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf, LLVMInstructionEraseFromParent, LLVMValueAsBasicBlock};
+use llvm_sys::LLVMValue;
 use llvm_sys::prelude::{LLVMValueRef};
 
 trait UnsignedInt: Sized + Into<u32> {}
@@ -260,30 +262,30 @@ impl MathValue for float_value::FloatValue {}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RawValue {
-    raw: LLVMValueRef
+    raw: NonNull<LLVMValue>
 }
 
 impl RawValue {
     pub fn new(raw: LLVMValueRef) -> Self {
-        RawValue { raw }
+        RawValue { raw: NonNull::new(raw).expect("The raw value is null") }
     }
 
     pub fn as_llvm_ref(&self) -> LLVMValueRef {
-        self.raw
+        self.raw.as_ptr()
     }
 
     pub fn dump(&self) {
-        unsafe { LLVMDumpValue(self.raw) }
+        unsafe { LLVMDumpValue(self.as_llvm_ref()) }
     }
 
 
     pub fn erase_from_parent(&self) {
-        unsafe { LLVMInstructionEraseFromParent(self.raw) }
+        unsafe { LLVMInstructionEraseFromParent(self.as_llvm_ref()) }
     }
 
     pub fn print_to_string(&self) -> String {
         unsafe {
-            let llvm_str = LLVMPrintValueToString(self.raw);
+            let llvm_str = LLVMPrintValueToString(self.as_llvm_ref());
             let str_slice = std::ffi::CStr::from_ptr(llvm_str)
                 .to_str()
                 .unwrap();
@@ -292,18 +294,18 @@ impl RawValue {
     }
 
     pub fn replace_all_uses_with(&self, new_value: RawValue) {
-        unsafe { LLVMReplaceAllUsesWith(self.raw, new_value.raw) }
+        unsafe { LLVMReplaceAllUsesWith(self.as_llvm_ref(), new_value.as_llvm_ref()) }
     }
 
     /// # Safety
     /// ValueEnum::from use LLVMTypeOf which can be invalid if the value is a function
     unsafe fn into_value_enum(self) -> ValueEnum {
-        ValueEnum::from(self.raw)
+        ValueEnum::from(self.as_llvm_ref())
     }
 
     pub fn get_type(&self) -> RawType {
         unsafe {
-            let value_type = LLVMTypeOf(self.raw);
+            let value_type = LLVMTypeOf(self.as_llvm_ref());
             RawType::new(value_type)
         }
     }
@@ -312,7 +314,7 @@ impl RawValue {
     pub fn get_named_value(&self) -> Option<String> {
         unsafe {
             let mut name_length = 0;
-            let name = LLVMGetValueName(self.raw, &mut name_length);
+            let name = LLVMGetValueName(self.as_llvm_ref(), &mut name_length);
             if name.is_null() {
                 None
             } else {
@@ -325,13 +327,13 @@ impl RawValue {
         let length = name.len();
         let c_str = to_c_str(name);
         unsafe {
-            LLVMSetValueName(self.raw, c_str.as_ptr(), length);
+            LLVMSetValueName(self.as_llvm_ref(), c_str.as_ptr(), length);
         }
     }
     
     pub fn try_as_basic_block(&self) -> Option<crate::basic_block::BasicBlock> {
         unsafe {
-            let value = LLVMValueAsBasicBlock(self.raw);
+            let value = LLVMValueAsBasicBlock(self.as_llvm_ref());
             if value.is_null() {
                 None
             } else {

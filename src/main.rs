@@ -1,4 +1,4 @@
-
+#![allow(clippy::upper_case_acronyms)]
 use std::io::Write;
 use popper_compiler::{compile_to_llvm, execute_llvm, compile_to_mir};
 use popper_compiler::get_ast;
@@ -88,7 +88,7 @@ fn main() {
                     if let Some(out) = output {
                         std::fs::File::open(out)
                             .expect("File Not Found")
-                            .write(s.as_bytes())
+                            .write_all(s.as_bytes())
                             .expect("Cannot write to file");
                     } else {
                         println!("{}", s);
@@ -132,7 +132,7 @@ fn main() {
                     if let Some(out) = output {
                         std::fs::File::open(out)
                             .expect("File Not Found")
-                            .write(res.as_bytes())
+                            .write_all(res.as_bytes())
                             .expect("Cannot write to file");
                     } else {
                         println!("{}", res);
@@ -157,7 +157,7 @@ fn main() {
                     if let Some(out) = output {
                         std::fs::File::open(out)
                             .expect("File Not Found")
-                            .write(res.as_bytes())
+                            .write_all(res.as_bytes())
                             .expect("Cannot write to file");
                     } else {
                         println!("{}", res);

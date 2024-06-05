@@ -10,9 +10,9 @@ pub enum FailureAction {
 }
 
 
-impl Into<LLVMVerifierFailureAction> for FailureAction {
-    fn into(self) -> LLVMVerifierFailureAction {
-        match self {
+impl From<FailureAction> for LLVMVerifierFailureAction {
+    fn from(action: FailureAction) -> Self {
+        match action {
             FailureAction::AbortProcess => LLVMVerifierFailureAction::LLVMAbortProcessAction,
             FailureAction::PrintMessage => LLVMVerifierFailureAction::LLVMPrintMessageAction,
             FailureAction::ReturnStatus => LLVMVerifierFailureAction::LLVMReturnStatusAction

@@ -1,9 +1,0 @@
-[package]
-name = "popper_libc"
-version = "0.1.0"
-edition = "2021"
-
-
-[dependencies]
-popper_flag = { path = "../popper_flag" }
-lazy_static = "1.4.0"

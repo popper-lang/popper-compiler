@@ -9,7 +9,7 @@ use llvm_sys::core::{LLVMBuildAdd, LLVMBuildCall2, LLVMBuildFAdd, LLVMBuildFDiv,
 use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
 use std::ffi::{CString};
 use crate::value::float_value::FloatValue;
-use popper_mem::string::to_c_str;
+use crate::util::to_c_str;
 
 #[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub enum MathOpType {

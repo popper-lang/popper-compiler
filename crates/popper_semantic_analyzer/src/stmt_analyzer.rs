@@ -106,7 +106,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
     }
 
     fn visit_block(&mut self, block: Block) -> Result<Self::Output, Self::Error> {
-        let mut analyzer = StmtAnalyzer::from(self.clone());
+        let mut analyzer = self.clone();
 
         let mut result = SymbolFlags::new(block.span());
 

@@ -1,3 +1,4 @@
+#![allow(clippy::all)]
 pub mod error;
 pub mod parser;
 mod test;

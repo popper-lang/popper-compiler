@@ -55,7 +55,7 @@ impl StructType {
     
     pub fn nth_element_type(&self, index: u32) -> Option<TypeEnum> {
         unsafe { ptr_to_option(LLVMStructGetTypeAtIndex(self.struct_type.as_llvm_ref(), index)) }
-            .map(|x| TypeEnum::from(x))
+            .map(TypeEnum::from)
     }
 
     pub fn get_name(&self) -> Option<String> {

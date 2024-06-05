@@ -4,7 +4,7 @@ use llvm_sys::core::{
 };
 use llvm_sys::prelude::LLVMTypeRef;
 use std::fmt::Debug;
-use popper_mem::string::to_c_str;
+use crate::util::to_c_str;
 
 
 use crate::types::{check_same_ty, RawType, Type, TypeEnum};

@@ -104,9 +104,9 @@ impl From<LLVMTypeKind> for TypeKind {
     }
 }
 
-impl Into<LLVMTypeKind> for TypeKind {
-    fn into(self) -> LLVMTypeKind {
-        match self {
+impl From<TypeKind> for LLVMTypeKind {
+    fn from(kind: TypeKind) -> Self {
+        match kind {
             TypeKind::Void => LLVMTypeKind::LLVMVoidTypeKind,
             TypeKind::Half => LLVMTypeKind::LLVMHalfTypeKind,
             TypeKind::Float => LLVMTypeKind::LLVMFloatTypeKind,
@@ -353,13 +353,13 @@ impl RawType {
         let res = unsafe { LLVMGetTypeContext(self.raw) };
         
         ptr_to_option(res)
-            .map(|x| Context::new(x))
+            .map(Context::new)
     }
     
     pub fn get_element_type(&self) -> Option<TypeEnum> {
         let res = unsafe { LLVMGetElementType(self.raw) };
         ptr_to_option(res)
-            .map(|x| TypeEnum::from(x))
+            .map(TypeEnum::from)
     }
 
 }

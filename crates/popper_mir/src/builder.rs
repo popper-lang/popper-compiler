@@ -19,6 +19,12 @@ pub struct Builder {
     let_decl_index: usize,
 }
 
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Builder {
     pub fn new() -> Self {
         Self {
@@ -47,7 +53,7 @@ impl Builder {
     pub fn build_external_function(&mut self, name: &str, args: Vec<Types>, ret: Types, is_var_arg: bool) -> ExternalFunction {
         let function = ExternalFunction::new(name.to_string(), args, ret, is_var_arg);
         self.program.add_external_function(function.clone());
-        return function;
+        function
     }
 
     pub fn start_function(&mut self, function: Function) {

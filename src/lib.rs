@@ -159,13 +159,10 @@ fn detail_output(name: &str, output: Output, debug: bool) {
     if debug {
         println!("({}) stdout: {}", name, stdout);
         println!("({}) stderr: {}", name, stderr);
-    } else {
-        if ! stderr.is_empty() {
-            println!("{}", stderr);
-        } else if ! stdout.is_empty() {
-            println!("{}", stdout);
-        }
-
+    } else if ! stderr.is_empty() {
+        println!("{}", stderr);
+    } else if ! stdout.is_empty() {
+        println!("{}", stdout);
     }
 
 }

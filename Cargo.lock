@@ -315,31 +315,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "inkwell"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32bf6d00838475201af3378a4adeca10e92a4a9dccb980dab0b432d9d4f2e514"
-dependencies = [
- "either",
- "inkwell_internals",
- "libc",
- "llvm-sys 170.0.1",
- "once_cell",
- "thiserror",
-]
-
-[[package]]
-name = "inkwell_internals"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fa4d8d74483041a882adaa9a29f633253a66dde85055f0495c121620ac484b2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -411,20 +386,6 @@ checksum = "c0ff37bd590ca25063e35af745c343cb7a0271906fb7b37e4813e8f79f00268d"
 dependencies = [
  "bitflags",
  "libc",
-]
-
-[[package]]
-name = "llvm-sys"
-version = "170.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eed90f72df5504c0af2e3a08ee7762a4a3e42ec2605811fc19f64879de40c50a"
-dependencies = [
- "anyhow",
- "cc",
- "lazy_static",
- "libc",
- "regex-lite",
- "semver",
 ]
 
 [[package]]
@@ -567,7 +528,6 @@ dependencies = [
  "popper_codegen",
  "popper_common",
  "popper_error",
- "popper_libc",
  "popper_mir",
  "popper_parser",
  "popper_semantic_analyzer",
@@ -592,36 +552,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "popper_inkwell"
-version = "0.1.0"
-dependencies = [
- "inkwell",
- "popper_common",
- "popper_mir",
-]
-
-[[package]]
-name = "popper_libc"
-version = "0.1.0"
-dependencies = [
- "lazy_static",
- "popper_flag",
-]
-
-[[package]]
 name = "popper_llvm"
 version = "0.1.0"
 dependencies = [
  "clap",
- "llvm-sys 180.0.0",
- "popper_mem",
-]
-
-[[package]]
-name = "popper_mem"
-version = "0.1.0"
-dependencies = [
- "libc",
+ "llvm-sys",
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 use sha2::Digest;
 use std::fs::File;
+use std::fmt::Write;
 
 pub fn hash_file(path: &str) -> String {
     let mut file = File::open(path).unwrap();
@@ -10,7 +11,9 @@ pub fn hash_file(path: &str) -> String {
         .finalize()
         .to_vec()
         .iter()
-        .map(|byte| format!("{:02x}", byte))
-        .collect::<String>();
+        .fold(String::new(), |mut acc, x| {
+            write!(acc, "{:02x}", x).unwrap();
+            acc
+        });
     hash
 }

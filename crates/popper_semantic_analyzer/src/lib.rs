@@ -1,3 +1,5 @@
+#![allow(clippy::only_used_in_recursion)]
+
 mod expr_analyzer;
 mod stmt_analyzer;
 

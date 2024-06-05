@@ -42,3 +42,9 @@ impl Type for VoidType {
         TypeEnum::VoidType(*self)
     }
 }
+
+impl Default for VoidType {
+    fn default() -> Self {
+        Self::new()
+    }
+}

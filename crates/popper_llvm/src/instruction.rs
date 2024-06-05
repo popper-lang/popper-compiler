@@ -158,7 +158,7 @@ impl From<LLVMOpcode> for InstructionOpCode {
 }
 
 
-#[derive(Debug, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct InstructionValue {
     value: RawValue
 }
@@ -206,15 +206,3 @@ impl InstructionValue {
     
 }
 
-
-impl Clone for InstructionValue {
-    fn clone(&self) -> Self {
-        unsafe {
-            Self::new(
-                RawValue::new(
-                    LLVMInstructionClone(self.get_llvm_ref())
-                )
-            )
-        }
-    }
-}

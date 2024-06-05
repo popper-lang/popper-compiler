@@ -5,7 +5,7 @@ use llvm_sys::linker::LLVMLinkModules2;
 use llvm_sys::prelude::*;
 use std::ffi::CString;
 use llvm_sys::LLVMModuleFlagBehavior;
-use popper_mem::string::to_c_str;
+use crate::util::to_c_str;
 
 use crate::analysis::FailureAction;
 use crate::context::Context;
@@ -42,9 +42,10 @@ impl From<LLVMModuleFlagBehavior> for ModuleFlagBehavior {
     }
 }
 
-impl Into<LLVMModuleFlagBehavior> for ModuleFlagBehavior {
-    fn into(self) -> LLVMModuleFlagBehavior {
-        match self {
+
+impl From<ModuleFlagBehavior> for LLVMModuleFlagBehavior {
+    fn from(value: ModuleFlagBehavior) -> Self {
+        match value {
             ModuleFlagBehavior::Error => LLVMModuleFlagBehavior::LLVMModuleFlagBehaviorError,
             ModuleFlagBehavior::Warning => LLVMModuleFlagBehavior::LLVMModuleFlagBehaviorWarning,
             ModuleFlagBehavior::Require => LLVMModuleFlagBehavior::LLVMModuleFlagBehaviorRequire,
@@ -302,7 +303,7 @@ impl Module {
         let key = to_c_str(key);
         let meta = unsafe { LLVMGetModuleFlag(self.module, key.as_ptr(), length) };
         ptr_to_option(meta)
-            .map(|x| Metadata::new(x))
+            .map(Metadata::new)
     }
 
     pub fn add_flag(&self, key: &str, behavior: ModuleFlagBehavior, meta: Metadata) {
@@ -322,13 +323,13 @@ impl Module {
     pub fn get_first_named_metadata(&self) -> Option<NamedMetadata> {
         let meta = unsafe { LLVMGetFirstNamedMetadata(self.module) };
         ptr_to_option(meta)
-            .map(|x| NamedMetadata::new(x))
+            .map(NamedMetadata::new)
     }
 
     pub fn get_last_named_metadata(&self) -> Option<NamedMetadata> {
         let meta = unsafe { LLVMGetLastNamedMetadata(self.module) };
         ptr_to_option(meta)
-            .map(|x| NamedMetadata::new(x))
+            .map(NamedMetadata::new)
     }
 
     pub fn get_named_metadata(&self, name: &str) -> Option<NamedMetadata> {
@@ -336,7 +337,7 @@ impl Module {
         let name = to_c_str(name);
         let meta = unsafe { LLVMGetNamedMetadata(self.module, name.as_ptr(), length) };
         ptr_to_option(meta)
-            .map(|x| NamedMetadata::new(x))
+            .map(NamedMetadata::new)
     }
 
     pub fn get_or_insert_named_metadata(&self, name: &str) -> NamedMetadata {
@@ -413,7 +414,7 @@ impl Module {
 impl Clone for Module {
     fn clone(&self) -> Self {
         Self {
-            context: self.context.clone(),
+            context: self.context,
             module: unsafe { LLVMCloneModule(self.module) },
         }
     }

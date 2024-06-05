@@ -160,7 +160,7 @@ impl Compiler {
                 self.builder.build_load(ptr_ty, ptr.into_ptr_value(), "")
             },
             CommandEnum::Call(func) => {
-                let l_func = self.functions_map.get(&func.function).unwrap().clone();
+                let l_func = *self.functions_map.get(&func.function).unwrap();
                 let args = func.args.iter().map(|arg| self.compile_expr(arg)).collect::<Vec<_>>();
                 self.builder.build_call(l_func, args.as_slice(), "")
             },
@@ -181,8 +181,7 @@ impl Compiler {
             CommandEnum::Add(add) => {
                 let lhs = self.compile_expr(&add.left).into_int_value();
                 let rhs = self.compile_expr(&add.right).into_int_value();
-                let res = self.builder.build_int_add(lhs, rhs, MathOpType::None, "");
-                res
+                self.builder.build_int_add(lhs, rhs, MathOpType::None, "")
             },
             CommandEnum::Sub(sub) => {
                 let lhs = self.compile_expr(&sub.left).into_int_value();
@@ -196,13 +195,11 @@ impl Compiler {
             },
             CommandEnum::GetElementPtr(gep) => {
                 let target_type = cast_type(self.context, gep.target_type.clone());
-                let ptr = self.env.get(gep.ptr.get_index() as usize).unwrap().clone().into_ptr_value();
+                let ptr = self.env.get(gep.ptr.get_index() as usize).unwrap().into_ptr_value();
                 let index = self.compile_expr(&gep.index);
-                //let zero = self.context.i64_type().int(0, false);
                 let array = vec![index.into_int_value()];
                 let ptr = self.builder.build_inbound_get_element_ptr(target_type, ptr, &array, "");
-                let loaded = self.builder.build_load(target_type, ptr.into_ptr_value(), "");
-                loaded
+                self.builder.build_load(target_type, ptr.into_ptr_value(), "")
             },
             _ => unimplemented!()
 
@@ -232,9 +229,8 @@ impl Compiler {
             ConstKind::Int(i) => self.context.i64_type().int(*i as u32, false).to_value_enum(),
             ConstKind::Float(f) => self.context.float_type().float(*f).to_value_enum(),
             ConstKind::Str(s) => {
-                let s = crate::string::replace_sc_string(&s);
-                let val = self.builder.build_global_string("", &s);
-                val
+                let s = crate::string::replace_sc_string(s);
+                self.builder.build_global_string("", &s)
             },
             ConstKind::Bool(b) => self.context.bool_type().bool(*b).to_value_enum(),
             ConstKind::List(l) => {

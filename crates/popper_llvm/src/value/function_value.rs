@@ -1,7 +1,7 @@
 use crate::module::Module;
 use llvm_sys::core::{LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
-use popper_mem::string::to_c_str;
+use crate::util::to_c_str;
 use crate::analysis::FailureAction;
 use crate::types::{function_types};
 
@@ -20,7 +20,7 @@ impl FunctionValue {
 
         let function_type =
             tref.map(
-                |x| function_types::FunctionType::new_with_llvm_ref(x)
+                function_types::FunctionType::new_with_llvm_ref
             )
             ;
 

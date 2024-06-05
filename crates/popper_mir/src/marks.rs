@@ -16,6 +16,12 @@ impl MarksSection {
     }
 }
 
+impl Default for MarksSection {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MarksSection {
     pub fn new() -> Self {
         Self {

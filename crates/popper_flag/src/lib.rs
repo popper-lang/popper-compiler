@@ -1,3 +1,5 @@
+#![allow(clippy::borrowed_box)]
+
 mod flag;
 mod scope_flag;
 mod symbol_table;

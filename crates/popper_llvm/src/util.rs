@@ -28,7 +28,7 @@ pub fn ptr_to_option<T: IsNull>(ptr: T) -> Option<T> {
 }
 
 
-pub fn to_c_str<'s>(mut s: &'s str) -> Cow<'s, CStr> {
+pub fn to_c_str(mut s: &str) -> Cow<CStr> {
     if s.is_empty() {
         s = "\0";
     }
