@@ -1,7 +1,7 @@
 use crate::types::{int_types, TypeEnum};
 use crate::value::{Value, ValueEnum};
 use llvm_sys::core::{LLVMConstInt, LLVMConstIntGetZExtValue, LLVMTypeOf};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+use llvm_sys::prelude::{LLVMValueRef};
 
 use super::RawValue;
 

@@ -1,4 +1,4 @@
-use ariadne::Fmt;
+
 use ariadne::Source;
 use thiserror::Error;
 

@@ -1,5 +1,5 @@
 use llvm_sys::core::{LLVMDumpValue, LLVMGetValueName2 as LLVMGetValueName, LLVMPrintValueToString, LLVMReplaceAllUsesWith, LLVMSetValueName2 as LLVMSetValueName, LLVMTypeOf, LLVMInstructionEraseFromParent, LLVMValueAsBasicBlock};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+use llvm_sys::prelude::{LLVMValueRef};
 
 trait UnsignedInt: Sized + Into<u32> {}
 

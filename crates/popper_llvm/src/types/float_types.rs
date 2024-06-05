@@ -1,10 +1,10 @@
 use crate::context::Context;
-use crate::types::function_types::FunctionType;
+
 use crate::types::{Type, TypeEnum};
 use crate::value::float_value::FloatValue;
 use llvm_sys::core::LLVMDoubleTypeInContext;
 use llvm_sys::prelude::LLVMTypeRef;
-use crate::types::array_types::ArrayType;
+
 
 use super::RawType;
 

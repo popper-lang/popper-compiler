@@ -1,5 +1,5 @@
 use popper_ast::*;
-use popper_error::notallowed::NotAllowed;
+
 use popper_error::{
     diff_length_of_argument::DiffLengthOfArgument, namenotfound::NameNotFound,
     typemismatch::TypeMismatch, typenotspecified::TypeNotSpecified,

@@ -1,9 +1,9 @@
 use crate::module::Module;
-use llvm_sys::core::{LLVMDumpValue, LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName, LLVMTypeOf};
+use llvm_sys::core::{LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName};
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use popper_mem::string::to_c_str;
 use crate::analysis::FailureAction;
-use crate::types::{function_types, TypeEnum};
+use crate::types::{function_types};
 
 use crate::value::{RawValue, Value, ValueEnum};
 

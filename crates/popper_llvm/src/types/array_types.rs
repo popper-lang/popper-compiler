@@ -6,7 +6,7 @@ use llvm_sys::prelude::LLVMTypeRef;
 use std::fmt::Debug;
 use popper_mem::string::to_c_str;
 
-use crate::types::function_types::FunctionType;
+
 use crate::types::{check_same_ty, RawType, Type, TypeEnum};
 use crate::types::int_types::IntType;
 use crate::value::array_value::ArrayValue;

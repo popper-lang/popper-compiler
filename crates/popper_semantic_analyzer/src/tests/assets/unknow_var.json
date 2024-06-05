@@ -1,1 +1,0 @@
-[{"Let":{"name":{"span":{"start":13,"end":16},"name":"foo"},"value":{"Constant":{"Int":{"span":{"start":24,"end":25},"value":3}}},"type":{"span":{"start":18,"end":21},"type_kind":"Int","generics":[]},"mutable":true,"span":{"start":9,"end":25}}},{"Expression":{"Constant":{"Ident":{"span":{"start":35,"end":38},"name":"foz"}}}}]

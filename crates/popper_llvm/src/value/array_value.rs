@@ -1,8 +1,8 @@
 use crate::types;
 use crate::value::{Value, ValueEnum};
 use llvm_sys::core::{LLVMConstArray2, LLVMTypeOf};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
-use crate::types::check_same_ty;
+use llvm_sys::prelude::{LLVMValueRef};
+
 
 use super::RawValue;
 

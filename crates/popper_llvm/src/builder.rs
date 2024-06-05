@@ -5,9 +5,9 @@ use crate::value::function_value::FunctionValue;
 use crate::value::int_value::IntValue;
 use crate::value::pointer_value::PointerValue;
 use crate::value::{Value, ValueEnum};
-use llvm_sys::core::{LLVMArrayType2, LLVMBuildAdd, LLVMBuildCall2, LLVMBuildFAdd, LLVMBuildFDiv, LLVMBuildFMul, LLVMBuildFSub, LLVMBuildGlobalString, LLVMBuildGlobalStringPtr, LLVMBuildMul, LLVMBuildNSWAdd, LLVMBuildNSWMul, LLVMBuildNSWSub, LLVMBuildNUWAdd, LLVMBuildNUWMul, LLVMBuildNUWSub, LLVMBuildPointerCast, LLVMBuildSub, LLVMCreateBuilderInContext, LLVMIntType, LLVMIntTypeInContext, LLVMPointerType, LLVMPositionBuilderAtEnd, LLVMPrintTypeToString, LLVMPrintValueToString, LLVMTypeOf};
-use llvm_sys::prelude::{LLVMBuilderRef, LLVMTypeRef, LLVMValueRef};
-use std::ffi::{c_char, c_uint, CString};
+use llvm_sys::core::{LLVMBuildAdd, LLVMBuildCall2, LLVMBuildFAdd, LLVMBuildFDiv, LLVMBuildFMul, LLVMBuildFSub, LLVMBuildGlobalString, LLVMBuildMul, LLVMBuildNSWAdd, LLVMBuildNSWMul, LLVMBuildNSWSub, LLVMBuildNUWAdd, LLVMBuildNUWMul, LLVMBuildNUWSub, LLVMBuildSub, LLVMCreateBuilderInContext, LLVMPositionBuilderAtEnd};
+use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
+use std::ffi::{CString};
 use crate::value::float_value::FloatValue;
 use popper_mem::string::to_c_str;
 

@@ -2,7 +2,7 @@ use crate::types;
 use crate::types::TypeEnum;
 use crate::value::{RawValue, Value, ValueEnum};
 use llvm_sys::core::{LLVMConstReal, LLVMConstRealGetDouble, LLVMTypeOf};
-use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+use llvm_sys::prelude::{LLVMValueRef};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct FloatValue {

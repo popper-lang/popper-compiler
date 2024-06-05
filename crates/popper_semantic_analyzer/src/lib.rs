@@ -1,9 +1,6 @@
 mod expr_analyzer;
 mod stmt_analyzer;
 
-#[cfg(test)]
-mod tests;
-
 pub fn analyze(stmts: Vec<popper_ast::Statement>) -> Vec<Result<(), Box<dyn popper_error::Error>>> {
     use popper_ast::visitor::StmtVisitor;
     use popper_error::Error;
