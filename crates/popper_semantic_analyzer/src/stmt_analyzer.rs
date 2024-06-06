@@ -417,7 +417,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             })
             .collect();
 
-        let symbol_flag = SymbolFlags::new(struct_stmt.span).set_struct(field).clone();
+        let symbol_flag = SymbolFlags::new(struct_stmt.span).set_struct(struct_stmt.name.clone()).clone();
         let variable = VariableFlag::new(
             struct_stmt.name.clone(),
             symbol_flag,
@@ -427,6 +427,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         );
 
         self.env.add_variable(variable);
+        self.env.add_struct(struct_stmt.name.clone(), field);
 
         Ok(SymbolFlags::new(struct_stmt.span))
     }

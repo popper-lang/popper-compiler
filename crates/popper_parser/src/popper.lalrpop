@@ -152,8 +152,8 @@ ConstStringType: TypeKind = {
 }
 
 StructType: TypeKind = {
-    "struct" "{" <fields:Comma<StructField>> "}" => {
-        TypeKind::Struct(fields.iter().map(|f| (f.name.clone(), f.ty.clone())).collect())
+    "struct" <id:Ident> => {
+        TypeKind::Struct(id.name)
     }
 }
 

@@ -82,8 +82,8 @@ impl SymbolFlags {
         self
     }
 
-    pub fn set_struct(&mut self, fields: HashMap<String, ValueFlag>) -> &mut Self {
-        self.add_flag(Flag::Value(ValueFlag::Struct(fields)));
+    pub fn set_struct(&mut self, name: String) -> &mut Self {
+        self.add_flag(Flag::Value(ValueFlag::Struct(name)));
         self
     }
 

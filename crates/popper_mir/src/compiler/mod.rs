@@ -78,6 +78,21 @@ impl Compiler {
         id
     }
 
+    pub fn get_type_from_ast(&self, ast: AstType) -> Types {
+        match ast.type_kind {
+            AstTypeKind::Int => Types::Int,
+            AstTypeKind::Bool => Types::Bool,
+            AstTypeKind::Float => Types::Float,
+            AstTypeKind::String(l) => Types::String(l as usize),
+            AstTypeKind::List(t, len) => Types::List(Box::new(self.get_type_from_ast(*t)), len),
+            AstTypeKind::Pointer(t) => Types::Ptr(Box::new(self.get_type_from_ast(*t))),
+            AstTypeKind::Struct(s) => {
+                Types::TypeId(s)
+            },
+            _ => todo!()
+        }
+    }
+
     pub fn compile(&mut self) {
         for stmt in self.program.clone() {
             self.compile_stmt(&stmt);
@@ -95,11 +110,12 @@ impl Compiler {
                         &sign.name,
                         sign.arguments.args
                             .iter()
-                            .map(|x| x.ty.clone().into())
+                            .map(|x| self.get_type_from_ast(x.ty.clone()))
                             .collect(),
-                        sign.return_type
+                        self.get_type_from_ast(sign.return_type
                             .clone()
-                            .into(),
+                        )
+                            ,
                         sign.is_var_args
                     );
 
@@ -128,7 +144,11 @@ impl Compiler {
                 self.ty_env.insert(s.name.clone(), s.clone());
                 let mut fields = Vec::new();
                 for field in s.fields.iter() {
-                    fields.push(field.ty.clone().into());
+                    fields.push(
+                        self.get_type_from_ast(
+                            field.ty.clone()
+                        )
+                    );
                 }
                 self.builder.build_type_decl(TypeId::new(s.name.clone()), Types::Struct(s.name.clone(), fields));
             },
@@ -141,10 +161,13 @@ impl Compiler {
             .arguments
             .args
             .iter()
-            .map(|x| x.ty.clone().into())
-            .collect(), f.returntype.clone().into());
+            .map(|x| 
+                self.get_type_from_ast(x.ty.clone()))
+            .collect(), self.get_type_from_ast(f.returntype.clone()));
         for arg in f.arguments.args.iter() {
-            let id = self.builder.new_ident(arg.ty.clone().into());
+            let id = self.builder.new_ident(
+                self.get_type_from_ast(arg.ty.clone())
+            );
             self.env.insert(arg.name.clone(), id.clone());
             self.debug_var(id, &arg.name);
         }
@@ -244,7 +267,7 @@ impl Compiler {
                 let struct_ty = struct_.clone().expect_ident().get_type().get_ptr_inner_type().into_struct();
                 let ty = self.ty_env.get(&struct_ty.0).unwrap();
                 let s = ty.fields.iter().position(|x| x.name == s.field).unwrap();
-                let ty: Types = ty.fields[s].ty.clone().into();
+                let ty: Types = self.get_type_from_ast(ty.fields[s].ty.clone());
                 let res = self.new_internal_ident(ty.clone());
                 self.builder.build_gep_command(res.clone(), struct_.expect_ident(), ty, Expr::Const(ConstKind::Int(s as i64)));
                 Expr::Ident(res)
@@ -259,17 +282,3 @@ impl Compiler {
     }
 }
 
-impl From<AstType> for Types {
-    fn from(val: AstType) -> Self {
-        match val.type_kind {
-            AstTypeKind::Int => Types::Int,
-            AstTypeKind::Bool => Types::Bool,
-            AstTypeKind::Unit => Types::Unit,
-            AstTypeKind::String(e) => Types::String(e as usize),
-            AstTypeKind::List(e, l) => Types::List(Box::new((*e).into()), l),
-            AstTypeKind::Pointer(p) => Types::Ptr(Box::new((*p).into())),
-            _ => unimplemented!()
-
-        }
-    }
-}

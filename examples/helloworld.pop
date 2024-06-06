@@ -7,8 +7,8 @@ struct Hello {
     b = int
 }
 
-func main(): int {
+func main(): struct Hello {
     let x = init Hello {a = 133, b = 2};
     printf("a + b = %d\n", {x}.b + {x}.a);
-    return 0;
+    return x;
 }

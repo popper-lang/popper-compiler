@@ -12,6 +12,7 @@ pub enum Types {
     Ptr(Box<Types>),
     Label,
     Struct(String, Vec<Types>),
+    TypeId(String)
 }
 
 impl Display for Types {
@@ -32,7 +33,8 @@ impl Display for Types {
                     write!(f, "{}, ", i)?;
                 }
                 write!(f, "}}")
-            }
+            },
+            Types::TypeId(s) => write!(f, "{}", s)
         }
 
     }
@@ -69,7 +71,8 @@ impl Types {
                     bytes.extend(i.to_bytes());
                 }
                 bytes
-            }
+            },
+            _ => panic!("Not implemented")
         }
         
         

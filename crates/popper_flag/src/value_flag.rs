@@ -11,7 +11,7 @@ pub enum ValueFlag {
     None,
     List(Box<ValueFlag>, usize),
     Function(Vec<ValueFlag>, Box<ValueFlag>, bool),
-    Struct(HashMap<String, ValueFlag>),
+    Struct(String),
     StructInstance(String),
     Pointer(Box<ValueFlag>),
     Module(HashMap<String, String>),
@@ -42,14 +42,8 @@ impl Display for ValueFlag {
             ValueFlag::Pointer(ptr) => {
                 write!(f, "*{}", ptr)
             }
-            ValueFlag::Struct(fields) => {
-                let mut fields_string = String::new();
-                for (name, ty) in fields {
-                    fields_string.push_str(&format!("{}: {}, ", name, ty));
-                }
-                fields_string.pop();
-                fields_string.pop();
-                write!(f, "struct({})", fields_string)
+            ValueFlag::Struct(name) => {
+                write!(f, "struct({})", name)
             }
 
             ValueFlag::StructInstance(name) => write!(f, "struct({})", name),
@@ -71,12 +65,8 @@ impl ValueFlag {
                 Box::new(Self::from_ty(*ret)),
                 var,
             ),
-            TypeKind::Struct(fields) => {
-                let mut hashmap = HashMap::new();
-                for (name, ty) in fields {
-                    hashmap.insert(name, Self::from_ty(ty));
-                }
-                ValueFlag::Struct(hashmap)
+            TypeKind::Struct(name) => {
+                ValueFlag::Struct(name)
             }
             TypeKind::StructInstance(name) => ValueFlag::StructInstance(name),
             TypeKind::Pointer(ptr) => ValueFlag::Pointer(Box::new(Self::from_ty(*ptr))),
@@ -86,13 +76,6 @@ impl ValueFlag {
 
     pub fn from_ty(ty: Type) -> Self {
         Self::from_ty_kind(ty.type_kind)
-    }
-
-    pub fn get(&self, name: &str) -> Option<&ValueFlag> {
-        match self {
-            ValueFlag::Struct(fields) => fields.get(name),
-            _ => None,
-        }
     }
 
     pub fn get_minor_type(&self) -> Option<&ValueFlag> {

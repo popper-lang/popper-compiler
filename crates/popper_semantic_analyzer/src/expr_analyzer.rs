@@ -45,6 +45,9 @@ impl ExprAnalyzer {
             }
             TypeKind::Unit => ValueFlag::None,
             TypeKind::Pointer(ptr) => ValueFlag::Pointer(Box::new(self.get_type(*ptr))),
+            TypeKind::Struct(name) => {
+                ValueFlag::Struct(name)
+            }
             _ => unimplemented!(),
         }
     }
@@ -302,9 +305,7 @@ impl ExprVisitor for ExprAnalyzer {
             .get_variable(struct_instance.name.as_str())
             .unwrap();
         let struct_model_value = struct_model.value.get_value().unwrap();
-        if let ValueFlag::Struct(ref fields) = struct_model_value {
-            let mut sorted_fields = fields.iter().collect::<Vec<_>>();
-            sorted_fields.sort_by(|a, b| a.0.cmp(b.0));
+        if let ValueFlag::Struct(ref name) = struct_model_value {
             let mut fields_s = Vec::new();
 
             for field in struct_instance.fields {
@@ -313,6 +314,9 @@ impl ExprVisitor for ExprAnalyzer {
                     self.visit_expr(field.value)?.get_value().unwrap(),
                 ))
             }
+            let fields = self.env.get_struct(name).unwrap();
+            let mut sorted_fields = fields.iter().collect::<Vec<_>>();
+            sorted_fields.sort_by(|a, b| a.0.cmp(b.0));
 
             fields_s.sort_by(|a, b| a.0.cmp(&b.0));
 
@@ -358,13 +362,14 @@ impl ExprVisitor for ExprAnalyzer {
     ) -> Result<Self::Output, Self::Error> {
         let struct_model = self.visit_expr(*struct_field_access.name.clone())?;
         let struct_model_value = struct_model.get_value().unwrap();
-        if let ValueFlag::Struct(ref fields) = struct_model_value {
-            match fields.get(&struct_field_access.field) {
+        if let ValueFlag::Struct(ref name) = struct_model_value {
+            let s = self.env.get_struct(name).unwrap();
+            match s.get(&struct_field_access.field) {
                 Some(flag) => Ok(SymbolFlags::new(struct_field_access.span)
                     .set_value(flag.clone())
                     .clone()),
                 None => {
-                    let field_candidates = fields.keys().cloned().collect::<Vec<_>>();
+                    let field_candidates = s.keys().cloned().collect::<Vec<_>>();
                     let similar_name = find_similar_name(
                         field_candidates.as_slice(),
                         struct_field_access.field.as_str(),

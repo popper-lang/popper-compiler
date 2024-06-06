@@ -45,7 +45,7 @@ pub enum TypeKind {
     Char,
     /// `string`
     String(u32), // u32: size of string
-    Struct(HashMap<String, Type>),
+    Struct(String),
     /// `struct name
     StructInstance(String),
 }
@@ -86,15 +86,8 @@ impl Display for TypeKind {
             TypeKind::Bool => write!(f, "bool"),
             TypeKind::Char => write!(f, "char"),
             TypeKind::String(size) => write!(f, "string[{}]", size),
-            TypeKind::Struct(fields) => {
-                write!(f, "struct {{")?;
-                for (i, (name, ty)) in fields.iter().enumerate() {
-                    write!(f, "{}: {}", name, ty.type_kind)?;
-                    if i != fields.len() - 1 {
-                        write!(f, ", ")?;
-                    }
-                }
-                write!(f, "}}")
+            TypeKind::Struct(name) => {
+                write!(f, "struct {}", name)
             }
             TypeKind::StructInstance(name) => write!(f, "struct {}", name),
         }

@@ -1,6 +1,7 @@
+use std::collections::HashMap;
 use crate::scope_flag::ScopeFlag;
 
-use crate::SymbolFlags;
+use crate::{SymbolFlags, ValueFlag};
 use popper_ast::Span;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -45,6 +46,7 @@ impl VariableFlag {
 #[derive(Clone, PartialEq, Debug)]
 pub struct Environment {
     pub variables: Vec<VariableFlag>,
+    pub struct_env: HashMap<String, HashMap<String, ValueFlag>>
 }
 
 impl Default for Environment {
@@ -57,6 +59,7 @@ impl Environment {
     pub fn new() -> Self {
         Self {
             variables: Vec::new(),
+            struct_env: HashMap::new()
         }
     }
 
@@ -110,5 +113,14 @@ impl Environment {
     pub fn extend(&mut self, other: &mut Environment) -> &mut Self {
         self.variables.append(&mut other.variables);
         self
+    }
+    
+    pub fn add_struct(&mut self, name: String, fields: HashMap<String, ValueFlag>) -> &mut Self {
+        self.struct_env.insert(name, fields);
+        self
+    }
+    
+    pub fn get_struct(&self, name: &str) -> Option<&HashMap<String, ValueFlag>> {
+        self.struct_env.get(name)
     }
 }

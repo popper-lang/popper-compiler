@@ -1,7 +1,7 @@
 use popper_llvm::builder::{Builder, MathOpType};
 use popper_llvm::context::Context;
 use popper_llvm::module::Module;
-use popper_llvm::types::{Type, TypeBuilder};
+use popper_llvm::types::{Type, TypeBuilder, TypeEnum};
 use popper_llvm::value::function_value::FunctionValue;
 use popper_llvm::value::{Value, ValueEnum};
 use popper_mir::command::CommandEnum;
@@ -12,10 +12,9 @@ use popper_mir::marks::MarkKind;
 use popper_mir::program::{ExternalFunction, Program};
 use popper_mir::program::ProgramSection;
 use popper_mir::stmt::{Statement, StmtKind};
-use crate::cast::cast_type;
 use std::collections::HashMap;
 use popper_llvm::types::struct_type::StructType;
-
+use popper_mir::types::Types;
 
 
 #[derive(Debug, Clone)]
@@ -49,6 +48,35 @@ impl Compiler {
         }
     }
 
+    pub fn cast_type(&self, context: Context, types: Types) -> TypeEnum {
+        match types {
+            Types::Int => context.i64_type().to_type_enum(),
+            Types::Float => context.float_type().to_type_enum(),
+            Types::Bool => context.bool_type().to_type_enum(),
+            Types::Unit => unsafe { context.void_type().as_type_enum() },
+            Types::String(_) => context.i8_type().ptr().to_type_enum(),
+            Types::LLVMPtr => context.i8_type().ptr().to_type_enum(),
+            Types::List(sub_ty, l) => {
+                let sub_ty = self.cast_type(context, *sub_ty);
+                let sub_ty = sub_ty.array(l as u64);
+                sub_ty.to_type_enum()
+            },
+            Types::Ptr(sub_ty) => {
+                let sub_ty = self.cast_type(context, *sub_ty);
+                sub_ty.ptr().to_type_enum()
+            },
+            Types::Struct(name, ty) => {
+                let tys = ty.iter().map(|t| self.cast_type(context, t.clone())).collect::<Vec<_>>();
+                let ty = context.named_struct_type(&name);
+                ty.set_body(&tys, false);
+                ty.to_type_enum()
+            },
+            Types::Label => panic!("Cannot cast to label type"),
+            Types::TypeId(e) => self.struct_map.get(&e).unwrap().to_type_enum()
+        }
+    }
+
+
     fn is_marked(&self, ident: &Ident, mark: MarkKind) -> bool {
         self.current_function.as_ref().unwrap().marks.contains_mark(ident, mark)
     }
@@ -69,7 +97,7 @@ impl Compiler {
                 self.compile_external_function(func);
             },
             ProgramSection::TypeDecl(e, f) => {
-                let tys = cast_type(self.context, f.clone());
+                let tys = self.cast_type(self.context, f.clone());
                 self.struct_map.insert(e.get_ident(), tys.into_struct_type());
                 
             }
@@ -82,12 +110,12 @@ impl Compiler {
 
     fn compile_function(&mut self, func: &Function) {
         self.current_function = Some(func.clone());
-        let ret_ty = cast_type(self.context, func.clone().ret);
+        let ret_ty = self.cast_type(self.context, func.clone().ret);
         let args = func
             .args
             .iter()
             .map(|arg|
-                cast_type(self.context, arg.clone())
+                self.cast_type(self.context, arg.clone())
             ).collect::<Vec<_>>();
 
         let func_ty = ret_ty.func(args, false);
@@ -112,12 +140,12 @@ impl Compiler {
     }
 
     fn compile_external_function(&mut self, func: &ExternalFunction) {
-        let ret_ty = cast_type(self.context, func.clone().ret);
+        let ret_ty = self.cast_type(self.context, func.clone().ret);
         let args = func
             .args
             .iter()
             .map(|arg|
-                cast_type(self.context, arg.clone())
+                self.cast_type(self.context, arg.clone())
             ).collect::<Vec<_>>();
 
         let func_ty = ret_ty.func(args, func.is_var_arg);
@@ -194,7 +222,7 @@ impl Compiler {
                 self.builder.build_int_mul(lhs, rhs, MathOpType::None, "")
             },
             CommandEnum::GetElementPtr(gep) => {
-                let target_type = cast_type(self.context, gep.target_type.clone());
+                let target_type = self.cast_type(self.context, gep.target_type.clone());
                 let ptr = self.env.get(gep.ptr.get_index() as usize).unwrap().into_ptr_value();
                 let index = self.compile_expr(&gep.index);
                 let array = vec![index.into_int_value()];
@@ -234,7 +262,7 @@ impl Compiler {
             },
             ConstKind::Bool(b) => self.context.bool_type().bool(*b).to_value_enum(),
             ConstKind::List(l) => {
-                let ty = cast_type(self.context, l[0].get_type());
+                let ty = self.cast_type(self.context, l[0].get_type());
                 let arr = ty.array(l.len() as u64);
                 let arr = arr.const_array(l.iter().map(|c| self.compile_expr(c)).collect::<Vec<_>>().as_slice());
                 arr.to_value_enum()
