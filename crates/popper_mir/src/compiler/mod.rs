@@ -19,7 +19,9 @@ pub struct Compiler {
     ty_env: HashMap<String, AstStructStmt>,
     function_env: HashMap<String, Function>,
     const_table: const_table::ConstTable,
-    const_id: usize
+    const_id: usize,
+    gep_table: HashMap<String, Ident>,
+    is_already_returned: bool
 
 }
 
@@ -32,7 +34,9 @@ impl Compiler {
             function_env: HashMap::new(),
             ty_env: HashMap::new(),
             const_table: const_table::ConstTable::new(),
-            const_id: 0
+            const_id: 0,
+            gep_table: HashMap::new(),
+            is_already_returned: false
         }
     }
 
@@ -67,11 +71,6 @@ impl Compiler {
         }
     }
     pub fn new_const(&mut self, c: ConstKind) -> Ident {
-        if let Some(c) = self.const_table.search(&c) {
-            self.builder.marks_ident(c.clone(), MarkKind::ConstTable);
-            return c.clone();
-        }
-
         let id = self.new_internal_ident(c.get_type());
         self.builder.build_const_command(id.clone(), c.clone());
         self.const_table.insert(id.clone(), c.clone());
@@ -89,7 +88,9 @@ impl Compiler {
             AstTypeKind::Struct(s) => {
                 Types::TypeId(s)
             },
-            _ => todo!()
+            AstTypeKind::Pointer(p) => Types::Ptr(Box::new(self.get_type_from_ast(*p))),
+            AstTypeKind::Unit => Types::Unit,
+            e => todo!("{:?}", e)
         }
     }
 
@@ -138,6 +139,7 @@ impl Compiler {
                 } else {
                     Expr::Const(ConstKind::Null)
                 };
+                self.is_already_returned = true;
                 self.builder.build_ret_command(expr);
             },
             AstStatement::Struct(s) => {
@@ -157,6 +159,7 @@ impl Compiler {
     }
 
     fn compile_function(&mut self, f: &popper_ast::Function) {
+        let ret = self.get_type_from_ast(f.returntype.clone());
         self.builder.build_function(&f.name, f
             .arguments
             .args
@@ -174,8 +177,14 @@ impl Compiler {
         for stmt in f.body.iter() {
             self.compile_stmt(stmt);
         }
+        
+        if !self.is_already_returned {
+            self.builder.build_ret_command(Expr::Const(ConstKind::Null));
+        }
         let func = self.builder.end_function();
         self.function_env.insert(f.name.clone(), func);
+        self.gep_table.clear();
+        self.is_already_returned = false;
     }
 
     pub fn compile_expression(&mut self, expr: AstExpression) -> Expr {
@@ -243,8 +252,15 @@ impl Compiler {
                 }
             },
             AstExpression::Call(call) => {
-                let args = call.arguments.iter().map(|x| self.compile_expression(x.clone())).collect();
-                let func = self.function_env.get(&call.name).unwrap();
+                let func = self.function_env.get(&call.name).unwrap().clone();
+                let mut args = vec![];
+                for arg in call.arguments.iter() {
+                    args.push(self.compile_expression(arg.clone()));
+                }
+                if func.ret == Types::Unit {
+                    self.builder.build_single_call_command(call.name, args);
+                    return Expr::Const(ConstKind::Null);
+                }
                 let res = self.new_internal_ident(func.ret.clone());
                 self.builder.build_call_command(call.name, args, res.clone());
                 Expr::Ident(res)
@@ -256,20 +272,43 @@ impl Compiler {
                 }
                 let const_ = ConstKind::Struct(TypeId::new(s.name.clone()), fields);
                 let res = self.new_const(const_);
-                let id = self.new_internal_ident(
-                    Types::Ptr(Box::new(res.get_type()))
-                );
-                self.builder.build_llvm_store_command(id.clone(), res);
-                Expr::Ident(id)
+                Expr::Ident(res)
             },
             AstExpression::StructFieldAccess(s) => {
                 let struct_ = self.compile_expression(*s.name);
-                let struct_ty = struct_.clone().expect_ident().get_type().get_ptr_inner_type().into_struct();
-                let ty = self.ty_env.get(&struct_ty.0).unwrap();
+                let struct_id = struct_.clone().expect_ident();
+                let struct_ty = struct_id.get_type();
+                let struct_name = struct_ty.expect_type_id();
+                let ptr = if let Some(e) = self.gep_table.get(&struct_name) {
+                    e.clone()
+                } else {
+                    let ptr_struct_ty = Types::Ptr(Box::new(struct_ty.clone()));
+                    let ptr = self.new_internal_ident(ptr_struct_ty.clone());
+                    self.builder.build_llvm_store_command(ptr.clone(), struct_id.clone(), struct_ty.clone());
+                    self.gep_table.insert(struct_name.clone(), ptr.clone());
+                    ptr
+                };
+
+                let ty = self.ty_env.get(&struct_name).unwrap();
                 let s = ty.fields.iter().position(|x| x.name == s.field).unwrap();
                 let ty: Types = self.get_type_from_ast(ty.fields[s].ty.clone());
                 let res = self.new_internal_ident(ty.clone());
-                self.builder.build_gep_command(res.clone(), struct_.expect_ident(), ty, Expr::Const(ConstKind::Int(s as i64)));
+                self.builder.build_gep_struct_command(res.clone(), ptr, ty, Expr::Const(ConstKind::Int(s as i64)), TypeId::new(struct_name));
+                Expr::Ident(res)
+            },
+            AstExpression::Reference(r) => {
+                let id = self.compile_expression(*r.expr);
+                let ty = id.get_type();
+                let res = self.new_internal_ident(Types::Ptr(Box::new(ty.clone())));
+                self.builder.build_llvm_store_command(res.clone(), id.expect_ident(), ty);
+                Expr::Ident(res)
+            },
+            AstExpression::Deref(d) => {
+                let id = self.compile_expression(*d.expr);
+                let ty = id.get_type();
+                let ty = ty.get_ptr_inner_type();
+                let res = self.new_internal_ident(ty.clone());
+                self.builder.build_llvm_load_ptr_command(res.clone(), id.expect_ident(), ty);
                 Expr::Ident(res)
             },
             _ => todo!()

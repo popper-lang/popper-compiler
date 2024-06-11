@@ -1,5 +1,6 @@
+use std::mem::forget;
 use crate::module::Module;
-use llvm_sys::core::{LLVMGetParam, LLVMGetValueName2 as LLVMGetValueName};
+use llvm_sys::core::*;
 use llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 use crate::util::to_c_str;
 use crate::analysis::FailureAction;
@@ -53,7 +54,7 @@ impl FunctionValue {
         use std::str;
 
         unsafe {
-            let ptr = LLVMGetValueName(self.function_value.as_llvm_ref(), std::ptr::null_mut());
+            let ptr = LLVMGetValueName2(self.function_value.as_llvm_ref(), std::ptr::null_mut());
             let cstr = CStr::from_ptr(ptr);
             str::from_utf8_unchecked(cstr.to_bytes())
         }
@@ -67,20 +68,23 @@ impl FunctionValue {
             Some(param.into())
         }
     }
+    
+    pub fn count_params(&self) -> u32 {
+        unsafe { LLVMCountParams(self.function_value.as_llvm_ref()) }
+    }
 
     pub fn get_all_params(&self) -> Vec<ValueEnum> {
-        let mut params = vec![];
-        let mut i = 0;
-        loop {
-            let param = self.get_nth_param(i);
-            if let Some(param) = param {
-                params.push(param);
-            } else {
-                break;
-            }
-            i += 1;
-        }
-        params
+        let length = self.count_params() as usize;
+        let mut params = Vec::with_capacity(length);
+        let ptr = params.as_mut_ptr();
+        forget(params);
+        let raw_vec = unsafe { 
+            LLVMGetParams(self.function_value.as_llvm_ref(), ptr); 
+            Vec::from_raw_parts(ptr, length, length)
+        };
+        
+        raw_vec.into_iter().map(|x| x.into()).collect()
+        
     }
 
     pub fn verify(&self, failure_action: FailureAction) -> bool {

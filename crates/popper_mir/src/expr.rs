@@ -39,6 +39,10 @@ impl Expr {
         }
 
     }
+    
+    pub fn is_null(&self) -> bool {
+        matches!(self, Expr::Const(crate::consts::ConstKind::Null))
+    }
 }
 
 impl Display for Expr {

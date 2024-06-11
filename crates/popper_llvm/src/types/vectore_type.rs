@@ -18,11 +18,11 @@ impl VectoreType {
     }
 
     pub fn get_size(&self) -> u32 {
-        unsafe { LLVMGetVectorSize(self.vectore_type.raw) }
+        unsafe { LLVMGetVectorSize(self.vectore_type.as_llvm_ref()) }
     }
 
     pub fn get_element_type(&self) -> RawType {
-        let element_type = unsafe { LLVMGetElementType(self.vectore_type.raw) };
+        let element_type = unsafe { LLVMGetElementType(self.vectore_type.as_llvm_ref()) };
         RawType::new(element_type)
     }
 }

@@ -1,7 +1,7 @@
 use popper_llvm::builder::{Builder, MathOpType};
 use popper_llvm::context::Context;
 use popper_llvm::module::Module;
-use popper_llvm::types::{Type, TypeBuilder, TypeEnum};
+use popper_llvm::types::{RawType, Type as TypeTrait, TypeBuilder, TypeEnum};
 use popper_llvm::value::function_value::FunctionValue;
 use popper_llvm::value::{Value, ValueEnum};
 use popper_mir::command::CommandEnum;
@@ -15,7 +15,16 @@ use popper_mir::stmt::{Statement, StmtKind};
 use std::collections::HashMap;
 use popper_llvm::types::struct_type::StructType;
 use popper_mir::types::Types;
+use crate::type_::Type;
 
+
+#[derive(Debug, Copy, Clone)]
+enum BitsMode {
+    B8,
+    B16,
+    B32,
+    B64
+}
 
 #[derive(Debug, Clone)]
 pub struct Compiler {
@@ -27,7 +36,8 @@ pub struct Compiler {
     current_function: Option<Function>,
     functions_map: HashMap<String, FunctionValue>,
     struct_map: HashMap<String, StructType>,
-    allocas_ptr: Vec<ValueEnum>
+    allocas_ptr: Vec<ValueEnum>,
+    current_bits_mode: BitsMode
 }
 
 impl Compiler {
@@ -45,36 +55,71 @@ impl Compiler {
             functions_map: HashMap::new(),
             struct_map: HashMap::new(),
             allocas_ptr: vec![],
+            current_bits_mode: BitsMode::B32
         }
     }
 
-    pub fn cast_type(&self, context: Context, types: Types) -> TypeEnum {
-        match types {
-            Types::Int => context.i64_type().to_type_enum(),
+    fn switch_bits_mode(&mut self, mode: BitsMode) {
+        self.current_bits_mode = mode;
+    }
+
+    fn int_type(&self) -> TypeEnum {
+        match self.current_bits_mode {
+            BitsMode::B8 => self.context.i8_type().to_type_enum(),
+            BitsMode::B16 => self.context.i16_type().to_type_enum(),
+            BitsMode::B32 => self.context.i32_type().to_type_enum(),
+            BitsMode::B64 => self.context.i64_type().to_type_enum()
+        }
+    }
+
+    fn int_value(&self, val: i64) -> ValueEnum {
+        self.int_type().into_int_type().int(val as u32, false).to_value_enum()
+    }
+
+
+    pub fn cast_type(&self, context: Context, types: Types, is_pure_struct: bool) -> Type {
+        Type::from_type(match types {
+            Types::Int => self.int_type(),
             Types::Float => context.float_type().to_type_enum(),
             Types::Bool => context.bool_type().to_type_enum(),
-            Types::Unit => unsafe { context.void_type().as_type_enum() },
             Types::String(_) => context.i8_type().ptr().to_type_enum(),
             Types::LLVMPtr => context.i8_type().ptr().to_type_enum(),
             Types::List(sub_ty, l) => {
-                let sub_ty = self.cast_type(context, *sub_ty);
+                let sub_ty = self.cast_type(context, *sub_ty, is_pure_struct).get_type();
                 let sub_ty = sub_ty.array(l as u64);
                 sub_ty.to_type_enum()
             },
             Types::Ptr(sub_ty) => {
-                let sub_ty = self.cast_type(context, *sub_ty);
+                let sub_ty = self.cast_type(context, *sub_ty, is_pure_struct).get_type();
                 sub_ty.ptr().to_type_enum()
             },
             Types::Struct(name, ty) => {
-                let tys = ty.iter().map(|t| self.cast_type(context, t.clone())).collect::<Vec<_>>();
+                let tys = ty.iter().map(|t| self.cast_type(context, t.clone(), false).get_type()).collect::<Vec<_>>();
                 let ty = context.named_struct_type(&name);
                 ty.set_body(&tys, false);
-                ty.to_type_enum()
+                let s = ty.to_type_enum();
+                if is_pure_struct {
+                    s
+                } else {
+                    let ty = self.context.i64_type().to_type_enum();
+                    return Type::new(ty, s);
+                }
             },
             Types::Label => panic!("Cannot cast to label type"),
-            Types::TypeId(e) => self.struct_map.get(&e).unwrap().to_type_enum()
-        }
+            Types::TypeId(e) => {
+                let s = self.struct_map.get(&e).unwrap().to_type_enum();
+                if is_pure_struct {
+                    s
+                } else {
+                    let ty = self.context.i64_type().to_type_enum();
+                    return Type::new(ty, s);
+                }
+            },
+            _ => panic!("Cannot cast to void type")
+        })
     }
+
+
 
 
     fn is_marked(&self, ident: &Ident, mark: MarkKind) -> bool {
@@ -97,9 +142,8 @@ impl Compiler {
                 self.compile_external_function(func);
             },
             ProgramSection::TypeDecl(e, f) => {
-                let tys = self.cast_type(self.context, f.clone());
+                let tys = self.cast_type(self.context, f.clone(), true).get_type();
                 self.struct_map.insert(e.get_ident(), tys.into_struct_type());
-                
             }
         }
 
@@ -110,15 +154,19 @@ impl Compiler {
 
     fn compile_function(&mut self, func: &Function) {
         self.current_function = Some(func.clone());
-        let ret_ty = self.cast_type(self.context, func.clone().ret);
+        let void_type = RawType::void_type();
         let args = func
             .args
             .iter()
             .map(|arg|
-                self.cast_type(self.context, arg.clone())
+                self.cast_type(self.context, arg.clone(), false).get_type()
             ).collect::<Vec<_>>();
-
-        let func_ty = ret_ty.func(args, false);
+        let func_ty = if func.ret == Types::Unit {
+            void_type.func(args, false)
+        } else {
+            let ret_ty = self.cast_type(self.context, func.ret.clone(), false).get_type();
+            ret_ty.func(args, false)
+        };
         let llvm_func = self.module.add_function(&func.name, func_ty);
 
         self.functions_map.insert(func.name.clone(), llvm_func);
@@ -140,12 +188,12 @@ impl Compiler {
     }
 
     fn compile_external_function(&mut self, func: &ExternalFunction) {
-        let ret_ty = self.cast_type(self.context, func.clone().ret);
+        let ret_ty = self.cast_type(self.context, func.clone().ret, false).get_type();
         let args = func
             .args
             .iter()
             .map(|arg|
-                self.cast_type(self.context, arg.clone())
+                self.cast_type(self.context, arg.clone(), false).get_type()
             ).collect::<Vec<_>>();
 
         let func_ty = ret_ty.func(args, func.is_var_arg);
@@ -161,17 +209,14 @@ impl Compiler {
                 let val = self.compile_command(&assign.command, Some(ident.clone())).unwrap();
                 let index = ident.get_index() as usize;
                 self.env.insert(index, val);
-                
+
             },
             StmtKind::Command(command) => {
                 self.compile_command(&command, None);
             },
             StmtKind::LetDecl(decl) => {
-                // let ty = cast_type(self.context, decl.ty.clone());
-                // let val = self.builder.build_alloca(ty, "");
-                // self.allocas_ptr.push(val.to_value_enum());
-                // let index = decl.ident.get_index() as usize;
-                // self.env.insert(index, val.to_value_enum());
+                let zero = self.context.i64_type().int(0, false);
+                self.env.push(zero.to_value_enum());
             }
         }
     }
@@ -183,25 +228,29 @@ impl Compiler {
                 self.compile_const(&c.kind)
             },
             CommandEnum::LLVMLoadPtr(ptr) => {
-                let ptr = self.env[ptr.ptr.get_index() as usize];
-                let ptr_ty = self.context.i8_type().ptr().to_type_enum();
-                self.builder.build_load(ptr_ty, ptr.into_ptr_value(), "")
+                let ptr_val = self.env[ptr.ptr.get_index() as usize].into_ptr_value();
+                let ptr_ty = self.cast_type(self.context, ptr.as_type.clone(), false).get_type();
+                self.builder.build_load(ptr_ty, ptr_val, "")
             },
             CommandEnum::Call(func) => {
                 let l_func = *self.functions_map.get(&func.function).unwrap();
                 let args = func.args.iter().map(|arg| self.compile_expr(arg)).collect::<Vec<_>>();
-                self.builder.build_call(l_func, args.as_slice(), "")
+                return self.builder.build_call(l_func, args.as_slice(), "");
             },
             CommandEnum::CopyVal(val) => {
                 self.compile_expr(&val.val)
             },
             CommandEnum::LLVMStore(ptr) => {
                 let val = self.env[ptr.ptr.get_index() as usize];
-                let ptr = self.builder.build_alloca(val.get_type(), "");
+                let ptr = self.builder.build_alloca(self.cast_type(self.context, ptr.as_type.clone(), false).get_real_type(), "");
                 self.builder.build_store(val, ptr);
                 ptr.to_value_enum()
             },
             CommandEnum::Ret(val) => {
+                if val.value.is_null() {
+                    self.builder.build_ret(None);
+                    return None;
+                }
                 let val = self.compile_expr(&val.value);
                 self.builder.build_ret(Some(val));
                 return None;
@@ -221,13 +270,15 @@ impl Compiler {
                 let rhs = self.compile_expr(&mul.right).into_int_value();
                 self.builder.build_int_mul(lhs, rhs, MathOpType::None, "")
             },
-            CommandEnum::GetElementPtr(gep) => {
-                let target_type = self.cast_type(self.context, gep.target_type.clone());
-                let ptr = self.env.get(gep.ptr.get_index() as usize).unwrap().into_ptr_value();
+            CommandEnum::GetElementPtrStruct(gep) => {
+                let struct_ty = self.struct_map.get(&gep.struct_id.get_ident()).unwrap().clone();
+                let mut val = self.env.get(gep.ptr.get_index() as usize).unwrap();
+                let ptr= val.into_ptr_value();
                 let index = self.compile_expr(&gep.index);
-                let array = vec![index.into_int_value()];
-                let ptr = self.builder.build_inbound_get_element_ptr(target_type, ptr, &array, "");
-                self.builder.build_load(target_type, ptr.into_ptr_value(), "")
+                let zero = self.context.i32_type().int(0, false);
+                let array = vec![zero, index.into_int_value()];
+                let ptr = self.builder.build_inbound_get_element_ptr(struct_ty.to_type_enum(), ptr, &array, "");
+                self.builder.build_load(self.context.i64_type().to_type_enum(), ptr.into_ptr_value(), "")
             },
             _ => unimplemented!()
 
@@ -254,7 +305,7 @@ impl Compiler {
 
     fn compile_const(&mut self, c: &ConstKind) -> ValueEnum {
         match c {
-            ConstKind::Int(i) => self.context.i64_type().int(*i as u32, false).to_value_enum(),
+            ConstKind::Int(i) => self.int_value(*i),
             ConstKind::Float(f) => self.context.float_type().float(*f).to_value_enum(),
             ConstKind::Str(s) => {
                 let s = crate::string::replace_sc_string(s);
@@ -262,15 +313,27 @@ impl Compiler {
             },
             ConstKind::Bool(b) => self.context.bool_type().bool(*b).to_value_enum(),
             ConstKind::List(l) => {
-                let ty = self.cast_type(self.context, l[0].get_type());
+                let ty = self.cast_type(self.context, l[0].get_type(), false).get_type();
                 let arr = ty.array(l.len() as u64);
                 let arr = arr.const_array(l.iter().map(|c| self.compile_expr(c)).collect::<Vec<_>>().as_slice());
                 arr.to_value_enum()
             },
             ConstKind::Struct(s, elt) => {
+
                 let args = elt.iter().map(|c| self.compile_expr(c)).collect::<Vec<_>>();
+
                 let s = self.struct_map.get(&s.get_ident()).unwrap();
-                s.const_struct(&args)
+                let alloca = self.builder.build_alloca(s.to_type_enum(), "");
+                let zero = self.context.i32_type().int(0, false);
+                for (i, arg) in args.iter().enumerate() {
+                    let index = self.context.i32_type().int(i as u32, false);
+                    let array = vec![zero, index];
+                    let ptr = self.builder.build_inbound_get_element_ptr(s.to_type_enum(), alloca, &array, "");
+                    self.builder.build_store(*arg, ptr.into_ptr_value());
+                }
+                let int64 = self.context.i64_type();
+                let loaded = self.builder.build_load(int64.to_type_enum(), alloca, "");
+                loaded
             },
             _ => unimplemented!()
         }

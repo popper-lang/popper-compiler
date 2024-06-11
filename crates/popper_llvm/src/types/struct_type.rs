@@ -12,7 +12,7 @@ pub struct StructType {
 
 impl StructType {
     pub fn new(element_types: &[TypeEnum], is_packed: bool) -> Self {
-        let mut element_types: Vec<LLVMTypeRef> = element_types.iter().map(|ty| ty.as_raw().raw).collect();
+        let mut element_types: Vec<LLVMTypeRef> = element_types.iter().map(|ty| ty.as_raw().as_llvm_ref()).collect();
         let struct_type = unsafe {
             LLVMStructType(
                 element_types.as_mut_ptr(),
@@ -34,7 +34,7 @@ impl StructType {
     }
 
     pub fn set_body(&self, element_types: &[TypeEnum], is_packed: bool) {
-        let mut element_types: Vec<LLVMTypeRef> = element_types.iter().map(|ty| ty.as_raw().raw).collect();
+        let mut element_types: Vec<LLVMTypeRef> = element_types.iter().map(|ty| ty.as_raw().as_llvm_ref()).collect();
         unsafe {
             LLVMStructSetBody(
                 self.struct_type.as_llvm_ref(),

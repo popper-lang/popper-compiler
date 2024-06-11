@@ -62,6 +62,18 @@ impl Environment {
             struct_env: HashMap::new()
         }
     }
+    
+    pub fn keep_static_member(&self) -> Self {
+        let mut new_env = Environment::new();
+        new_env.struct_env = self.struct_env.clone();
+        for variable in &self.variables {
+            if variable.value
+                .get_value().unwrap().is_static() {
+                new_env.variables.push(variable.clone());
+            }
+        }
+        new_env
+    }
 
     pub fn add_variable(&mut self, variable: VariableFlag) -> &mut Self {
         self.variables.push(variable);

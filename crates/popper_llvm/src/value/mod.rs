@@ -111,7 +111,14 @@ impl ValueEnum {
     pub fn into_ptr_value(self) -> pointer_value::PointerValue {
         match self {
             ValueEnum::PointerValue(ptr_value) => ptr_value,
-            _ => panic!("Not a pointer value"),
+            e => panic!("Not a pointer value: {:?}", e.get_type().as_raw().get_type_kind()),
+        }
+    }
+    
+    pub fn into_struct_value(self) -> struct_value::StructValue {
+        match self {
+            ValueEnum::StructValue(struct_value) => struct_value,
+            e => panic!("Not a struct value: {:?}", e.get_type().as_raw().get_type_kind()),
         }
     }
 
@@ -128,6 +135,15 @@ impl ValueEnum {
 
     pub fn erase_from_parent(&self) {
         unsafe { LLVMInstructionEraseFromParent(self.as_llvm_ref()) }
+
+    }
+    
+    pub fn is_ptr(&self) -> bool {
+        matches!(self.get_type(), TypeEnum::PointerType(_))
+    }
+    
+    pub fn is_struct(&self) -> bool {
+        matches!(self.get_type(), TypeEnum::StructType(_))
     }
 
     pub fn as_raw(&self) -> RawValue {
@@ -299,7 +315,7 @@ impl RawValue {
 
     /// # Safety
     /// ValueEnum::from use LLVMTypeOf which can be invalid if the value is a function
-    unsafe fn into_value_enum(self) -> ValueEnum {
+    pub unsafe fn into_value_enum(self) -> ValueEnum {
         ValueEnum::from(self.as_llvm_ref())
     }
 

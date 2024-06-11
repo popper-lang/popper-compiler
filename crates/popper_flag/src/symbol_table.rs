@@ -1,6 +1,5 @@
 use crate::{Environment, Flag, ScopeFlag, ValueFlag, VariableFlag};
 use popper_ast::Span;
-use std::collections::HashMap;
 
 /// save all flags in this struct
 #[derive(Clone, PartialEq, Debug)]

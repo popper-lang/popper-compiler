@@ -89,6 +89,16 @@ impl ValueFlag {
     pub fn is_same(&self, other: &Self) -> bool {
         self == other
     }
+    
+    pub fn is_static(&self) -> bool {
+        match self {
+            ValueFlag::Struct(_) => true,
+            ValueFlag::Module(_) => true,
+            ValueFlag::Function(..) => true,
+            ValueFlag::StructInstance(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl PartialEq for ValueFlag {

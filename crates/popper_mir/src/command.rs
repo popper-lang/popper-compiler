@@ -1,4 +1,4 @@
-use crate::consts::{ConstKind, Ident};
+use crate::consts::{ConstKind, Ident, TypeId};
 use crate::expr::Expr;
 use crate::labels::{Label, LabelId};
 use crate::types::Types;
@@ -106,11 +106,13 @@ commands! {
     }
 
     struct LLVMLoadPtr(llvm_load_ptr) {
-        ptr: Ident [Ident]
+        ptr: Ident [Ident],
+        as_type: Types [None]
     }
     
     struct LLVMStore(llvm_store) {
-        ptr: Ident [Ident]
+        ptr: Ident [Ident],
+        as_type: Types [None]
     }
 
     struct CmpEq(cmp_eq) {
@@ -182,10 +184,11 @@ commands! {
         val: Expr [Expr]
     }
     
-    struct GetElementPtr(get_element_ptr) {
+    struct GetElementPtrStruct(get_element_ptr) {
         ptr: Ident [Ident],
         index: Expr [Expr],
-        target_type: Types [None]
+        target_type: Types [None],
+        struct_id: TypeId [None]
     }
 
 }
@@ -210,6 +213,6 @@ pub enum CommandEnum {
     Br(Br),
     Ret(Ret),
     CopyVal(CopyVal),
-    GetElementPtr(GetElementPtr)
+    GetElementPtrStruct(GetElementPtrStruct)
 }
 

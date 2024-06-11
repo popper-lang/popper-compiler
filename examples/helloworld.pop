@@ -7,8 +7,13 @@ struct Hello {
     b = int
 }
 
-func main(): struct Hello {
-    let x = init Hello {a = 133, b = 2};
-    printf("a + b = %d\n", {x}.b + {x}.a);
-    return x;
+func initStruct(h: *struct Hello): unit {
+    printf("a: %d\n", {@h}.a);
+}
+
+
+func main(): int {
+    let h = init Hello { a = 03, b = 2 };
+    initStruct(ref h);
+    return 0;
 }

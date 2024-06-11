@@ -12,10 +12,10 @@ pub struct FunctionType {
 impl FunctionType {
     pub fn new(args_ty: Vec<TypeEnum>, return_ty: TypeEnum, is_var_args: bool) -> Self {
         let mut args_ty: Vec<LLVMTypeRef> =
-            args_ty.into_iter().map(|ty| ty.as_raw().raw).collect();
+            args_ty.into_iter().map(|ty| ty.as_raw().as_llvm_ref()).collect();
         let function_type = unsafe {
             LLVMFunctionType(
-                return_ty.as_raw().raw,
+                return_ty.as_raw().as_llvm_ref(),
                 args_ty.as_mut_ptr(),
                 args_ty.len() as u32,
                 is_var_args.into(),

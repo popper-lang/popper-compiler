@@ -1,10 +1,10 @@
 use crate::basic_block::BasicBlock;
 use crate::context::Context;
-use crate::types::TypeEnum;
+use crate::types::{TypeEnum, TypeKind};
 use crate::value::function_value::FunctionValue;
 use crate::value::int_value::IntValue;
 use crate::value::pointer_value::PointerValue;
-use crate::value::{Value, ValueEnum};
+use crate::value::{RawValue, Value, ValueEnum};
 use llvm_sys::core::{LLVMBuildAdd, LLVMBuildCall2, LLVMBuildFAdd, LLVMBuildFDiv, LLVMBuildFMul, LLVMBuildFSub, LLVMBuildGlobalString, LLVMBuildMul, LLVMBuildNSWAdd, LLVMBuildNSWMul, LLVMBuildNSWSub, LLVMBuildNUWAdd, LLVMBuildNUWMul, LLVMBuildNUWSub, LLVMBuildSub, LLVMCreateBuilderInContext, LLVMPositionBuilderAtEnd};
 use llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
 use std::ffi::{CString};
@@ -138,7 +138,7 @@ impl Builder {
         function: FunctionValue,
         args: &[ValueEnum],
         name: &str,
-    ) -> ValueEnum {
+    ) -> Option<ValueEnum> {
         let mut args = args
             .iter().map(|x: &ValueEnum| x.as_raw().as_llvm_ref()).by_ref().collect::<Vec<LLVMValueRef>>();
         let function_type_ref = function.get_raw_function_type().unwrap();
@@ -154,7 +154,13 @@ impl Builder {
                 name.as_ptr()
             )
         };
-        value.into()
+        let value = RawValue::new(value);
+        let ty = value.get_type().get_type_kind();
+        if ty == TypeKind::Void {
+            None
+        } else {
+            Some(unsafe { value.into_value_enum() })
+        }
     }
     
     pub fn build_ret(&self, r: Option<ValueEnum>) {

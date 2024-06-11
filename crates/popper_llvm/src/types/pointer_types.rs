@@ -10,7 +10,7 @@ pub struct PointerTypes {
 
 impl PointerTypes {
     pub fn new_const(ty: TypeEnum) -> Self {
-        let ty = unsafe { LLVMPointerType(ty.as_raw().raw, 0) };
+        let ty = unsafe { LLVMPointerType(ty.as_raw().as_llvm_ref(), 0) };
         Self { ty: RawType::new(ty) }
     }
     pub fn new_llvm_ref(ty: LLVMTypeRef) -> Self {

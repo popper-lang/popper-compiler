@@ -85,10 +85,25 @@ impl Types {
         }
     }
     
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Types::Struct(_, _))
+    }
+    
+    pub fn is_type_id(&self) -> bool {
+        matches!(self, Types::TypeId(_))
+    }
+    
     pub fn get_ptr_inner_type(&self) -> Types {
         match self {
             Types::Ptr(t) => *t.clone(),
-            _ => panic!("Not a pointer")
+            e => panic!("Not a pointer(: {})", e)
+        }
+    }
+    
+    pub fn expect_type_id(&self) -> String {
+        match self {
+            Types::TypeId(s) => s.clone(),
+            e => panic!("Not a type id: {}", e)
         }
     }
 }

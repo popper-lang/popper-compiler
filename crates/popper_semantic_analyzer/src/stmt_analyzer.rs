@@ -63,7 +63,6 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         } else {
             analyzer.visit_expr(let_stmt.value.clone())?
         };
-
         let variable = VariableFlag::new(
             let_stmt.name.name,
             value.clone(),
@@ -71,8 +70,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let_stmt.mutable,
             let_stmt.span,
         );
-
         self.env.add_variable(variable);
+        
 
         Ok(value)
     }
@@ -209,6 +208,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             let err = AlreadyExist::new(f.span, (function.name, function.span));
             return Err(Box::new(err));
         }
+        let mut old_env = self.env.clone();
+        self.env = self.env.keep_static_member();
         let mut args = Vec::new();
 
         for arg in function.arguments.args {
@@ -246,7 +247,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
             function.span,
         );
 
-        self.env.add_variable(function_flag);
+        old_env.add_variable(function_flag);
 
         for stmt in function.body {
             self.visit_stmt(stmt)?;
@@ -258,6 +259,8 @@ impl visitor::StmtVisitor for StmtAnalyzer {
                 (function.span, ValueFlag::None.to_string()),
             )));
         }
+        
+        self.env = old_env;
 
 
 

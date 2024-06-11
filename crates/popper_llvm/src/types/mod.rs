@@ -1,6 +1,7 @@
+use std::ptr::NonNull;
 use llvm_sys::core::*;
 use llvm_sys::prelude::*;
-use llvm_sys::LLVMTypeKind;
+use llvm_sys::{LLVMType, LLVMTypeKind};
 use crate::context::Context;
 use crate::util::ptr_to_option;
 
@@ -206,36 +207,6 @@ impl TypeEnum {
         }
     }
 
-    pub fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> function_types::FunctionType {
-        match self {
-            TypeEnum::IntType(t) => t.func(args, is_var_args),
-            TypeEnum::FloatType(t) => t.func(args, is_var_args),
-            TypeEnum::ArrayType(t) => t.func(args, is_var_args),
-            TypeEnum::FunctionType(t) => t.func(args, is_var_args),
-            TypeEnum::PointerType(t) => t.func(args, is_var_args),
-            TypeEnum::VoidType(t) => t.func(args, is_var_args),
-            TypeEnum::StructType(t) => t.func(args, is_var_args),
-            TypeEnum::VectoreType(t) => t.func(args, is_var_args),
-        }
-    }
-
-    pub fn array(&self, length: u64) -> array_types::ArrayType {
-        match self {
-            TypeEnum::IntType(t) => t.array(length),
-            TypeEnum::FloatType(t) => t.array(length),
-            TypeEnum::ArrayType(t) => t.array(length),
-            TypeEnum::FunctionType(t) => t.array(length),
-            TypeEnum::PointerType(t) => t.array(length),
-            TypeEnum::VoidType(t) => t.array(length),
-            TypeEnum::StructType(t) => t.array(length),
-            TypeEnum::VectoreType(t) => t.array(length),
-        }
-    }
-
-    pub fn ptr(&self) -> pointer_types::PointerTypes {
-        pointer_types::PointerTypes::new_const(*self)
-    }
-
     pub fn into_function_type(self) -> function_types::FunctionType {
         match self {
             TypeEnum::FunctionType(t) => t,
@@ -254,6 +225,13 @@ impl TypeEnum {
         match self {
             TypeEnum::StructType(t) => t,
             _ => panic!("Expected StructType, got {:?}", self),
+        }
+    }
+    
+    pub fn into_int_type(self) -> int_types::IntType {
+        match self {
+            TypeEnum::IntType(t) => t,
+            _ => panic!("Expected IntType, got {:?}", self),
         }
     }
 }
@@ -288,16 +266,66 @@ impl From<LLVMTypeRef> for TypeEnum {
                 TypeEnum::VectoreType(vectore_type::VectoreType::new_llvm_ref(value))
             },
             
-            _ => panic!("Unknown type"),
+            e => panic!("Unknown type: {:?}", e),
         }
 
     }
 }
 
+impl TypeBuilder for TypeEnum {
+    fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> function_types::FunctionType {
+        match self {
+            TypeEnum::IntType(t) => t.func(args, is_var_args),
+            TypeEnum::FloatType(t) => t.func(args, is_var_args),
+            TypeEnum::ArrayType(t) => t.func(args, is_var_args),
+            TypeEnum::FunctionType(t) => t.func(args, is_var_args),
+            TypeEnum::PointerType(t) => t.func(args, is_var_args),
+            TypeEnum::VoidType(t) => t.func(args, is_var_args),
+            TypeEnum::StructType(t) => t.func(args, is_var_args),
+            TypeEnum::VectoreType(t) => t.func(args, is_var_args),
+        }
+    }
 
+    fn array(&self, length: u64) -> array_types::ArrayType {
+        match self {
+            TypeEnum::IntType(t) => t.array(length),
+            TypeEnum::FloatType(t) => t.array(length),
+            TypeEnum::ArrayType(t) => t.array(length),
+            TypeEnum::FunctionType(t) => t.array(length),
+            TypeEnum::PointerType(t) => t.array(length),
+            TypeEnum::VoidType(t) => t.array(length),
+            TypeEnum::StructType(t) => t.array(length),
+            TypeEnum::VectoreType(t) => t.array(length),
+        }
+    }
+
+    fn ptr(&self) -> pointer_types::PointerTypes {
+        pointer_types::PointerTypes::new_const(*self)
+    }
+
+}
+
+impl TypeBuilder for RawType {
+    fn func(&self, args: Vec<TypeEnum>, is_var_args: bool) -> function_types::FunctionType {
+        let mut args = args.into_iter().map(|t| t.as_raw().as_llvm_ref()).collect::<Vec<_>>();
+        function_types::FunctionType::new_with_llvm_ref(unsafe {
+            LLVMFunctionType(self.as_llvm_ref(), args.as_mut_ptr(), args.len() as u32, is_var_args as i32)
+        })
+        
+    }
+
+    fn array(&self, length: u64) -> array_types::ArrayType {
+        unsafe { array_types::ArrayType::new_with_llvm_ref(LLVMArrayType2(self.as_llvm_ref(), length) ) }
+    }
+
+    fn ptr(&self) -> pointer_types::PointerTypes {
+        pointer_types::PointerTypes::new_llvm_ref(unsafe { LLVMPointerType(self.as_llvm_ref(), 0) })
+    }
+
+}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RawType {
-    raw: LLVMTypeRef,
+    raw: NonNull<LLVMType>,
 }
 
 
@@ -321,43 +349,47 @@ impl RawType {
     
     
     pub fn new(raw: LLVMTypeRef) -> Self {
-        Self { raw }
+        Self { raw: NonNull::new(raw).expect("The pointer is null") }
     }
     
     pub unsafe fn as_type_enum(&self) -> TypeEnum {
-        TypeEnum::from(self.raw)
+        TypeEnum::from(self.raw.as_ptr())
     }
 
     pub fn print_to_string(&self) -> String {
-        let llvm_str = unsafe { LLVMPrintTypeToString(self.raw) };
+        let llvm_str = unsafe { LLVMPrintTypeToString(self.raw.as_ptr()) };
         let str_slice = unsafe { std::ffi::CStr::from_ptr(llvm_str) }
             .to_str()
             .unwrap();
         str_slice.to_owned()
     }
     
+    pub fn dump(&self) {
+        unsafe { LLVMDumpType(self.raw.as_ptr()) }
+    }
+    
     pub fn as_llvm_ref(&self) -> LLVMTypeRef {
-        self.raw
+        self.raw.as_ptr()
     }
     
     pub fn get_type_kind(&self) -> TypeKind {
-        let kind = unsafe { LLVMGetTypeKind(self.raw) };
+        let kind = unsafe { LLVMGetTypeKind(self.raw.as_ptr()) };
         kind.into()
     }
     
     pub fn is_sized(&self) -> bool {
-        unsafe { LLVMTypeIsSized(self.raw) == 1 }
+        unsafe { LLVMTypeIsSized(self.raw.as_ptr()) == 1 }
     }
     
     pub fn get_context(&self) -> Option<Context> {
-        let res = unsafe { LLVMGetTypeContext(self.raw) };
+        let res = unsafe { LLVMGetTypeContext(self.raw.as_ptr()) };
         
         ptr_to_option(res)
             .map(Context::new)
     }
     
     pub fn get_element_type(&self) -> Option<TypeEnum> {
-        let res = unsafe { LLVMGetElementType(self.raw) };
+        let res = unsafe { LLVMGetElementType(self.raw.as_ptr()) };
         ptr_to_option(res)
             .map(TypeEnum::from)
     }

@@ -139,7 +139,7 @@ impl Builder {
             );
     }
 
-    pub fn build_llvm_load_ptr_command(&mut self, ident: Ident, ptr: Ident) {
+    pub fn build_llvm_load_ptr_command(&mut self, ident: Ident, ptr: Ident, as_type: Types) {
         self.current_function
             .as_mut()
             .unwrap()
@@ -147,13 +147,13 @@ impl Builder {
                 Statement::new_assign(
                     ident,
                     CommandEnum::LLVMLoadPtr(
-                        LLVMLoadPtr::new(ptr)
+                        LLVMLoadPtr::new(ptr, as_type)
                     )
                 )
             );
     }
 
-    pub fn build_llvm_store_command(&mut self, ident: Ident, ptr: Ident) {
+    pub fn build_llvm_store_command(&mut self, ident: Ident, ptr: Ident, as_type: Types) {
         self.current_function
             .as_mut()
             .unwrap()
@@ -161,7 +161,7 @@ impl Builder {
                 Statement::new_assign(
                     ident,
                     CommandEnum::LLVMStore(
-                        LLVMStore::new(ptr)
+                        LLVMStore::new(ptr, as_type)
                     )
                 )
             );
@@ -351,15 +351,15 @@ impl Builder {
         self.program.add_type_decl(id, ty);
     }
     
-    pub fn build_gep_command(&mut self, id: Ident, ptr: Ident, target_type: Types, index: Expr) {
+    pub fn build_gep_struct_command(&mut self, id: Ident, ptr: Ident, target_type: Types, index: Expr, struct_id: TypeId) {
         self.current_function
             .as_mut()
             .unwrap()
             .add_stmt(
                 Statement::new_assign(
                     id,
-                    CommandEnum::GetElementPtr(
-                        crate::command::GetElementPtr::new(ptr, index, target_type)
+                    CommandEnum::GetElementPtrStruct(
+                        crate::command::GetElementPtrStruct::new(ptr, index, target_type, struct_id)
                     )
                 )
             );

@@ -158,7 +158,7 @@ impl Pretty {
             },
 
             CommandEnum::LLVMStore(store) => {
-                format!("llvm_store {}", store.ptr)
+                format!("llvm_store {} as {}", store.ptr, store.as_type)
             },
 
             CommandEnum::LLVMLoadPtr(load) => {
@@ -191,7 +191,7 @@ impl Pretty {
                 format!("copy_val {}", copy_val.val)
             },
             
-            CommandEnum::GetElementPtr(gep) => {
+            CommandEnum::GetElementPtrStruct(gep) => {
                 format!("get_element_ptr {}, {}", gep.ptr, gep.index)
             },
 
