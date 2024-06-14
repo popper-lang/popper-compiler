@@ -118,8 +118,7 @@ impl Compiler {
             _ => panic!("Cannot cast to void type")
         })
     }
-
-
+    
 
 
     fn is_marked(&self, ident: &Ident, mark: MarkKind) -> bool {
@@ -278,7 +277,18 @@ impl Compiler {
                 let zero = self.context.i32_type().int(0, false);
                 let array = vec![zero, index.into_int_value()];
                 let ptr = self.builder.build_inbound_get_element_ptr(struct_ty.to_type_enum(), ptr, &array, "");
-                self.builder.build_load(self.context.i64_type().to_type_enum(), ptr.into_ptr_value(), "")
+                if self.is_marked(&ident.unwrap(), MarkKind::Ptr) {
+                    ptr
+                } else {
+                    self.builder.build_load(self.context.i64_type().to_type_enum(), ptr.into_ptr_value(), "")
+                }
+            },
+            
+            CommandEnum::Write(write) => {
+                let val = self.compile_expr(&write.value);
+                let ptr = self.env.get(write.ptr.get_index() as usize).unwrap();
+                self.builder.build_store(val, ptr.into_ptr_value());
+                return None;
             },
             _ => unimplemented!()
 

@@ -194,6 +194,10 @@ impl Pretty {
             CommandEnum::GetElementPtrStruct(gep) => {
                 format!("get_element_ptr {}, {}", gep.ptr, gep.index)
             },
+            
+            CommandEnum::Write(write) => {
+                format!("write {}, {}", write.ptr, write.value)
+            },
 
 
         }

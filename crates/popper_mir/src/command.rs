@@ -190,6 +190,11 @@ commands! {
         target_type: Types [None],
         struct_id: TypeId [None]
     }
+    
+    struct Write(write) {
+        ptr: Ident [Ident],
+        value: Expr [Expr]
+    }
 
 }
 
@@ -213,6 +218,7 @@ pub enum CommandEnum {
     Br(Br),
     Ret(Ret),
     CopyVal(CopyVal),
-    GetElementPtrStruct(GetElementPtrStruct)
+    GetElementPtrStruct(GetElementPtrStruct),
+    Write(Write)
 }
 

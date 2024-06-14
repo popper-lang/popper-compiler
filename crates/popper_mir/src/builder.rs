@@ -1,4 +1,4 @@
-use crate::command::{Add, Br, Call, CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, CmpNe, CommandEnum, Const, CopyVal, Div, LLVMLoadPtr, LLVMStore, Mul, Ref, Ret, Sub};
+use crate::command::{Add, Br, Call, CmpEq, CmpGe, CmpGt, CmpLe, CmpLt, CmpNe, CommandEnum, Const, CopyVal, Div, LLVMLoadPtr, LLVMStore, Mul, Ref, Ret, Sub, Write};
 
 use crate::consts::{ConstKind, Ident, TypeId};
 use crate::debug::VarDebugKind;
@@ -148,6 +148,19 @@ impl Builder {
                     ident,
                     CommandEnum::LLVMLoadPtr(
                         LLVMLoadPtr::new(ptr, as_type)
+                    )
+                )
+            );
+    }
+    
+    pub fn build_write(&mut self, ptr: Ident, value: Expr) {
+        self.current_function
+            .as_mut()
+            .unwrap()
+            .add_stmt(
+                Statement::new_command(
+                    CommandEnum::Write(
+                        Write::new(ptr, value)
                     )
                 )
             );

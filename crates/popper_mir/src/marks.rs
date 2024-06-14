@@ -54,13 +54,15 @@ impl Mark {
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum MarkKind {
-    ConstTable
+    ConstTable,
+    Ptr
 }
 
 impl Display for MarkKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MarkKind::ConstTable => write!(f, "ConstTable")
+            MarkKind::ConstTable => write!(f, "ConstTable"),
+            MarkKind::Ptr => write!(f, "Ptr")
         }
     }
 }

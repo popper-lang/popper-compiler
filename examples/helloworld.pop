@@ -8,12 +8,16 @@ struct Hello {
 }
 
 func initStruct(h: *struct Hello): unit {
-    printf("a: %d\n", {@h}.a);
+    {h}.a = 12;
+    {h}.b = 332;
 }
 
 
 func main(): int {
     let h = init Hello { a = 03, b = 2 };
-    initStruct(ref h);
+    let k = ref h;
+    initStruct(k);
+
+    printf("Hello, World! %d %d\n", {@k}.a, {@k}.b);
     return 0;
 }

@@ -76,6 +76,13 @@ impl Compiler {
         self.const_table.insert(id.clone(), c.clone());
         id
     }
+    
+    pub fn new_const_with_type(&mut self, c: ConstKind, ty: Types) -> Ident {
+        let id = self.new_internal_ident(ty.clone());
+        self.builder.build_const_command(id.clone(), c.clone());
+        self.const_table.insert(id.clone(), c.clone());
+        id
+    }
 
     pub fn get_type_from_ast(&self, ast: AstType) -> Types {
         match ast.type_kind {
@@ -153,6 +160,12 @@ impl Compiler {
                     );
                 }
                 self.builder.build_type_decl(TypeId::new(s.name.clone()), Types::Struct(s.name.clone(), fields));
+            },
+            AstStatement::Assign(a) => {
+                let ident = self.compile_expression(a.name.clone()).expect_ident();
+                self.builder.marks_ident(ident.clone(), MarkKind::Ptr);
+                let value = self.compile_expression(a.value.clone());
+                self.builder.build_write(ident, value);
             },
             _ => todo!()
         }
@@ -271,29 +284,39 @@ impl Compiler {
                     fields.push(self.compile_expression(field.clone().value));
                 }
                 let const_ = ConstKind::Struct(TypeId::new(s.name.clone()), fields);
-                let res = self.new_const(const_);
+                let res = self.new_const_with_type(const_, Types::TypeId(s.name.clone()));
                 Expr::Ident(res)
             },
             AstExpression::StructFieldAccess(s) => {
                 let struct_ = self.compile_expression(*s.name);
                 let struct_id = struct_.clone().expect_ident();
                 let struct_ty = struct_id.get_type();
-                let struct_name = struct_ty.expect_type_id();
-                let ptr = if let Some(e) = self.gep_table.get(&struct_name) {
-                    e.clone()
+                let ptr;
+                let struct_name;
+                (ptr, struct_name) = if let Some(s_name) = struct_ty.get_type_id() {
+                    let ptr = if let Some(e) = self.gep_table.get(&s_name) {
+                        e.clone()
+                    } else {
+                        let ptr_struct_ty = Types::Ptr(Box::new(struct_ty.clone()));
+                        let ptr = self.new_internal_ident(ptr_struct_ty.clone());
+                        self.builder.build_llvm_store_command(ptr.clone(), struct_id.clone(), struct_ty.clone());
+                        self.gep_table.insert(s_name.clone(), ptr.clone());
+                        ptr
+                    };
+                    (ptr, s_name) 
+                } else if let Types::Ptr(e) = struct_ty {
+                    let s_name = e.expect_type_id();
+                    (struct_id, s_name)
                 } else {
-                    let ptr_struct_ty = Types::Ptr(Box::new(struct_ty.clone()));
-                    let ptr = self.new_internal_ident(ptr_struct_ty.clone());
-                    self.builder.build_llvm_store_command(ptr.clone(), struct_id.clone(), struct_ty.clone());
-                    self.gep_table.insert(struct_name.clone(), ptr.clone());
-                    ptr
+                    todo!()
                 };
 
                 let ty = self.ty_env.get(&struct_name).unwrap();
                 let s = ty.fields.iter().position(|x| x.name == s.field).unwrap();
                 let ty: Types = self.get_type_from_ast(ty.fields[s].ty.clone());
-                let res = self.new_internal_ident(ty.clone());
-                self.builder.build_gep_struct_command(res.clone(), ptr, ty, Expr::Const(ConstKind::Int(s as i64)), TypeId::new(struct_name));
+                let res_type = Types::Ptr(Box::new(ty.clone()));
+                let res = self.new_internal_ident(res_type.clone());
+                self.builder.build_gep_struct_command(res.clone(), ptr, res_type, Expr::Const(ConstKind::Int(s as i64)), TypeId::new(struct_name));
                 Expr::Ident(res)
             },
             AstExpression::Reference(r) => {

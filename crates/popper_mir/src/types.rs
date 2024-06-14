@@ -103,7 +103,16 @@ impl Types {
     pub fn expect_type_id(&self) -> String {
         match self {
             Types::TypeId(s) => s.clone(),
+            Types::Struct(s, _) => s.clone(),
             e => panic!("Not a type id: {}", e)
+        }
+    }
+    
+    pub fn get_type_id(&self) -> Option<String> {
+        match self {
+            Types::TypeId(s) => Some(s.clone()),
+            Types::Struct(s, _) => Some(s.clone()),
+            _ => None
         }
     }
 }
