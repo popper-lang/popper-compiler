@@ -7,17 +7,15 @@ struct Hello {
     b = int
 }
 
-func initStruct(h: *struct Hello): unit {
-    {h}.a = 12;
-    {h}.b = 332;
+func initStruct(h: *int): unit {
+    @h = 2;
 }
 
 
 func main(): int {
-    let h = init Hello { a = 03, b = 2 };
-    let k = ref h;
-    initStruct(k);
+    let h = 3;
+    initStruct(ref h);
 
-    printf("Hello, World! %d %d\n", {@k}.a, {@k}.b);
+    printf("Hello, World! %d\n", h);
     return 0;
 }

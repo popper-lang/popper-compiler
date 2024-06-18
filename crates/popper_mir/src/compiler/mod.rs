@@ -21,7 +21,8 @@ pub struct Compiler {
     const_table: const_table::ConstTable,
     const_id: usize,
     gep_table: HashMap<String, Ident>,
-    is_already_returned: bool
+    is_already_returned: bool,
+    no_load: bool
 
 }
 
@@ -36,7 +37,8 @@ impl Compiler {
             const_table: const_table::ConstTable::new(),
             const_id: 0,
             gep_table: HashMap::new(),
-            is_already_returned: false
+            is_already_returned: false,
+            no_load: false
         }
     }
 
@@ -100,6 +102,13 @@ impl Compiler {
             e => todo!("{:?}", e)
         }
     }
+    
+    pub fn no_load<T>(&mut self, f: impl Fn(&mut Self) -> T)  -> T {
+        self.no_load = true;
+        let res = f(self);
+        self.no_load = false;
+        res
+    }
 
     pub fn compile(&mut self) {
         for stmt in self.program.clone() {
@@ -162,7 +171,9 @@ impl Compiler {
                 self.builder.build_type_decl(TypeId::new(s.name.clone()), Types::Struct(s.name.clone(), fields));
             },
             AstStatement::Assign(a) => {
-                let ident = self.compile_expression(a.name.clone()).expect_ident();
+                let ident = self.no_load(|s| 
+                    s.compile_expression(a.name.clone()).expect_ident()
+                );
                 self.builder.marks_ident(ident.clone(), MarkKind::Ptr);
                 let value = self.compile_expression(a.value.clone());
                 self.builder.build_write(ident, value);
@@ -320,13 +331,16 @@ impl Compiler {
                 Expr::Ident(res)
             },
             AstExpression::Reference(r) => {
-                let id = self.compile_expression(*r.expr);
+                let id = self.compile_expression(*r.expr).expect_ident();
                 let ty = id.get_type();
                 let res = self.new_internal_ident(Types::Ptr(Box::new(ty.clone())));
-                self.builder.build_llvm_store_command(res.clone(), id.expect_ident(), ty);
+                self.builder.build_llvm_store_command(res.clone(), id, ty);
                 Expr::Ident(res)
             },
             AstExpression::Deref(d) => {
+                if self.no_load {
+                    return self.compile_expression(*d.expr);
+                }
                 let id = self.compile_expression(*d.expr);
                 let ty = id.get_type();
                 let ty = ty.get_ptr_inner_type();

@@ -91,7 +91,7 @@ impl visitor::StmtVisitor for StmtAnalyzer {
         let name = analyzer.visit_expr(assign.name.clone())?;
         let value = analyzer.visit_expr(assign.value.clone())?;
 
-        if name.get_value().unwrap() != value.get_value().unwrap() {
+        if name.get_value().unwrap() != value.get_value().unwrap() && name.get_value().unwrap().get_minor_type().cloned().unwrap() != value.get_value().unwrap() {
             return Err(Box::new(TypeMismatch::new(
                 (assign.span, name.get_value().unwrap().to_string()),
                 (assign.value.span(), value.get_value().unwrap().to_string()),
