@@ -1,0 +1,10 @@
+[package]
+name = "popper_error_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ariadne = "0.5.0"
+popper_error_macro = { path = "../popper_error_macro" }
+popper_ast = { path = "../popper_ast" }
+popper_context = { path = "../popper_context" }

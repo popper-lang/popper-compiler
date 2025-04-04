@@ -1,0 +1,8 @@
+[package]
+name = "popper_ast"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+popper_index = { path = "../popper_index" }
+crc = "3.2.1"

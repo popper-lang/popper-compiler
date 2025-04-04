@@ -1,0 +1,7 @@
+[package]
+name = "popper_lexer"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+popper_ast = { path = "../popper_ast" }

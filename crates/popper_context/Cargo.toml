@@ -1,0 +1,8 @@
+[package]
+name = "popper_context"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+popper_ast = { path = "../popper_ast" }
+lazy_static = "1.5.0"
