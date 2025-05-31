@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/popper_index/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/popper_parser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/popper_panic/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/popper_semantic_analyzer/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

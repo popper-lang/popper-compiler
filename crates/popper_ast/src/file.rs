@@ -1,10 +1,9 @@
-use std::path::Path;
+use crate::ast::LangAst;
 use popper_index::Idx;
-use crate::ast::Ast;
+use std::path::Path;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct FileId(u32);
-
 
 impl Idx for FileId {
     const MAX_ID: usize = u32::MAX as usize;
@@ -22,30 +21,29 @@ impl Idx for FileId {
 pub struct File {
     id: FileId,
     info: SourceFileInfo,
-    ast: Ast
+    ast: Option<LangAst>,
 }
 
 impl File {
-    pub fn new(id: FileId, info: SourceFileInfo, ast: Ast) -> File {
-        File { id, info,  ast }
+    pub fn new(id: FileId, info: SourceFileInfo, ast: Option<LangAst>) -> File {
+        File { id, info, ast }
     }
     pub fn info(&self) -> &SourceFileInfo {
         &self.info
     }
 }
 
+#[derive(Clone)]
 pub struct FileTable {
     files: Vec<File>,
 }
 
 impl FileTable {
     pub fn new() -> FileTable {
-        FileTable {
-            files: Vec::new(),
-        }
+        FileTable { files: Vec::new() }
     }
 
-    pub fn insert(&mut self, info: SourceFileInfo, ast: Ast) -> FileId {
+    pub fn insert(&mut self, info: SourceFileInfo, ast: Option<LangAst>) -> FileId {
         let id = FileId::new(self.files.len());
         let file = File::new(id, info, ast);
         self.files.push(file);
@@ -60,7 +58,6 @@ impl FileTable {
         self.files.get(id.index())
     }
 }
-
 
 #[derive(Debug, Clone)]
 pub struct SourceFileInfo {
@@ -78,11 +75,29 @@ impl SourceFileInfo {
         let source = std::fs::read_to_string(path).ok()?;
         let hash = crc::Crc::<u64>::new(&crc::CRC_64_MS).checksum(source.as_bytes());
 
-        Some(SourceFileInfo { name, source, hash, path: raw_path.to_string(), absolute_path: path.to_str()?.to_string() })
+        Some(SourceFileInfo {
+            name,
+            source,
+            hash,
+            path: raw_path.to_string(),
+            absolute_path: path.to_str()?.to_string(),
+        })
     }
 
-    pub fn new(name: String, source: String, hash: u64, path: String, absolute_path: String) -> SourceFileInfo {
-        SourceFileInfo { name, source, hash, path, absolute_path }
+    pub fn new(
+        name: String,
+        source: String,
+        hash: u64,
+        path: String,
+        absolute_path: String,
+    ) -> SourceFileInfo {
+        SourceFileInfo {
+            name,
+            source,
+            hash,
+            path,
+            absolute_path,
+        }
     }
 
     pub fn name(&self) -> &str {
@@ -104,6 +119,4 @@ impl SourceFileInfo {
     pub fn absolute_path(&self) -> &str {
         &self.absolute_path
     }
-
-
 }

@@ -5,3 +5,5 @@ edition = "2021"
 
 [dependencies]
 popper_ast = { path = "../popper_ast" }
+popper_error_macro = { path = "../popper_error_macro" }
+popper_error_core = { path = "../popper_error_core" }

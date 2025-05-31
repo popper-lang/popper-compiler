@@ -4,6 +4,17 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/popper_ast", "crates/popper_context", "crates/popper_error_core", "crates/popper_error_macro", "crates/popper_index", "crates/popper_lexer", "crates/popper_panic", "crates/popper_parser"]
+members = ["crates/popper_ast", "crates/popper_context", "crates/popper_error_core", "crates/popper_error_macro", "crates/popper_index", "crates/popper_lexer", "crates/popper_panic", "crates/popper_parser", "crates/popper_semantic_analyzer"]
 
 [dependencies]
+popper_ast = { path = "crates/popper_ast" }
+popper_context = { path = "crates/popper_context" }
+popper_error_core = { path = "crates/popper_error_core" }
+popper_error_macro = { path = "crates/popper_error_macro" }
+popper_index = { path = "crates/popper_index" }
+popper_lexer = { path = "crates/popper_lexer" }
+popper_panic = { path = "crates/popper_panic" }
+popper_parser = { path = "crates/popper_parser" }
+popper_semantic_analyzer = { path = "crates/popper_semantic_analyzer" }
+
+

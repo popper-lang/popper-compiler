@@ -23,9 +23,3 @@ pub fn panic_handler(info: PanicInfo) -> ! {
     eprintln!("  at {}:{}:{}", info.location.file, info.location.line, info.location.column);
     std::process::exit(1);
 }
-
-macro_rules! popper_panic {
-    ($msg:expr) => {
-        panic_handler(PanicInfo::new($msg.to_string(), Location::new(file!(), line!(), column!()));
-    };
-}

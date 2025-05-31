@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+popper_lexer = { path = "../popper_lexer" }
+popper_error_core = { path = "../popper_error_core" }
+popper_error_macro = { path = "../popper_error_macro" }
+popper_ast = { path = "../popper_ast" }

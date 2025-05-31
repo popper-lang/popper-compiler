@@ -44,6 +44,17 @@ dependencies = [
 [[package]]
 name = "popper_compiler"
 version = "0.1.0"
+dependencies = [
+ "popper_ast",
+ "popper_context",
+ "popper_error_core",
+ "popper_error_macro",
+ "popper_index",
+ "popper_lexer",
+ "popper_panic",
+ "popper_parser",
+ "popper_semantic_analyzer",
+]
 
 [[package]]
 name = "popper_context"
@@ -81,6 +92,8 @@ name = "popper_lexer"
 version = "0.1.0"
 dependencies = [
  "popper_ast",
+ "popper_error_core",
+ "popper_error_macro",
 ]
 
 [[package]]
@@ -90,6 +103,22 @@ version = "0.1.0"
 [[package]]
 name = "popper_parser"
 version = "0.1.0"
+dependencies = [
+ "popper_ast",
+ "popper_error_core",
+ "popper_error_macro",
+ "popper_lexer",
+]
+
+[[package]]
+name = "popper_semantic_analyzer"
+version = "0.1.0"
+dependencies = [
+ "popper_ast",
+ "popper_error_core",
+ "popper_error_macro",
+ "popper_index",
+]
 
 [[package]]
 name = "proc-macro2"

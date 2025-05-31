@@ -1,11 +1,11 @@
-use std::sync::Mutex;
 use lazy_static::lazy_static;
 use popper_ast::file::{FileId, FileTable};
+use std::sync::Mutex;
 
+#[derive(Clone)]
 pub struct Context {
     file_table: FileTable,
 }
-
 
 impl Context {
     pub fn new() -> Context {
@@ -18,9 +18,11 @@ impl Context {
         &self.file_table
     }
 
+
     pub fn file_table_mut(&mut self) -> &mut FileTable {
         &mut self.file_table
     }
+
 
     pub fn file_table_into(self) -> FileTable {
         self.file_table

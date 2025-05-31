@@ -1,10 +1,10 @@
-use popper_ast::token::{Token, TokenKind};
 use crate::tokenize;
+use popper_ast::token::{Token, TokenKind};
 
 #[test]
 fn test_identifier() {
     let input = "foo";
-    let tokens = tokenize(input);
+    let tokens = tokenize(input).unwrap();
     assert_eq!(tokens.len(), 2);
     assert_eq!(tokens[0].kind, TokenKind::Identifier);
     assert_eq!(tokens[0].value, "foo");
@@ -15,6 +15,8 @@ fn test_identifier() {
 fn test_number() {
     let input = "123";
     let tokens = tokenize(input);
+    assert!(tokens.is_ok());
+    let tokens = tokens.unwrap();
     assert_eq!(tokens.len(), 2);
     assert_eq!(tokens[0].kind, TokenKind::Number);
     assert_eq!(tokens[0].value, "123");
@@ -25,6 +27,8 @@ fn test_number() {
 fn test_string() {
     let input = "\"foo\"";
     let tokens = tokenize(input);
+    assert!(tokens.is_ok());
+    let tokens = tokens.unwrap();
     assert_eq!(tokens.len(), 2);
     assert_eq!(tokens[0].kind, TokenKind::String);
     assert_eq!(tokens[0].value, "foo");
@@ -35,6 +39,8 @@ fn test_string() {
 fn test_keyword() {
     let input = "let";
     let tokens = tokenize(input);
+    assert!(tokens.is_ok());
+    let tokens = tokens.unwrap();
     assert_eq!(tokens.len(), 2);
     assert_eq!(tokens[0].kind, TokenKind::KeywordLet);
     assert_eq!(tokens[0].value, "let");
