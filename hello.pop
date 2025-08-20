@@ -4,5 +4,5 @@ func(C) printf(s: string);
 
 
 func main() {
-    prntf(2);
+    main(2);
 }

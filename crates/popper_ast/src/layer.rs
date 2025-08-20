@@ -19,7 +19,7 @@ pub trait Ast {
     
     fn root(&self) -> Self::NodeId;
     
-    fn apply_layer<L: Layer<Inner = Self>>(&mut self, layer: &mut L) -> L::Output {
+    fn apply_layer<L: Layer<Inner = Self>>(&self, layer: &mut L) -> L::Output {
         layer.handle(self, self.root())
     }
 }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/popper_ast", "crates/popper_context", "crates/popper_error_core", "crates/popper_error_macro", "crates/popper_index", "crates/popper_lexer", "crates/popper_panic", "crates/popper_parser", "crates/popper_semantic_analyzer"]
+members = ["crates/popper_ast", "crates/popper_codegen_llvm", "crates/popper_context", "crates/popper_error_core", "crates/popper_error_macro", "crates/popper_index", "crates/popper_lexer", "crates/popper_panic", "crates/popper_parser", "crates/popper_semantic_analyzer"]
 
 [dependencies]
 popper_ast = { path = "crates/popper_ast" }

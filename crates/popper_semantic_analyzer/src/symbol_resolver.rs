@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-use popper_ast::ast::{LangAst, Expr, LangNodeId, LangNodeKind, SymbolId, Span};
+use crate::error::{Result, SemanticError};
+use crate::{LayerOutput, SemanticAnalyzer, SemanticLayer};
+use popper_ast::ast::{Expr, LangAst, LangNodeId, LangNodeKind, Span, SymbolId};
 use popper_ast::layer::Layer;
 use popper_ast::type_::Type;
-use crate::error::{Result, SemanticError};
-use crate::{LayerOutput, SemanticAnalyzer, SemanticContext, SemanticLayer};
-
 
 #[derive(Debug, Clone)]
 pub struct SymbolStorage {
@@ -36,18 +34,18 @@ impl Scope {
             symbols: Vec::new(),
         }
     }
-    
+
     pub fn new(parent: Scope) -> Self {
         Scope {
             parent: Some(Box::new(parent)),
             symbols: Vec::new(),
         }
     }
-    
+
     pub fn create_child(&self) -> Self {
         Scope::new(self.clone())
     }
-    
+
     pub fn insert(&mut self, id: SymbolId, ty: Type, span: Span) {
         self.symbols.push(SymbolStorage {
             id,
@@ -56,7 +54,7 @@ impl Scope {
             used_count: 0,
         });
     }
-    
+
     pub fn get(&self, id: SymbolId) -> Option<&Type> {
         for symbol in &self.symbols {
             if symbol.id == id {
@@ -65,7 +63,7 @@ impl Scope {
         }
         self.parent.as_ref().and_then(|p| p.get(id))
     }
-    
+
     pub fn get_mut(&mut self, id: SymbolId) -> Option<&mut SymbolStorage> {
         for symbol in &mut self.symbols {
             if symbol.id == id {
@@ -74,7 +72,7 @@ impl Scope {
         }
         self.parent.as_mut().and_then(|p| p.get_mut(id))
     }
-    
+
     pub fn get_parent(&self, n: usize) -> Option<&Scope> {
         let mut current = self;
         for _ in 0..n {
@@ -103,12 +101,12 @@ impl SymbolResolver {
             expected_ret_ty: None,
         }
     }
-    
+
     pub fn enter_scope(&mut self) {
         self.current_scope_idx += 1;
         self.global_scope = self.global_scope.create_child();
     }
-    
+
     pub fn exit_scope(&mut self) {
         if self.current_scope_idx > 0 {
             self.current_scope_idx -= 1;
@@ -117,15 +115,15 @@ impl SymbolResolver {
             }
         }
     }
-    
+
     pub fn insert(&mut self, id: SymbolId, ty: Type, span: Span) {
         self.global_scope.insert(id, ty, span);
     }
-    
+
     pub fn get(&self, id: SymbolId) -> Option<&Type> {
         self.global_scope.get(id)
     }
-    
+
     pub fn get_mut(&mut self, id: SymbolId) -> Option<&mut SymbolStorage> {
         self.global_scope.get_mut(id)
     }
@@ -133,98 +131,127 @@ impl SymbolResolver {
 
 impl Iterator for SymbolResolver {
     type Item = Scope;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_scope_idx == 0 {
             return None;
         }
         let scope = self.global_scope.get_parent(self.current_scope_idx);
-        if let Some(scope) = scope {
-            Some(scope.clone())
-        } else {
-            None
-        }
+        scope.cloned()
     }
 }
 
 impl SemanticLayer for SymbolResolver {
     type Output = Type;
-    
-    fn handle(&mut self, analyzer: &mut SemanticAnalyzer, node: LangNodeId) -> LayerOutput<Self::Output> {
-        let node  = analyzer.ast.get(node).clone();
-        
-        match node.kind { 
+
+    fn handle(
+        layer_id: usize,
+        analyzer: &mut SemanticAnalyzer,
+        node: LangNodeId,
+    ) -> LayerOutput<Self::Output> {
+        let lang_node = analyzer.ast.get(node).clone();
+        match lang_node.kind {
             LangNodeKind::Expr(Expr::Ident(id)) => {
-                if let Some(ss) = self.get_mut(id.0) {
+                if let Some(ss) = analyzer.layers[layer_id]
+                    .symbol_resolver_mut()
+                    .get_mut(id.0)
+                {
+                    analyzer.hir.incr_used(node.into());
+                    analyzer.hir.set_type(node.into(), ss.ty.clone());
                     ss.used_count += 1; // Increment usage count
                     LayerOutput::ResOk(ss.ty.clone())
                 } else {
-                    LayerOutput::ResErr(
-                        crate::semantic_error!(symbol (ast.get_symbol(id.0).name) not found in node.span)
-                    )
+                    LayerOutput::ResErr({
+                        let symbol = analyzer.ast.get_symbol(id.0);
+                        SemanticError::symbol_not_found(symbol.name.clone(), lang_node.span)
+                    })
                 }
-            },
+            }
             LangNodeKind::Let(l) => {
                 let ty = analyzer.analyze(l.value)?.unwrap();
-                self.insert(l.name.0, ty.clone(), node.span);
+                analyzer.layers[layer_id].symbol_resolver_mut().insert(
+                    l.name.0,
+                    ty.clone(),
+                    lang_node.span,
+                );
+                analyzer.hir.set_type(node.into(), ty.clone());
                 LayerOutput::ResOk(ty)
-            },
-            LangNodeKind::FunctionDef { 
+            }
+            LangNodeKind::FunctionDef {
                 name,
-                attrs,
                 params,
                 ret,
                 body,
-                is_expr
+                ..
             } => {
                 let mut param_types = Vec::new();
                 for param in params.clone() {
                     param_types.push(param.ty.clone());
                 }
-                
-                let ty = Type::Function(
-                    param_types,
-                    Box::new(ret.clone()),
+
+                let ty = Type::Function(param_types, Box::new(ret.clone()));
+
+                analyzer.layers[layer_id].symbol_resolver_mut().insert(
+                    name.0,
+                    ty.clone(),
+                    lang_node.span,
                 );
-                
-                self.insert(name.0, ty.clone(), node.span);
-                self.expected_ret_ty = Some(ret.clone());
+                analyzer.hir.set_type(node.into(), ty.clone());
+                analyzer.layers[layer_id]
+                    .symbol_resolver_mut()
+                    .expected_ret_ty = Some(ret.clone());
                 if let Some(body) = body {
-                    self.enter_scope();
-                    for (i, param) in params.iter().enumerate() {
-                        self.insert(param.name.0, param.ty.clone(), node.span);
+                    analyzer.layers[layer_id]
+                        .symbol_resolver_mut()
+                        .enter_scope();
+                    for param in params.iter() {
+                        analyzer.layers[layer_id].symbol_resolver_mut().insert(
+                            param.name.0,
+                            param.ty.clone(),
+                            lang_node.span,
+                        );
                     }
                     analyzer.analyze(body)?;
-                    self.exit_scope();
+                    analyzer.layers[layer_id].symbol_resolver_mut().exit_scope();
                 }
 
                 LayerOutput::ResOk(ty)
-            },
+            }
             LangNodeKind::Return(ret) => {
-                if let Some(expected) = &self.expected_ret_ty {
+                if let Some(expected) = &analyzer.layers[layer_id]
+                    .symbol_resolver_mut()
+                    .clone()
+                    .expected_ret_ty
+                {
                     let ret_ty = analyzer.analyze(ret)?.unwrap();
                     if ret_ty != *expected {
-                        return LayerOutput::ResErr(
-                            SemanticError::type_mismatch(
-                                expected.to_string(),
-                                ret_ty.to_string(),
-                                node.span
-                            )
-                        );
+                        return LayerOutput::ResErr(SemanticError::type_mismatch(
+                            expected.to_string(),
+                            ret_ty.to_string(),
+                            lang_node.span,
+                        ));
                     }
-                    self.expected_ret_ty = None; // Reset after return
+                    analyzer.layers[layer_id]
+                        .symbol_resolver_mut()
+                        .expected_ret_ty = None; // Reset after return
                 } else {
-                    return LayerOutput::ResErr(
-                        SemanticError::return_not_in_function(
-                            node.span
-                        )
-                    );
+                    return LayerOutput::ResErr(SemanticError::return_not_in_function(
+                        lang_node.span,
+                    ));
                 }
                 LayerOutput::Handled
             }
-            _ => LayerOutput::NotHandled
+            LangNodeKind::Block(elts) => {
+                analyzer.layers[layer_id]
+                    .symbol_resolver_mut()
+                    .enter_scope();
+                for elt in elts {
+                    analyzer.analyze(elt)?;
+                }
+                analyzer.layers[layer_id].symbol_resolver_mut().exit_scope();
+                LayerOutput::Handled
+            }
+            _ => LayerOutput::NotHandled,
         }
-        
     }
 }
-

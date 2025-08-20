@@ -1,0 +1,9 @@
+[package]
+name = "popper_codegen_llvm"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+inkwell = { version = "0.6.0", features = ["llvm18-1"] }
+popper_ast = { path = "../popper_ast" }
+popper_semantic_analyzer = { path = "../popper_semantic_analyzer" }

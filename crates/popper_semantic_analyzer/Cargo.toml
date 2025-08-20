@@ -1,10 +1,10 @@
 [package]
-name = "popper_parser"
+name = "popper_semantic_analyzer"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-popper_lexer = { path = "../popper_lexer" }
+popper_ast = { path = "../popper_ast" }
 popper_error_core = { path = "../popper_error_core" }
 popper_error_macro = { path = "../popper_error_macro" }
-popper_ast = { path = "../popper_ast" }
+popper_index = { path = "../popper_index" }
