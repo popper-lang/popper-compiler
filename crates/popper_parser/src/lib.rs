@@ -1,8 +1,8 @@
-pub mod error;
-mod stmt;
-mod expr;
-mod ty;
 mod attribute;
+pub mod error;
+mod expr;
+mod stmt;
+mod ty;
 
 use popper_ast::ast::{LangAst, LangNode, LangNodeKind, Span};
 use popper_ast::file::SourceFileInfo;
@@ -12,19 +12,20 @@ use popper_lexer::cursor::Cursor;
 
 pub struct Parser {
     cursor: Cursor,
-    ast: LangAst
+    ast: LangAst,
+    disallow_struct_literal: bool,
 }
 
 impl Parser {
-    
-    pub fn from_source_file(source_file_info: SourceFileInfo) -> Self {
+    pub fn from_source_file(source_file_info: &SourceFileInfo) -> Self {
         let source = source_file_info.source();
         Parser::new(source)
     }
     pub fn new(s: &str) -> Self {
         Parser {
             cursor: Cursor::new(s),
-            ast: LangAst::new()
+            ast: LangAst::new(),
+            disallow_struct_literal: false,
         }
     }
 
@@ -38,7 +39,6 @@ impl Parser {
         false
     }
 
-    
     fn expect(&mut self, expected: TokenKind) -> error::Result<Token> {
         let current_token = self.cursor.peek_token()?;
         if current_token.kind == expected {
@@ -46,13 +46,11 @@ impl Parser {
             return Ok(current_token);
         }
 
-        Err(
-            error::ParserError::expected_token(
-                &[expected],
-                current_token.clone(),
-                current_token.span
-            )
-        )
+        Err(error::ParserError::expected_token(
+            &[expected],
+            current_token.clone(),
+            current_token.span,
+        ))
     }
 
     fn expect_after(&mut self, expected: TokenKind) -> error::Result<Token> {
@@ -63,17 +61,13 @@ impl Parser {
 
         let current_token = self.cursor.peek_token()?;
 
-
-        Err(
-            error::ParserError::expected_token(
-                &[expected],
-                current_token.clone(),
-                current_token.span
-            )
-        )
+        Err(error::ParserError::expected_token(
+            &[expected],
+            current_token.clone(),
+            current_token.span,
+        ))
     }
-    
-    
+
     pub fn parse(&mut self) -> error::Result<LangAst> {
         let start = self.cursor.pos();
         let mut block = Vec::new();
@@ -87,9 +81,9 @@ impl Parser {
         let end = self.cursor.pos();
         let node = LangNode {
             kind: LangNodeKind::Block(block),
-            span: Span::new(start, end)
+            span: Span::new(start, end),
         };
-        
+
         let root = self.ast.add(node);
         self.ast.set_root(root);
         Ok(self.ast.clone())

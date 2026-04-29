@@ -7,7 +7,7 @@ impl Parser {
     pub(crate) fn parse_let_stmt(&mut self) -> Result<LangNodeId> {
         let start = self.expect(TokenKind::KeywordLet)?;
         let identifier = self.expect(TokenKind::Identifier)?;
-        self.expect(TokenKind::Eq)?;
+        self.expect(TokenKind::Assign)?;
         let expr = self.parse_expr()?;
         let end = self.expect(TokenKind::Semicolon)?;
 

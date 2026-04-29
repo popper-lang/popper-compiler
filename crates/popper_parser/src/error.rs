@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use popper_ast::{
     ast::Span,
     token::{Token, TokenKind},
@@ -6,10 +5,11 @@ use popper_ast::{
 use popper_error_core::Diagnostics;
 use popper_error_macro::Diagnostics;
 use popper_lexer::error::LexerError;
+use std::fmt::Display;
 
 struct FormatedListString<T: Display>(Vec<T>);
 
-impl <T: Display> Display for FormatedListString<T> {
+impl<T: Display> Display for FormatedListString<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut iter = self.0.iter();
         if let Some(first) = iter.next() {
@@ -60,35 +60,55 @@ impl ExpectedValidAttribute {
     pub fn new(found: Token, span: Span) -> Self {
         ExpectedValidAttribute {
             found_token: found,
-            span
+            span,
         }
     }
 }
 
+#[derive(Diagnostics, Debug)]
+#[message("expected a valid expr `{0}` but found `{1}`", FormatedListString(expected_expr.to_vec()), found)]
+#[code = 5]
+#[label = "found expr `{found}`"]
+pub struct ExpectedValidExpr {
+    found: String,
+    expected_expr: Vec<String>,
+    #[span]
+    pub span: Span
+}
+
+impl ExpectedValidExpr {
+    pub fn new(found: String, expected: &[String], span: Span) -> Self {
+        ExpectedValidExpr { found, expected_expr: expected.to_vec(), span }
+    }
+}
 
 #[derive(Debug)]
 pub enum ParserError {
     LexerError(LexerError),
     UnexpectedToken(UnexpectedToken),
     ExpectedValidAttribute(ExpectedValidAttribute),
+    ExpectedValidExpr(ExpectedValidExpr),
 }
 
 impl ParserError {
     pub fn expected_token(expected: &[TokenKind], found: Token, span: Span) -> Self {
         ParserError::UnexpectedToken(UnexpectedToken::new(expected, found, span))
     }
-    
+
     pub fn expected_valid_attribute(found: Token, span: Span) -> Self {
         ParserError::ExpectedValidAttribute(ExpectedValidAttribute::new(found, span))
     }
-    
-    
-    
+
+    pub fn expected_valid_expr(found: String, expected: &[String],span: Span) -> Self {
+        ParserError::ExpectedValidExpr(ExpectedValidExpr::new(found, expected, span))
+    }
+
     pub fn span(&self) -> Span {
         match self {
             ParserError::LexerError(err) => err.span(),
             ParserError::UnexpectedToken(err) => err.span,
             ParserError::ExpectedValidAttribute(err) => err.span,
+            ParserError::ExpectedValidExpr(err) => err.span,
         }
     }
 }
@@ -132,6 +152,13 @@ macro_rules! parse_error {
     (expect a valid attribute but got ($found:expr)) => {
         $crate::error::ParserError::expected_valid_attribute(
             $found.clone(),
+            $found.span
+        )
+    };
+    (expect valid expressions [$($expected:ident),+] but got ($found:expr)) => {
+        $crate::error::ParserError::expected_valid_expr(
+            $found.kind.get_kind_name().to_string(),
+            &[$(stringify!($expected).to_string()),*],
             $found.span
         )
     };

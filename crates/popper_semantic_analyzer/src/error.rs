@@ -64,6 +64,36 @@ pub struct ReturnNotInFunction {
     pub span: Span,
 }
 
+#[derive(Diagnostics, Debug)]
+#[message("Return not found in function")]
+#[code = 1006]
+#[label = "Return not found"]
+#[note = "Ensure all code paths in a function have a return statement if the function has a non-void return type"]
+pub struct ReturnNotFound {
+    #[span]
+    pub span: Span,
+}
+
+#[derive(Diagnostics, Debug)]
+#[message("Field `{field_name}` not found in struct")]
+#[code = 1007]
+#[label = "Field not found"]
+pub struct FieldNotFound {
+    pub field_name: String,
+    #[span]
+    pub span: Span,
+}
+
+#[derive(Diagnostics, Debug)]
+#[message("Duplicate field `{field_name}` found in struct")]
+#[code = 1008]
+#[label = "Field already exists"]
+pub struct DuplicateField {
+    pub field_name: String,
+    #[span]
+    pub span: Span,
+}
+
 #[derive(Debug, Diagnostics)]
 pub enum SemanticError {
     SymbolNotFound(SymbolNotFound),
@@ -71,6 +101,9 @@ pub enum SemanticError {
     NotAFunction(NotAFunction),
     ArgumentCountMismatch(ArgumentCountMismatch),
     ReturnNotInFunction(ReturnNotInFunction),
+    ReturnNotFound(ReturnNotFound),
+    FieldNotFound(FieldNotFound),
+    DuplicateField(DuplicateField),
 }
 
 impl SemanticError {
@@ -99,6 +132,32 @@ impl SemanticError {
     
     pub fn return_not_in_function(span: Span) -> Self {
         SemanticError::ReturnNotInFunction(ReturnNotInFunction { span })
+    }
+
+    pub fn return_not_found(span: Span) -> Self {
+        SemanticError::ReturnNotFound(ReturnNotFound { span })
+    }
+    
+    pub fn field_not_found(field_name: String, span: Span) -> Self {
+        SemanticError::FieldNotFound(FieldNotFound { field_name, span })
+    }
+
+    pub fn duplicate_field(field_name: String, span: Span) -> Self {
+        SemanticError::DuplicateField(DuplicateField { field_name, span })
+    }
+
+
+    pub fn span(&self) -> Span {
+        match self {
+            SemanticError::SymbolNotFound(e) => e.span.clone(),
+            SemanticError::TypeMismatch(e) => e.span.clone(),
+            SemanticError::NotAFunction(e) => e.span.clone(),
+            SemanticError::ArgumentCountMismatch(e) => e.span.clone(),
+            SemanticError::ReturnNotInFunction(e) => e.span.clone(),
+            SemanticError::ReturnNotFound(e) => e.span.clone(),
+            SemanticError::FieldNotFound(e) => e.span.clone(),
+            SemanticError::DuplicateField(e) => e.span.clone(),
+        }
     }
 }
 

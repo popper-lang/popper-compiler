@@ -6,23 +6,26 @@ use popper_ast::token::TokenKind;
 impl Parser {
     pub(crate) fn parse_if_stmt(&mut self) -> crate::error::Result<LangNodeId> {
         let start = self.expect(TokenKind::KeywordIf)?;
+        self.disallow_struct_literal = true;
         let condition = self.parse_expr()?;
+        self.disallow_struct_literal = false;
         let then_block = self.parse_block()?;
 
         let else_block = if self.cursor.peek_token()?.kind == TokenKind::KeywordElse {
             self.cursor.next_token()?;
-            let res = self.parse_block()?;
-            Some(res)
+            if self.cursor.peek_token()?.kind == TokenKind::KeywordIf {
+                Some(self.parse_if_stmt()?)
+            } else {
+                let res = self.parse_block()?;
+                Some(res)
+            }
         } else {
             None
         };
-        
+
         let end = self.cursor.pos();
 
-        let span = Span::new(
-            start.span.lo,
-            end
-        );
+        let span = Span::new(start.span.lo, end);
 
         let node = LangNode {
             kind: LangNodeKind::If {

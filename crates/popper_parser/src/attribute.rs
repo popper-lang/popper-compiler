@@ -7,6 +7,7 @@ impl Parser {
         let ident = self.expect(TokenKind::Identifier)?;
         match ident.value.as_str() { 
             "C" => Ok(Attribute::StdCallC),
+            "Static" => Ok(Attribute::Static),
             _ => {
                 Err(crate::parse_error!(expect a valid attribute but got (ident)))
             }

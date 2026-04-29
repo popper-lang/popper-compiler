@@ -1,4 +1,5 @@
 use crate::attribute::Attribute;
+use crate::file::SourceFileInfo;
 use crate::layer::{Ast, Layer};
 use crate::token::TokenKind;
 use crate::type_::Type;
@@ -114,6 +115,12 @@ impl LangAst {
     }
 
     pub fn add_symbol(&mut self, name: &str) -> SymbolId {
+        // check if the symbol already exists
+        for (i, symbol) in self.symbol_table.symbols.iter().enumerate() {
+            if symbol.name == name {
+                return SymbolId(i as u32);
+            }
+        }
         self.symbol_table.intern(name)
     }
 
@@ -133,14 +140,33 @@ impl LangAst {
         &mut self.nodes[id.0 as usize]
     }
 
+    pub fn symbol_table(&self) -> &SymbolTable {
+        &self.symbol_table
+    }
+    /*
     pub fn dumps(&self) -> String {
         let node = self.get(self.root);
         self.dumps_node(node)
     }
 
+    pub fn dumps_nodes(&self, nodes: &[LangNodeId]) -> String {
+        let mut result = String::new();
+        for &id in nodes {
+            result.push_str(&self.dumps_node(self.get(id)));
+        }
+        result
+    }
+
     fn dumps_node(&self, node: &LangNode) -> String {
         match &node.kind {
             LangNodeKind::Expr(expr) => self.dumps_expr(expr),
+            LangNodeKind::Assign { lhs, rhs } => {
+                format!(
+                    "{} = {}",
+                    self.dumps_node(self.get(*lhs)),
+                    self.dumps_node(self.get(*rhs))
+                )
+            }
             LangNodeKind::Let(let_) => format!(
                 "Let {} = {}",
                 self.dumps_symbol(let_.name.0),
@@ -167,6 +193,7 @@ impl LangAst {
                 if let Some(else_id) = else_branch {
                     result.push_str(&format!("else {}", self.dumps_node(self.get(*else_id))));
                 }
+
                 result
             }
             LangNodeKind::FunctionCall { function, args } => {
@@ -178,6 +205,13 @@ impl LangAst {
                 format!("{}.call([{}])", func_str, args_str.join(", "))
             }
             LangNodeKind::Return(expr) => format!("Return({})", self.dumps_node(self.get(*expr))),
+            LangNodeKind::While { condition, body } => {
+                format!(
+                    "While {} do {}",
+                    self.dumps_node(self.get(*condition)),
+                    self.dumps_node(self.get(*body))
+                )
+            }
             LangNodeKind::FunctionDef {
                 name,
                 attrs,
@@ -185,6 +219,7 @@ impl LangAst {
                 ret,
                 body,
                 is_expr,
+                is_vararg: _,
             } => {
                 let params_str: Vec<String> = params
                     .iter()
@@ -209,12 +244,62 @@ impl LangAst {
                     s
                 )
             }
+            LangNodeKind::TypeDecl { name, kind, fields } => {
+                let fields_str: Vec<String> = fields
+                    .iter()
+                    .map(|field| format!("{}: {:?}", field.name.0.index(), field.ty))
+                    .collect();
+                format!(
+                    "{} {} {{ {} }}",
+                    match kind {
+                        TypeDeclKind::Struct => "Struct",
+                        TypeDeclKind::Union => "Union",
+                    },
+                    self.dumps_symbol(name.0),
+                    fields_str.join(", ")
+                )
+            }
+            LangNodeKind::Const(c) => {
+                format!(
+                    "Const {}: {:?} = {}",
+                    self.dumps_symbol(c.name.0),
+                    c.ty,
+                    self.dumps_node(self.get(c.value))
+                )
+            }
+            LangNodeKind::MacroDef(m) => {
+                format!("MacroDef {}(...) {{ ... }}", self.dumps_symbol(m.name.0))
+            }
+            LangNodeKind::Comptime(n) => {
+                format!("Comptime {{ {} }}", self.dumps_node(self.get(*n)))
+            }
+            LangNodeKind::DeDecl {
+                target_type,
+                methods,
+            } => {
+                format!(
+                    "ExtendDecl {{ target_type: {}, methods: [{}] }}",
+                    target_type,
+                    self.dumps_nodes(methods)
+                )
+            }
+            LangNodeKind::ContextDecl { name, extensions } => {
+                format!("ContextDecl {{ name:")
+            }
+            LangNodeKind::RequireContextDecl { name, items } => {
+                format!("RequireContextDecl {{ name: {}, items: [{}] }}", self.dumps_symbol(name.0), self.dumps_nodes(items))
+            }
+
+            LangNodeKind::ImportDecl { path, context_mappings } => {
+                format!("ImportDecl {{ path: {}, context_mappings: {:?} }}", path, context_mappings)
+            }
         }
     }
 
     fn dump_attribute(&self, attribute: Attribute) -> String {
         match attribute {
             Attribute::StdCallC => "C".to_string(),
+            Attribute::Comptime => "comptime".to_string(),
         }
     }
 
@@ -222,7 +307,16 @@ impl LangAst {
         match expr {
             Expr::Ident(ident) => format!("Ident({})", self.dumps_symbol(ident.0)),
             Expr::Int(value) => format!("Int({})", value),
+            Expr::Float(value) => format!("Float({})", value),
+            Expr::Char(c) => format!("Char({})", c),
             Expr::String(value) => format!("String({})", value),
+            Expr::Bool(value) => format!("Bool({})", value),
+            Expr::Ref(r) => {
+                format!("Ref({})", self.dumps_node(self.get(*r)))
+            }
+            Expr::Deref(d) => {
+                format!("Deref({})", self.dumps_node(self.get(*d)))
+            }
             Expr::UnaryOp(op, node_id) => {
                 let op_str = match op {
                     UnaryOpKind::Negate => "!",
@@ -255,12 +349,81 @@ impl LangAst {
                 self.dumps_node(self.get(*lhs)),
                 self.dumps_node(self.get(*rhs))
             ),
+            Expr::Eq(lhs, rhs) => format!(
+                "Eq({}, {})",
+                self.dumps_node(self.get(*lhs)),
+                self.dumps_node(self.get(*rhs))
+            ),
+            Expr::Lt(lhs, rhs) => format!(
+                "Lt({}, {})",
+                self.dumps_node(self.get(*lhs)),
+                self.dumps_node(self.get(*rhs))
+            ),
+            Expr::LtEq(lhs, rhs) => format!(
+                "LtEq({}, {})",
+                self.dumps_node(self.get(*lhs)),
+                self.dumps_node(self.get(*rhs))
+            ),
+            Expr::Gt(lhs, rhs) => format!(
+                "Gt({}, {})",
+                self.dumps_node(self.get(*lhs)),
+                self.dumps_node(self.get(*rhs))
+            ),
+            Expr::GtEq(lhs, rhs) => format!(
+                "GtEq({}, {})",
+                self.dumps_node(self.get(*lhs)),
+                self.dumps_node(self.get(*rhs))
+            ),
+            Expr::FieldAccess { base, field } => format!(
+                "FieldAccess({}, {})",
+                self.dumps_node(self.get(*base)),
+                self.dumps_symbol(field.0)
+            ),
+            Expr::TypeDeclInstance {
+                type_name: struct_name,
+                fields,
+            } => {
+                let fields_str: Vec<String> = fields
+                    .iter()
+                    .map(|(name, value)| {
+                        format!(
+                            "{}: {}",
+                            self.dumps_symbol(name.0),
+                            self.dumps_node(self.get(*value))
+                        )
+                    })
+                    .collect();
+                format!(
+                    "StructInstance {} {{ {} }}",
+                    self.dumps_symbol(struct_name.0),
+                    fields_str.join(", ")
+                )
+            }
+            Expr::List(elements) => {
+                let elements_str: Vec<String> = elements
+                    .iter()
+                    .map(|&id| self.dumps_node(self.get(id)))
+                    .collect();
+                format!("List([{}])", elements_str.join(", "))
+            }
+            Expr::Index { base, index } => format!(
+                "Index({}, {})",
+                self.dumps_node(self.get(*base)),
+                self.dumps_node(self.get(*index))
+            ),
+            Expr::BuiltinCall { name, args } => {
+                let args_str: Vec<String> =
+                    args.iter().map(|a| self.dumps_node(self.get(*a))).collect();
+                format!("@{} ({})", name, args_str.join(", "))
+            }
+            Expr::Type(ty) => format!("Type({:?})", ty),
         }
     }
 
     fn dumps_symbol(&self, id: SymbolId) -> String {
         self.symbol_table.get(id).name.clone()
     }
+    */
 }
 
 impl Ast for LangAst {
@@ -306,6 +469,10 @@ pub enum LangNodeKind {
         then_branch: LangNodeId,
         else_branch: Option<LangNodeId>,
     },
+    While {
+        condition: LangNodeId,
+        body: LangNodeId,
+    },
     FunctionCall {
         function: LangNodeId,
         args: Vec<LangNodeId>,
@@ -314,15 +481,81 @@ pub enum LangNodeKind {
     FunctionDef {
         name: Ident,
         attrs: Vec<Attribute>,
-        params: Vec<ArgumentParamDef>,
+        params: Vec<ParamDef>,
         ret: Type,
         body: Option<LangNodeId>,
         is_expr: bool,
+        is_vararg: bool,
     },
+    TypeDecl {
+        name: Ident,
+        kind: TypeDeclKind,
+        fields: Vec<ParamDef>,
+    },
+    Assign {
+        lhs: LangNodeId,
+        rhs: LangNodeId,
+    },
+    ExtendDecl {
+        target_type: Type,
+        methodes: Vec<LangNodeId>,
+    },
+    ContextDecl {
+        name: Ident,
+        extensions: Vec<LangNodeId>,
+    },
+    RequireContextDecl {
+        name: Ident,
+        items: Vec<LangNodeId>,
+    },
+
+    ImportDecl {
+        path: String,
+        context_mappings: Vec<(Ident, Ident)>,
+    },
+    InContext {
+        context_name: Ident,
+        body: LangNodeId,
+    },
+    Const(Const),
+    MacroDef(MacroDef),
+    Comptime(LangNodeId),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum TypeDeclKind {
+    Struct,
+    Union,
+}
+
+impl LangNodeKind {
+    pub fn get_kind_name(&self) -> &'static str {
+        match self {
+            LangNodeKind::Expr(e) => e.get_kind_name(),
+            LangNodeKind::Let(_) => "Let",
+            LangNodeKind::Block(_) => "Block",
+            LangNodeKind::If { .. } => "If",
+            LangNodeKind::FunctionCall { .. } => "FunctionCall",
+            LangNodeKind::Return(_) => "Return",
+            LangNodeKind::FunctionDef { .. } => "FunctionDef",
+            LangNodeKind::Assign { .. } => "Assign",
+            LangNodeKind::TypeDecl { .. } => "StructDef",
+            LangNodeKind::While { .. } => "While",
+            LangNodeKind::Const(_) => "Const",
+            LangNodeKind::MacroDef(_) => "MacroDef",
+            LangNodeKind::ContextDecl { .. } => "ContextDecl",
+            LangNodeKind::RequireContextDecl { .. } => "RequireContextDecl",
+
+            LangNodeKind::ImportDecl { .. } => "ImportDecl",
+            LangNodeKind::ExtendDecl { .. } => "ExtendDecl",
+            LangNodeKind::InContext { .. } => "InContext",
+            LangNodeKind::Comptime(_) => "Comptime",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ArgumentParamDef {
+pub struct ParamDef {
     pub name: Ident,
     pub ty: Type,
 }
@@ -338,12 +571,85 @@ pub enum UnaryOpKind {
 pub enum Expr {
     Ident(Ident),
     Int(i64),
+    Float(f64),
     String(String),
+    Char(char),
+    Bool(bool),
     UnaryOp(UnaryOpKind, LangNodeId),
     Add(LangNodeId, LangNodeId),
     Sub(LangNodeId, LangNodeId),
     Mul(LangNodeId, LangNodeId),
     Div(LangNodeId, LangNodeId),
+    Eq(LangNodeId, LangNodeId),
+    Lt(LangNodeId, LangNodeId),
+    LtEq(LangNodeId, LangNodeId),
+    Gt(LangNodeId, LangNodeId),
+    GtEq(LangNodeId, LangNodeId),
+    Ref(LangNodeId),
+    Deref(LangNodeId),
+    FieldAccess {
+        base: LangNodeId,
+        field: Ident,
+    },
+    TypeDeclInstance {
+        type_name: Ident,
+        fields: Vec<(Ident, LangNodeId)>,
+    },
+    List(Vec<LangNodeId>),
+    Index {
+        base: LangNodeId,
+        index: LangNodeId,
+    },
+    BuiltinCall {
+        name: String,
+        args: Vec<LangNodeId>,
+    },
+    Type(Type),
+}
+
+impl Expr {
+    pub fn get_kind_name(&self) -> &'static str {
+        match self {
+            Expr::Ident(_) => "Ident",
+            Expr::Int(_) => "Int",
+            Expr::Float(_) => "Float",
+            Expr::String(_) => "String",
+            Expr::Char(_) => "Char",
+            Expr::Bool(_) => "Bool",
+            Expr::UnaryOp(_, _) => "UnaryOp",
+            Expr::Add(_, _) => "Add",
+            Expr::Sub(_, _) => "Sub",
+            Expr::Mul(_, _) => "Mul",
+            Expr::Div(_, _) => "Div",
+            Expr::Eq(_, _) => "Eq",
+            Expr::Lt(_, _) => "Lt",
+            Expr::LtEq(_, _) => "LtEq",
+            Expr::Gt(_, _) => "Gt",
+            Expr::GtEq(_, _) => "GtEq",
+            Expr::Ref(_) => "Ref",
+            Expr::Deref(_) => "Deref",
+            Expr::FieldAccess { .. } => "FieldAccess",
+            Expr::TypeDeclInstance { .. } => "StructInstance",
+            Expr::List(_) => "List",
+            Expr::Index { .. } => "Index",
+            Expr::BuiltinCall { .. } => "BuiltinCall",
+            Expr::Type(_) => "Type",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Const {
+    pub name: Ident,
+    pub value: LangNodeId,
+    pub ty: Option<Type>,
+}
+
+#[derive(Debug, Clone)]
+pub struct MacroDef {
+    pub name: Ident,
+    pub params: Vec<ParamDef>,
+    pub body: LangNodeId,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -360,8 +666,36 @@ pub struct LineInfo {
 }
 
 impl LineInfo {
-    pub fn from_span(span: Span, line: usize) -> LineInfo {
-        LineInfo::new(line, span.lo, span.hi)
+    pub fn from_span(span: Span, source_file_info: &SourceFileInfo) -> LineInfo {
+        let mut line = 0;
+        let mut current_start = 0;
+        let mut current_end = 0;
+        let mut found = false;
+
+        for (i, s) in source_file_info.source().lines().enumerate() {
+            let line_len = s.len() + 1; // +1 for the newline character
+            current_end += line_len;
+
+            if span.lo >= current_start && span.hi <= current_end {
+                line = i + 1; // Lines are 1-indexed
+                found = true;
+                break;
+            }
+
+            current_start += line_len;
+        }
+
+        if !found {
+            // If not found, return the last line info
+            line = source_file_info.source().lines().count();
+            current_start = source_file_info
+                .source()
+                .rfind('\n')
+                .map_or(0, |pos| pos + 1);
+            current_end = source_file_info.source().len();
+        }
+
+        LineInfo::new(line, current_start, current_end)
     }
 
     pub fn new(line: usize, start: usize, end: usize) -> LineInfo {

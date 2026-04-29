@@ -1,0 +1,7 @@
+[package]
+name = "popper_module"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+popper_ast = { version = "0.1.0", path = "../popper_ast" }

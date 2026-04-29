@@ -139,6 +139,14 @@ impl SemanticLayerKind {
             }
         }
     }
+    
+    
+    pub fn symbol_resolver(&self) -> &SymbolResolver {
+        match self {
+            SemanticLayerKind::SymbolResolver(s) => s,
+            _ => panic!("Semantic layer is not symbol resolver"),
+        }
+    }
 
     pub fn symbol_resolver_mut(&mut self) -> &mut SymbolResolver {
         match self {
@@ -167,7 +175,7 @@ impl SemanticAnalyzer {
         self.layers.push(SemanticLayerKind::TypeChecker(t));
     }
 
-    pub fn add_symbol_resolver_layer(&mut self, layer: symbol_resolver::SymbolResolver) {
+    pub fn add_symbol_resolver_layer(&mut self, layer: SymbolResolver) {
         self.layers.push(SemanticLayerKind::SymbolResolver(layer));
     }
 
@@ -217,12 +225,14 @@ pub struct SemanticAnalyzerLayer;
 
 impl Layer for SemanticAnalyzerLayer {
     type Inner = LangAst;
-    type Output = error::Result<()>;
+    type Output = error::Result<Hir>;
 
     fn handle(&mut self, ast: &LangAst, node: LangNodeId) -> Self::Output {
         let mut semantic_analyzer = SemanticAnalyzer::new(ast.clone());
-        semantic_analyzer.add_type_checker_layer(type_checker::TypeChecker::new());
-        semantic_analyzer.add_symbol_resolver_layer(symbol_resolver::SymbolResolver::new());
-        semantic_analyzer.analyze(node).map(|_| ())
+        semantic_analyzer.add_type_checker_layer(TypeChecker::new());
+        semantic_analyzer.add_symbol_resolver_layer(SymbolResolver::new());
+        semantic_analyzer
+            .analyze(node)
+            .map(|_| semantic_analyzer.hir)
     }
 }

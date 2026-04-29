@@ -1,8 +1,22 @@
-func(C) printf(s: string);
+func(C) printf(s: string, ...) -> int;
+func(C) malloc(s: int) -> !char;
+func(C) free(p: !char);
+func(C) realloc(p: !char, n: int) -> !char;
+func(C) strlen(s: !char) -> int;
+func(C) memcpy(dest: !char, src: !char, n: int) -> !char;
 
 
-
+context Std {
+    extend string {
+        func print() {
+		printf("%s", this);
+	}
+    }
+}
 
 func main() {
-    main(2);
+    in Std  {
+        let s = "hello";
+        s.print();
+    }
 }

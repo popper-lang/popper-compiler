@@ -56,11 +56,16 @@ impl Error {
         let message = self.diagnostics.message();
         let label = self.diagnostics.label();
         let code = self.diagnostics.code();
+        let note = self.diagnostics.note();
         let report = Report::build(ariadne::ReportKind::Error, span.clone())
             .with_code(code)
             .with_message(message)
-            .with_label(Label::new(span).with_message(label))
-            .finish();
+            .with_label(Label::new(span).with_message(label));
+        let report = if let Some(note) = note {
+            report.with_note(note).finish()
+        } else {
+            report.finish()
+        };
         Some(report)
     }
 

@@ -1,8 +1,8 @@
+use popper_ast::ast::Span;
+use popper_ast::token::{Token, TokenKind};
 use std::alloc::handle_alloc_error;
 use std::iter::Peekable;
 use std::str::Chars;
-use popper_ast::ast::Span;
-use popper_ast::token::{Token, TokenKind};
 
 #[derive(Debug, Clone)]
 pub struct Cursor {
@@ -20,7 +20,6 @@ impl Cursor {
             remaining,
         }
     }
-    
 
     pub fn is_at_end(&self) -> bool {
         self.remaining == 0
@@ -38,7 +37,6 @@ impl Cursor {
         self.pos += c.len_utf8();
         self.remaining -= c.len_utf8();
         Some(c)
-        
     }
 
     pub fn take(&mut self, n: usize, peek: bool) -> String {
@@ -56,13 +54,11 @@ impl Cursor {
         self.remaining -= n;
         s.to_string()
     }
-    
 
     pub fn take_while<F>(&mut self, mut f: F, peek: bool) -> String
     where
         F: FnMut(char) -> bool,
     {
-
         let start = 0;
         let mut end = start;
         let s = self.string[self.pos..].chars().collect::<String>();
@@ -78,7 +74,6 @@ impl Cursor {
             }
         }
         s[start..end].to_string()
-        
     }
 
     pub fn pos(&self) -> usize {
@@ -99,11 +94,29 @@ impl Cursor {
                     "else" => TokenKind::KeywordElse,
                     "func" => TokenKind::KeywordFunc,
                     "return" => TokenKind::KeywordReturn,
+                    "struct" => TokenKind::KeywordStruct,
+                    "union" => TokenKind::KeywordUnion,
+                    "while" => TokenKind::KeywordWhile,
                     "int" => TokenKind::TypeInt,
+                    "char" => TokenKind::TypeChar,
                     "float" => TokenKind::TypeFloat,
                     "bool" => TokenKind::TypeBool,
                     "string" => TokenKind::TypeString,
                     "void" => TokenKind::TypeVoid,
+                    "type" => TokenKind::TypeType,
+                    "true" => TokenKind::KeywordTrue,
+                    "false" => TokenKind::KeywordFalse,
+                    "const" => TokenKind::KeywordConst,
+                    "mcro" => TokenKind::KeywordMcro,
+                    "comptime" => TokenKind::KeywordComptime,
+                    "extend" => TokenKind::KeywordExtend,
+                    "context" => TokenKind::KeywordContext,
+                    "require" => TokenKind::KeywordRequire,
+                    "import" => TokenKind::KeywordImport,
+                    "inherit" => TokenKind::KeywordInherit,
+                    "in" => TokenKind::KeywordIn,
+                    "mut" => TokenKind::KeywordMut,
+
                     _ => TokenKind::Identifier,
                 };
 
@@ -113,6 +126,14 @@ impl Cursor {
                 let value = self.take_while(char::is_numeric, peek);
                 Token::new(TokenKind::Number, Span::new(start, self.pos), value)
             }
+            '!' => {
+                let value = self.take(1, peek);
+                Token::new(TokenKind::Bang, Span::new(start, self.pos), value)
+            }
+            '&' => {
+                let value = self.take(1, peek);
+                Token::new(TokenKind::Ampersand, Span::new(start, self.pos), value)
+            }
             '"' => {
                 if peek {
                     self.pos += 1;
@@ -120,50 +141,108 @@ impl Cursor {
                 } else {
                     self.take(1, peek);
                 }
-                let value = self.take_while(|c| c != '"', peek);
+                let value = self
+                    .take_while(|c| c != '"', peek)
+                    .replace("\\n", "\n")
+                    .replace("\\t", "\t")
+                    .replace("\\0", "\0");
+
                 if peek {
                     self.pos -= 1;
                     self.remaining += 1;
                 } else {
                     self.take(1, peek);
                 }
-                Token::new(TokenKind::String, Span::new(start, self.pos), value.to_string())
+                Token::new(
+                    TokenKind::String,
+                    Span::new(start, self.pos),
+                    value.to_string(),
+                )
             }
             '\'' => {
-                let value = self.take(1, peek);
-                Token::new(TokenKind::Char, Span::new(start, self.pos), value.to_string())
+                let value = self.take(3, peek);
+                Token::new(
+                    TokenKind::Char,
+                    Span::new(start, self.pos),
+                    value.to_string(),
+                )
             }
             ',' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Comma, Span::new(start, self.pos), ",".to_string())
+                Token::new(
+                    TokenKind::Comma,
+                    Span::new(start, self.pos),
+                    ",".to_string(),
+                )
             }
             '(' => {
                 self.take(1, peek);
-                Token::new(TokenKind::ParenL, Span::new(start, self.pos), "(".to_string())
+                Token::new(
+                    TokenKind::ParenL,
+                    Span::new(start, self.pos),
+                    "(".to_string(),
+                )
             }
             ')' => {
                 self.take(1, peek);
-                Token::new(TokenKind::ParenR, Span::new(start, self.pos), ")".to_string())
+                Token::new(
+                    TokenKind::ParenR,
+                    Span::new(start, self.pos),
+                    ")".to_string(),
+                )
             }
             '{' => {
                 self.take(1, peek);
-                Token::new(TokenKind::BraceL, Span::new(start, self.pos), "{".to_string())
+                Token::new(
+                    TokenKind::BraceL,
+                    Span::new(start, self.pos),
+                    "{".to_string(),
+                )
             }
             '}' => {
                 self.take(1, peek);
-                Token::new(TokenKind::BraceR, Span::new(start, self.pos), "}".to_string())
+                Token::new(
+                    TokenKind::BraceR,
+                    Span::new(start, self.pos),
+                    "}".to_string(),
+                )
             }
             '[' => {
                 self.take(1, peek);
-                Token::new(TokenKind::BracketL, Span::new(start, self.pos), "[".to_string())
+                Token::new(
+                    TokenKind::BracketL,
+                    Span::new(start, self.pos),
+                    "[".to_string(),
+                )
             }
             ']' => {
                 self.take(1, peek);
-                Token::new(TokenKind::BracketR, Span::new(start, self.pos), "]".to_string())
+                Token::new(
+                    TokenKind::BracketR,
+                    Span::new(start, self.pos),
+                    "]".to_string(),
+                )
             }
             '=' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Eq, Span::new(start, self.pos), "=".to_string())
+                let speek = if peek {
+                    self.string[self.pos + 1..].chars().next()
+                } else {
+                    self.peek()
+                };
+                if speek == Some('=') {
+                    self.take(1, peek);
+                    return Ok(Token::new(
+                        TokenKind::Eq,
+                        Span::new(start, self.pos),
+                        "==".to_string(),
+                    ));
+                }
+                Token::new(
+                    TokenKind::Assign,
+                    Span::new(start, self.pos),
+                    "=".to_string(),
+                )
             }
             '+' => {
                 self.take(1, peek);
@@ -172,44 +251,120 @@ impl Cursor {
             '-' => {
                 self.take(1, peek);
                 let speek = if peek {
-                    self.string[self.pos+1..].chars().next()
+                    self.string[self.pos + 1..].chars().next()
                 } else {
                     self.peek()
                 };
                 if speek == Some('>') {
                     self.take(1, peek);
-                    return Ok(Token::new(TokenKind::Arrow, Span::new(start, self.pos), "->".to_string()));
+                    return Ok(Token::new(
+                        TokenKind::Arrow,
+                        Span::new(start, self.pos),
+                        "->".to_string(),
+                    ));
                 }
-                Token::new(TokenKind::Minus, Span::new(start, self.pos), "-".to_string())
+                Token::new(
+                    TokenKind::Minus,
+                    Span::new(start, self.pos),
+                    "-".to_string(),
+                )
+            }
+            '<' => {
+                self.take(1, peek);
+                let speek = if peek {
+                    self.string[self.pos + 1..].chars().next()
+                } else {
+                    self.peek()
+                };
+                if speek == Some('=') {
+                    self.take(1, peek);
+                    return Ok(Token::new(
+                        TokenKind::Lte,
+                        Span::new(start, self.pos),
+                        "<=".to_string(),
+                    ));
+                }
+                Token::new(TokenKind::Lt, Span::new(start, self.pos), "<".to_string())
+            }
+            '>' => {
+                self.take(1, peek);
+                let speek = if peek {
+                    self.string[self.pos + 1..].chars().next()
+                } else {
+                    self.peek()
+                };
+                if speek == Some('=') {
+                    self.take(1, peek);
+                    return Ok(Token::new(
+                        TokenKind::Gte,
+                        Span::new(start, self.pos),
+                        ">=".to_string(),
+                    ));
+                }
+                Token::new(TokenKind::Gt, Span::new(start, self.pos), ">".to_string())
+            }
+            '@' => {
+                self.take(1, peek);
+                Token::new(TokenKind::At, Span::new(start, self.pos), "@".to_string())
             }
             '*' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Multiply, Span::new(start, self.pos), "*".to_string())
+                Token::new(
+                    TokenKind::Multiply,
+                    Span::new(start, self.pos),
+                    "*".to_string(),
+                )
             }
             '/' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Divide, Span::new(start, self.pos), "/".to_string())
+                Token::new(
+                    TokenKind::Divide,
+                    Span::new(start, self.pos),
+                    "/".to_string(),
+                )
             }
             ';' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Semicolon, Span::new(start, self.pos), ";".to_string())
+                Token::new(
+                    TokenKind::Semicolon,
+                    Span::new(start, self.pos),
+                    ";".to_string(),
+                )
             }
             ':' => {
                 self.take(1, peek);
-                Token::new(TokenKind::Colon, Span::new(start, self.pos), ":".to_string())
+                Token::new(
+                    TokenKind::Colon,
+                    Span::new(start, self.pos),
+                    ":".to_string(),
+                )
+            }
+            '.' => {
+                self.take(1, peek);
+                if self.peek() == Some('.') && self.string[self.pos..].chars().nth(1) == Some('.') {
+                    self.take(2, peek);
+                    Token::new(
+                        TokenKind::DotDotDot,
+                        Span::new(start, self.pos),
+                        "...".to_string(),
+                    )
+                } else {
+                    Token::new(TokenKind::Dot, Span::new(start, self.pos), ".".to_string())
+                }
             }
             ' ' | '\t' | '\r' | '\n' => {
-                
                 let v = self.take_while(|c| c.is_whitespace(), false);
                 let c = self.peek_token()?;
                 c
             }
-            _ => return Err(crate::error::LexerError::unexpected_token(
-                format!("{}", c),
-                Span::new(start, self.pos),
-            ))
+            _ => {
+                return Err(crate::error::LexerError::unexpected_token(
+                    format!("{}", c),
+                    Span::new(start, self.pos),
+                ))
+            }
         };
-        
+
         Ok(kind)
     }
     pub fn next_token(&mut self) -> super::Result<Token> {
@@ -225,7 +380,6 @@ impl Cursor {
         };
 
         self.process_token(c, start, false)
-        
     }
 
     pub fn peek_token(&mut self) -> super::Result<Token> {
@@ -238,10 +392,8 @@ impl Cursor {
                 value: String::new(),
             });
         };
-        
+
         let start = self.pos;
         self.process_token(c, start, true)
     }
-
 }
-

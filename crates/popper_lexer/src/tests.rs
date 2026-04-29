@@ -46,3 +46,15 @@ fn test_keyword() {
     assert_eq!(tokens[0].value, "let");
     assert_eq!(tokens[1].kind, TokenKind::Eof);
 }
+
+#[test]
+fn test_type_type() {
+    let input = "type";
+    let tokens = tokenize(input);
+    assert!(tokens.is_ok());
+    let tokens = tokens.unwrap();
+    assert_eq!(tokens.len(), 2);
+    assert_eq!(tokens[0].kind, TokenKind::TypeType);
+    assert_eq!(tokens[0].value, "type");
+    assert_eq!(tokens[1].kind, TokenKind::Eof);
+}
